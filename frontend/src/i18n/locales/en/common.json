@@ -1,0 +1,9 @@
+{
+    "alert_message": {
+        "error": "Error"
+    },
+    "confirm_dialog": {
+        "cancel": "Cancel",
+        "confirm": "Confirm"
+    }
+}

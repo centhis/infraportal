@@ -1,0 +1,9 @@
+{
+    "alert_message": {
+        "error": "Ошибка"
+    },
+    "confirm_dialog": {
+        "cancel": "Отмена",
+        "confirm": "Подтвердить"
+    }
+}

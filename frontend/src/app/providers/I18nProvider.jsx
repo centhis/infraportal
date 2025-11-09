@@ -1,0 +1,46 @@
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../../i18n/i18n";
+
+
+const I18nContext = createContext({
+    currentLanguage: "en",
+    changeLanguage: (lng) => {},
+});
+
+export const useI18n = () => useContext(I18nContext);
+
+export const I18nProvider = ({ children }) => {
+    const [currentLanguage, setCurrentLanguage] = useState(i18n.language || "en");
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+    };
+
+    useEffect(() => {
+        const handleLanguageChanged = (lng) => {
+            setCurrentLanguage(lng);
+            localStorage.setItem("i18nextLng", lng);
+        };
+
+        i18n.on('languageChanged', handleLanguageChanged);
+
+        // Initial check
+        const storedLng = localStorage.getItem("i18nextLng");
+        if (storedLng && storedLng !== i18n.language) {
+            i18n.changeLanguage(storedLng);
+        }
+
+        return () => {
+            i18n.off('languageChanged', handleLanguageChanged);
+        };
+    }, []);
+
+    return (
+        <I18nContext.Provider value={{ currentLanguage, changeLanguage }}>
+            <I18nextProvider i18n={i18n}>
+                {children}
+            </I18nextProvider>
+        </I18nContext.Provider>
+    )
+}

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Editor directories and files
+.vscode/
+.idea/
+
+# Alembic
+alembic/versions/*.pyc
+
+# UV (if not committed)
+uv.lock

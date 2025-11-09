@@ -1,0 +1,12 @@
+{
+    "nav_items": {
+        "default": "InfraPortal",
+        "home": "Home",
+        "about": "About",
+        "user_management": "Users"
+    },
+    "user_menu": {
+        "profile": "Profile",
+        "logout": "Exit"
+    }
+}

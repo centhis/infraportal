@@ -1,0 +1,12 @@
+{
+    "nav_items": {
+        "default": "ИнфраПортал",
+        "home": "Домашняя",
+        "about": "О программе",
+        "user_management": "Пользователи"
+    },
+    "user_menu": {
+        "profile": "Профиль",
+        "logout": "Выход"
+    }
+}
