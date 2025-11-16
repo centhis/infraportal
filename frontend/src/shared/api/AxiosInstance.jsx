@@ -46,6 +46,11 @@ AxiosInstance.interceptors.response.use(
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
+            // Do not intercept for login requests, just pass the error through
+            if (originalRequest._isLogin) {
+                return Promise.reject(error);
+            }
+
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
@@ -73,7 +78,9 @@ AxiosInstance.interceptors.response.use(
             } catch (err) {
                 processQueue(err, null);
                 localStorage.removeItem("Token");
-                window.location.href = ROUTES.LOGIN;
+                if (window.location.pathname !== ROUTES.LOGIN) {
+                    window.location.href = ROUTES.LOGIN;
+                }
                 return Promise.reject(err);
             } finally {
                 isRefreshing = false

@@ -56,7 +56,7 @@ export default function Navbar() {
         }}
       >
         <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap component="h1" sx={{ flexGrow: 1 }}>
             {currentTitle}    
           </Typography>
           <UserMenu user={user} onLogout={logout} />

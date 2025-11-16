@@ -24,35 +24,23 @@ const Login = () => {
     }
   });
 
-  const {login, error, loading} = useAuthContext();
+  const {login, error, loading, clearError} = useAuthContext(); // Destructure clearError
 
   const onSubmit = async (data) => {
     const success = await login(data);
     if (success) navigate(ROUTES.HOME);
   };
 
-  // const [showMessage, setShowMessage] = React.useState(false)
-  // const [textMessage, setTextMessage] = React.useState('')
-  // const [severityMessage, setSeverityMessage] = React.useState('')
-  // const [titleMessage, setTitleMessage] = React.useState('')
+  React.useEffect(() => { // Use React.useEffect since React is imported as * as React
+    if (error) {
+      const timeout = Number(import.meta.env.VITE_ALERT_TIMEOUT || 15000); // Default to 15s
+      const timer = setTimeout(() => {
+        clearError();
+      }, timeout);
 
-  // const submission = (data) => {
-  //   AxiosInstance.post(`auth/login/`, {
-  //     login: data.login,
-  //     password: data.password,
-  //   }).then((response) => {
-  //     console.log(response)
-  //     localStorage.setItem('Token', response.data.access_token)
-  //     navigate('/home')
-  //   }).catch((error) => {
-  //     const text = error.response?.data?.detail || "Authorization Error"
-  //     setTextMessage(text)
-  //     setSeverityMessage('error')
-  //     setTitleMessage(t('alert_message.error'))
-  //     setShowMessage(true)
-  //     console.error('Error during login', error)
-  //   })
-  // }
+      return () => clearTimeout(timer);
+    }
+  }, [error, clearError]); // Depend on error and clearError
 
   return (
     
@@ -64,13 +52,27 @@ const Login = () => {
         justifyContent: 'center',
         height: '100vh',
         padding: 2,
+        position: 'relative', // Make this the positioning context for absolute alert
       }}
     >
+      {error && ( // Only render the alert container if there's an error
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            p: 2, // Padding around the alert
+            zIndex: 1000, // Ensure it's above other content
+          }}
+        >
+          <LoginAlert message={error} />
+        </Box>
+      )}
+
       <Typography variant="h4" gutterBottom>
         {t('login_page.title')}
       </Typography>
-
-      <LoginAlert message={error} />
 
       <form onSubmit={handleSubmit(onSubmit)} style={{ width: '100%', maxWidth: 400 }}>
         <LoginTextField
@@ -101,8 +103,8 @@ const Login = () => {
       </form>
       <Box sx={{ marginTop: 2 }}>
         {/* Пример переключения языка */}
-        <Button disabled={changeLanguage == "en"} onClick={() => changeLanguage('en')}>EN</Button>
-        <Button disabled={changeLanguage == "ru"} onClick={() => changeLanguage('ru')}>RU</Button>
+        <Button disabled={currentLanguage == "en"} onClick={() => changeLanguage('en')}>EN</Button>
+        <Button disabled={currentLanguage == "ru"} onClick={() => changeLanguage('ru')}>RU</Button>
       </Box>
     </Box>
 

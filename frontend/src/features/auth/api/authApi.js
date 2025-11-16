@@ -6,7 +6,7 @@ export const authApi = {
         const response = await AxiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, {
             login,
             password,
-        });
+        }, { _isLogin: true });
         return response.data;
     },
     getCurrentUser: async() => {

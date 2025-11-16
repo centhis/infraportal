@@ -21,9 +21,10 @@ class Settings(BaseSettings):
     def parse_allowed_origins(cls, v: str) -> List[str]:
         return [origin.strip() for origin in v.split(",") if origin.strip()] if v else []
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive: True
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": True
+    }
 
 settings = Settings()

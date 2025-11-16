@@ -5,7 +5,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from 'react-i18next';
 
-import usePersistentState from "../hooks/usePersistentState";
+import usePersistentState from "../../hooks/usePersistentState";
 
 const UserTable = React.memo(({ 
     users, 
@@ -48,10 +48,10 @@ const UserTable = React.memo(({
             disableColumnMenu: true,
             renderCell: (params) => (
                 <Box>
-                    <IconButton color="primary" onClick={() => onEdit(params.row)}>
+                    <IconButton aria-label="edit" color="primary" onClick={() => onEdit(params.row)}>
                         <EditIcon />
                     </IconButton>
-                    <IconButton color="error" onClick={() => onDelete(params.row.id)}>
+                    <IconButton aria-label="delete" color="error" onClick={() => onDelete(params.row.id)}>
                         <DeleteIcon />
                     </IconButton>
                 </Box>

@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status, Depends
 
 from app.db.database import db_dependency
-from app.users.local.models import User
+from app.users.models import User
 from app.core.security import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE, verify_password
 from app.core.jwt_prvider import JwtProvider
 

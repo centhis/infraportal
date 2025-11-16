@@ -5,7 +5,7 @@ from app.auth.schemas import LoginUserSchema, CurrenUserSchema
 from app.auth.services import AuthService
 from app.auth.dependencies import get_current_user
 from app.core.security import REFRESH_TOKEN_EXPIRE, oauth2_scheme
-from app.users.local.models import User
+from app.users.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

@@ -5,7 +5,7 @@ export default function IpAlert({ text, severity, title }) {
     return (
         <Stack sx={{width: '100%'}} spacing={2}>
             <Alert severity={severity}>
-                {title && <AlertTitle>{title}</AlertTitle>}
+                {title && <AlertTitle component="h5">{title}</AlertTitle>}
                 {text}
             </Alert>
         </Stack>

@@ -1,11 +1,22 @@
 import importlib
 import pkgutil
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-# from routers import auth, users
+from app.db.database import SessionLocal
+from app.core.initial_data_loader import load_initial_data
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db = SessionLocal()
+    try:
+        load_initial_data(db)
+    finally:
+        db.close()
+    yield
 
 app = FastAPI(
     title = "Infraportal backend",
@@ -13,6 +24,7 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -32,4 +44,3 @@ for _, module_name, _ in pkgutil.iter_modules([package.replace(".", "/")]):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=9000, reload=True)
-

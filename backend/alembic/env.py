@@ -6,8 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.core.config import settings
-from app.db.database import Base
-from app.users.local.models import *
+from app.db.orm_base import Base, load_all_models
 
 
 # this is the Alembic Config object, which provides
@@ -23,8 +22,7 @@ config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+load_all_models()
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

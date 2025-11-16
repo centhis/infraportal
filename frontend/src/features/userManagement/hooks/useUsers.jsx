@@ -2,11 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 
 import { usersService } from "../services/usersService";
 import usePersistentState from "./usePersistentState";
+import { USER_PAGINATION_KEY } from "../../../shared/constants/keys";
 
 export default function useUsers() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [paginationModel, setPaginationModel] = usePersistentState('user-pagination-model', { page: 0, pageSize: 10 });
+    const [paginationModel, setPaginationModel] = usePersistentState(USER_PAGINATION_KEY, { page: 0, pageSize: 10 });
     const [rowCount, setRowCount] = useState(0);
 
     const refetchUsers = useCallback(async () => {

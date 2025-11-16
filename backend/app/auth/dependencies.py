@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status
 
-from app.users.local.models import User
+from app.users.models import User
 from app.core.security import oauth2_scheme
 from app.auth.services import AuthService
 
@@ -15,7 +15,7 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
-    user = service.db.query(User).get(user_id)
+    user = service.db.get(User, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

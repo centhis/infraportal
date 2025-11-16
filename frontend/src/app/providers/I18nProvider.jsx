@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../../i18n/i18n";
+import { I18N_LNG_KEY } from "../../shared/constants/keys";
 
 
 const I18nContext = createContext({
@@ -20,13 +21,13 @@ export const I18nProvider = ({ children }) => {
     useEffect(() => {
         const handleLanguageChanged = (lng) => {
             setCurrentLanguage(lng);
-            localStorage.setItem("i18nextLng", lng);
+            localStorage.setItem(I18N_LNG_KEY, lng);
         };
 
         i18n.on('languageChanged', handleLanguageChanged);
 
         // Initial check
-        const storedLng = localStorage.getItem("i18nextLng");
+        const storedLng = localStorage.getItem(I18N_LNG_KEY);
         if (storedLng && storedLng !== i18n.language) {
             i18n.changeLanguage(storedLng);
         }

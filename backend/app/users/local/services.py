@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 
 from app.db.database import db_dependency
-from app.users.local.models import User
+from app.users.models import User
 from app.users.local.schemas import CreateUserSchema, UpdateUserSchema, UserResponseSchema
 from app.core.security import hash_password
 

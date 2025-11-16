@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
 import useUsers from "../hooks/useUsers";
-import UserTable from "../components/UserTable";
-import UserForm from "../components/UserForm";
+import UserTable from "../components/user/UserTable";
+import UserForm from "../components/user/UserForm";
 import ConfirmDialog from "../../../components/layout/ConfirmDialog/ConfirmDialog";
 
 const UserTabPage = () => {
@@ -84,7 +84,7 @@ const UserTabPage = () => {
                         ref={addUserButtonRef}
                     >
                         {t('user_management.users.actions.add_user_button')}
-                    </Button>
+                    </Button>.
                 </Box>
                 <UserTable 
                     users={usersState.users}

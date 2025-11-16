@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { authApi } from "../api/authApi";
 import { ROUTES } from "../../../shared/constants/routes";
+import { TOKEN_KEY } from "../../../shared/constants/keys";
 
 export function useAuth() {
     const [user, setUser] = useState(null);
@@ -21,7 +22,7 @@ export function useAuth() {
     const login = async ({ login, password }) => {
         try {
             const data = await authApi.login(login, password);
-            localStorage.setItem("Token", data.access_token);
+            localStorage.setItem(TOKEN_KEY, data.access_token);
             setError(null);
             await fetchUser();
             return true;
@@ -39,14 +40,18 @@ export function useAuth() {
         } catch {
 
         } finally {
-            localStorage.removeItem("Token");
+            localStorage.removeItem(TOKEN_KEY);
             setUser(null);
             window.location.href = ROUTES.LOGIN
         }
     };
 
+    const clearError = () => {
+        setError(null);
+    };
+
     useEffect(() => {
-        const token = localStorage.getItem("Token")
+        const token = localStorage.getItem(TOKEN_KEY)
         if (token){
             fetchUser();
         } else {
@@ -55,5 +60,5 @@ export function useAuth() {
         
     }, []);
 
-    return {user, setUser, loading, error, login, logout};
+    return {user, setUser, loading, error, login, logout, clearError};
 }
