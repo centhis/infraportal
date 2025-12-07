@@ -65,50 +65,58 @@ uv pip sync
 
 ```mermaid
 graph TD
-    subgraph "Точка входа и Конфигурация"
-        Main["main.py (Точка входа)<br>Инициализация FastAPI, подключение роутеров"]
-        Settings["core/config.py (Конфигурация)<br>Загрузка настроек из .env"]
-        InitialData["core/initial_data_loader.py (Загрузчик данных)<br>Начальное наполнение БД"]
-    end
-
-    subgraph "Слой API (app/api/v1)"
-        APIRouters["Роутеры (*.py)<br>Определение эндпоинтов, валидация запросов"]
-        Dependencies["auth/dependencies.py (Зависимости)<br>get_current_user, permission_checker"]
-    end
-
-    subgraph "Сервисный слой (Бизнес-логика)"
-        AuthService["auth/services.py<br>Логика аутентификации"]
-        UserServices["users/.../services.py<br>CRUD-операции для пользователей, групп, ролей"]
-    end
-
-    subgraph "Слой доступа к данным"
-        SQLAlchemySession["db/database.py (Сессия БД)<br>Управление сессиями и транзакциями"]
-        Alembic["alembic/env.py (Миграции)<br>Управление схемой БД"]
-        Models[".../models.py (Модели ORM)<br>Определение таблиц и связей"]
-    end
+    %% Определения узлов
+    Main["main.py (Точка входа)<br>Инициализация FastAPI, подключение роутеров"]
+    Settings["core/config.py (Конфигурация)<br>Загрузка настроек из .env"]
+    InitialData["core/initial_data_loader.py (Загрузчик данных)<br>Начальное наполнение БД"]
+    APIRouters["Роутеры (*.py)<br>Определение эндпоинтов, валидация запросов"]
+    Dependencies["auth/dependencies.py (Зависимости)<br>get_current_user, permission_checker"]
+    AuthService["auth/services.py<br>Логика аутентификации"]
+    UserServices["users/.../services.py<br>CRUD-операции для пользователей, групп, ролей"]
+    SQLAlchemySession["db/database.py (Сессия БД)<br>Управление сессиями и транзакциями"]
+    Alembic["alembic/env.py (Миграции)<br>Управление схемой БД"]
+    Models[".../models.py (Модели ORM)<br>Определение таблиц и связей"]
 
     %% Зависимости
     Main --> Settings
     Main --> APIRouters
     Main --> InitialData
-
     InitialData --> Models
-
     APIRouters --> Dependencies
     APIRouters --> UserServices
     APIRouters --> AuthService
     APIRouters --> SQLAlchemySession
-
     Dependencies --> Settings
     Dependencies --> AuthService
-
     AuthService --> Models
     AuthService --> SQLAlchemySession
     UserServices --> Models
     UserServices --> SQLAlchemySession
-
     Alembic --> Models
     Alembic --> Settings
+
+    %% Группировка в подграфы
+    subgraph "Точка входа и Конфигурация"
+        Main
+        Settings
+        InitialData
+    end
+
+    subgraph "Слой API (app/api/v1)"
+        APIRouters
+        Dependencies
+    end
+
+    subgraph "Сервисный слой (Бизнес-логика)"
+        AuthService
+        UserServices
+    end
+
+    subgraph "Слой доступа к данным"
+        SQLAlchemySession
+        Alembic
+        Models
+    end
 end
 ```
 
