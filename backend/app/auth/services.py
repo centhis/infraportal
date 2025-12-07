@@ -1,15 +1,21 @@
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status, Depends, Request
+from datetime import datetime, timezone
 
 from app.db.database import db_dependency
 from app.users.models import User
-from app.core.security import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE, verify_password
-from app.core.jwt_prvider import JwtProvider
+from app.auth.models import UserSession
+from app.core.security import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE, verify_password, create_token, decode_token
+from app.users.permissions.services import PermissionService
 
 
 class AuthService:
-    def __init__(self, db: db_dependency, jwt_provider: JwtProvider = Depends()):
+    def __init__(
+            self, 
+            db: db_dependency,
+            permission_service: PermissionService = Depends()
+        ):
         self.db = db
-        self.jwt_provider = jwt_provider
+        self.permission_service = permission_service
 
     def authenticate_user(self, login: str, password: str):
         user = self.db.query(User).filter(User.login == login.lower()).first()
@@ -20,23 +26,77 @@ class AuthService:
             )
         return user
     
-    def create_tokens(self, user: User):
-        access = self.jwt_provider.create_token({"sub": user.login, "id": user.id}, ACCESS_TOKEN_EXPIRE, "access")
-        refresh = self.jwt_provider.create_token({"sub": user.login, "id": user.id}, REFRESH_TOKEN_EXPIRE, "refresh")
+    def create_tokens(self, user: User, request: Request):
+        permissions = self.permission_service.get_user_permissions(user.id)
+        access_payload = {
+            "sub": user.login,
+            "id": user.id,
+            "permissions": permissions
+        }
+        access = create_token(access_payload, ACCESS_TOKEN_EXPIRE, "access")
+        refresh = create_token({"sub": user.login, "id": user.id}, REFRESH_TOKEN_EXPIRE, "refresh")
+
+        session = UserSession(
+            user_id=user.id,
+            refresh_token=refresh,
+            expires_at=datetime.now(timezone.utc) + REFRESH_TOKEN_EXPIRE,
+            user_agent=request.headers.get("user-agent"),
+            ip_address=request.client.host
+        )
+        self.db.add(session)
+        self.db.commit()
+
         return access, refresh
     
     def referesh_access_token(self, refresh_token: str):
-        payload = self.jwt_provider.decode_token(refresh_token)
+        payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token type"
             )
+        
+        session = self.db.query(UserSession).filter(UserSession.refresh_token == refresh_token).first()
+        if not session or session.expires_at < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired refresh token"
+            )
+
         user = self.db.query(User).filter(User.id == payload.get("id")).first()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found"
             )
-        new_access = self.jwt_provider.create_token({"sub": user.login, "id": user.id}, ACCESS_TOKEN_EXPIRE, "access")
+        permissions = self.permission_service.get_user_permissions(user.id)
+        new_access_payload = {
+            "sub": user.login,
+            "id": user.id,
+            "permissions": permissions
+        }
+        new_access = create_token(new_access_payload, ACCESS_TOKEN_EXPIRE, "access")
         return new_access
+
+    def logout(self, refresh_token: str):
+        session = self.db.query(UserSession).filter(UserSession.refresh_token == refresh_token).first()
+        if session:
+            self.db.delete(session)
+            self.db.commit()
+
+    def list_sessions(self, user_id: int):
+        return self.db.query(UserSession).filter(UserSession.user_id == user_id).all()
+
+    def revoke_session(self, user_id: int, session_id: int):
+        session = self.db.query(UserSession).filter(
+            UserSession.id == session_id,
+            UserSession.user_id == user_id
+        ).first()
+        if session:
+            self.db.delete(session)
+            self.db.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Session not found"
+            )

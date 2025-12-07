@@ -41,7 +41,6 @@ class UserService:
             password = hash_password(data.password),
             name = data.name,
             is_active = data.is_active,
-            is_admin = data.is_admin,
             is_ldap = data.is_ldap
         )
         try:
@@ -54,7 +53,7 @@ class UserService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User creation failed due to database constraint"
             )
-        return UserResponseSchema.model_validate(new_user)
+        return new_user
     
     def list_users(self, skip: int = 0, limit: int = 100) -> dict:
         total = self.db.query(User).count()
@@ -68,6 +67,12 @@ class UserService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
+        if user.built_in:
+            if 'login' in data.model_dump(exclude_unset=True) and data.login != user.login:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot change login of a built-in user"
+                )
         for field, value in data.model_dump(exclude_unset=True).items():
             if field == "password" and value is not None:
                 setattr(user, field, hash_password(value))
@@ -82,7 +87,7 @@ class UserService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to update user due to database constraint"
         )
-        return UserResponseSchema.model_validate(user)
+        return user
         
     def delete_user(self, user_id: int):
         user = self.get_user_by_id(user_id)
@@ -90,6 +95,11 @@ class UserService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
+            )
+        if user.built_in:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete a built-in user"
             )
         try:
             self.db.delete(user)

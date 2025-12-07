@@ -1,5 +1,6 @@
 import importlib
 import pkgutil
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,13 +10,18 @@ from app.core.config import settings
 from app.db.database import SessionLocal
 from app.core.initial_data_loader import load_initial_data
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Application startup...")
     db = SessionLocal()
     try:
         load_initial_data(db)
     finally:
         db.close()
+    logger.info("Application startup complete.")
     yield
 
 app = FastAPI(

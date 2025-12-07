@@ -8,19 +8,25 @@ from app.db.orm_base import Base
 role_permission_association = Table(
     'role_permission_association', Base.metadata,
     Column('role_id', Integer, ForeignKey('roles.id')),
-    Column('permission_id', Integer, ForeignKey('permissions.id'))
+    Column('permission_id', Integer, ForeignKey('permissions.id')),
+    Column('built_in', Boolean, default=False, nullable=False),
+    Column('created_at', DateTime(timezone=True), server_default=func.now())
 )
 
 group_role_association = Table(
     'group_role_association', Base.metadata,
     Column('group_id', Integer, ForeignKey('groups.id')),
-    Column('role_id', Integer, ForeignKey('roles.id'))
+    Column('role_id', Integer, ForeignKey('roles.id')),
+    Column('built_in', Boolean, default=False, nullable=False),
+    Column('created_at', DateTime(timezone=True), server_default=func.now())
 )
 
 user_group_association = Table(
     'user_group_association', Base.metadata,
     Column('user_id', Integer, ForeignKey('users.id')),
-    Column('group_id', Integer, ForeignKey('groups.id'))
+    Column('group_id', Integer, ForeignKey('groups.id')),
+    Column('built_in', Boolean, default=False, nullable=False),
+    Column('created_at', DateTime(timezone=True), server_default=func.now())
 )
 
 # Models
@@ -29,6 +35,8 @@ class Permission(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     description = Column(String)
+    built_in = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     roles = relationship("Role", secondary=role_permission_association, back_populates="permissions")
 
 class Role(Base):
@@ -36,6 +44,8 @@ class Role(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     description = Column(String)
+    built_in = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     permissions = relationship("Permission", secondary=role_permission_association, back_populates="roles")
     groups = relationship("Group", secondary=group_role_association, back_populates="roles")
 
@@ -44,6 +54,8 @@ class Group(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     description = Column(String)
+    built_in = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     roles = relationship("Role", secondary=group_role_association, back_populates="groups")
     users = relationship("User", secondary=user_group_association, back_populates="groups")
 
@@ -53,8 +65,9 @@ class User(Base):
     login = Column(String, unique=True, index=True)
     password = Column(String)
     name = Column(String, index=True)
-    is_admin = Column(Boolean, default=False)
+    built_in = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=False)
     is_ldap = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     groups = relationship("Group", secondary=user_group_association, back_populates="users")
+    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")

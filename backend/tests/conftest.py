@@ -9,6 +9,7 @@ from app.db.database import get_db
 from app.core.config import settings
 from app.users.local.services import UserService
 from app.users.local.schemas import CreateUserSchema
+from app.users.models import Group
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -61,11 +62,29 @@ def client(run_migrations, db_session):
     app.dependency_overrides = {}
 
 @pytest.fixture
+def authenticated_client(client: TestClient):
+    """
+    Pytest fixture to provide an authenticated TestClient.
+    """
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"login": settings.DEFAULT_ADMIN_USER, "password": settings.DEFAULT_ADMIN_PASSWORD}
+    )
+    access_token = login_response.json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {access_token}"
+    return client
+
+@pytest.fixture
 def tmp_user(db_session):
     """
-    Create a temporary user for testing.
+    Create a temporary user for testing and assign it to the 'admins' group.
     """
     user_schema = CreateUserSchema(login="testuser", password="password", name="Test User")
     user_service = UserService(db_session)
     user = user_service.create_user(user_schema)
+    
+    admins_group = db_session.query(Group).filter(Group.name == "admins").first()
+    user.groups.append(admins_group)
+    db_session.commit()
+    
     return user
