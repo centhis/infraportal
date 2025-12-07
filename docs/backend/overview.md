@@ -117,7 +117,6 @@ graph TD
         Alembic
         Models
     end
-end
 ```
 
 ## Разделы Документации Бэкенда
