@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ const userSchema = z.object({
 const UserForm = ({ onSubmit, defaultValues }) => {
   const { t } = useTranslation('user_management');
   const isEditing = !!defaultValues;
+  const isBuiltInUser = isEditing && defaultValues?.type === 'built_in';
 
   const {
     control,
@@ -48,6 +49,7 @@ const UserForm = ({ onSubmit, defaultValues }) => {
               helperText={errors.login?.message}
               required
               autoFocus
+              disabled={isBuiltInUser}
             />
           )}
         />
@@ -61,6 +63,7 @@ const UserForm = ({ onSubmit, defaultValues }) => {
               error={!!errors.name}
               helperText={errors.name?.message}
               required
+              disabled={isBuiltInUser}
             />
           )}
         />
@@ -81,7 +84,7 @@ const UserForm = ({ onSubmit, defaultValues }) => {
           control={control}
           render={({ field }) => (
             <FormControlLabel
-              control={<Switch {...field} checked={field.value} />}
+              control={<Switch {...field} checked={field.value} disabled={isBuiltInUser} />}
               label={t('user_management.users.form.is_active')}
             />
           )}

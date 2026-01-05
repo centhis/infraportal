@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../../i18n/i18n";
 import { I18N_LNG_KEY } from "../../shared/constants/keys";
@@ -6,7 +6,7 @@ import { I18N_LNG_KEY } from "../../shared/constants/keys";
 
 const I18nContext = createContext({
     currentLanguage: "en",
-    changeLanguage: (lng) => {},
+    changeLanguage: (_lng) => {},
 });
 
 export const useI18n = () => useContext(I18nContext);

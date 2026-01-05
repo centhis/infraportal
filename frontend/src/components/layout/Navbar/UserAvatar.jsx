@@ -1,4 +1,3 @@
-import React from "react";
 import { Avatar, Tooltip } from "@mui/material";
 
 export default function UserAvatar({ user }) {

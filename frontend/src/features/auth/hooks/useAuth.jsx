@@ -38,7 +38,7 @@ export function useAuth() {
         try {
             await authApi.logout();
         } catch {
-
+            // Suppress errors during logout, as cleanup is handled in finally.
         } finally {
             localStorage.removeItem(TOKEN_KEY);
             setUser(null);

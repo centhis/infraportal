@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { Alert, AlertTitle, Stack } from '@mui/material';
 
 export default function IpAlert({ text, severity, title }) {

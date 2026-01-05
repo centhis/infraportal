@@ -8,6 +8,8 @@ export const usersMock = {
     },
     async create(user) {
         const newUser = { id: Date.now(), ...user };
+        users.push(newUser);
+        return newUser;
     },
     async update(id, updateUser) {
         users = users.map(u => (u.id === id ? { ...u, ...updateUser } : u));

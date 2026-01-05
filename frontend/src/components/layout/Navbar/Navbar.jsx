@@ -1,9 +1,8 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import {
   Box, Drawer, CssBaseline, AppBar, Toolbar,
   List, Typography, Divider, ListItem, ListItemButton,
-  ListItemIcon, ListItemText,
-  Icon
+  ListItemIcon, ListItemText
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
@@ -15,7 +14,6 @@ import { Link, useLocation, Outlet } from "react-router-dom";
 import UserMenu from './UserMenu';
 import { useAuthContext } from "../../../app/providers/AuthProvider";
 import { ROUTES } from "../../../shared/constants/routes";
-import { t } from "i18next";
 
 const drawerWidth = 240;
 
@@ -25,10 +23,6 @@ export default function Navbar() {
 
   const {t} = useTranslation('layout');
 
-  // const path = location.pathname
-
-  if (loading) return null;
-
   const navItems = useMemo(() => [
     { text: t('nav_items.home'), path: ROUTES.HOME, icon: <HomeIcon/> },   
     { text: t('nav_items.about'), path: ROUTES.ABOUT, icon: <InfoIcon/> },
@@ -37,7 +31,7 @@ export default function Navbar() {
     { text: t('nav_items.user_management'), path: ROUTES.USER_MANAGEMENT, icon: <GroupIcon/> },
   ], [t]);
 
-  const allItems = [...navItems, ...settingsItems];
+  const allItems = useMemo(() => [...navItems, ...settingsItems], [navItems, settingsItems]);
   const currentNav = useMemo(() => {
     return allItems.find(
       item => location.pathname === item.path || location.pathname.startsWith(item.path + "/")
@@ -45,6 +39,8 @@ export default function Navbar() {
   }, [location.pathname, allItems])
   
   const currentTitle = currentNav ? currentNav.text : t('nav_items.default');
+
+  if (loading) return null;
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -98,6 +94,7 @@ export default function Navbar() {
               <ListItemButton
                 component={Link}
                 to={item.path}
+                state={{ resetTab: true }}
                 selected={location.pathname === item.path}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>

@@ -1,9 +1,8 @@
-import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthContext } from "../providers/AuthProvider";
 import { ROUTES } from "../../shared/constants/routes";
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute() {
     const { user, loading } = useAuthContext();
 
     console.log("ProtectedRoute render", { user, loading });

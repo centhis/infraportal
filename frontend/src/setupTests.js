@@ -1,7 +1,8 @@
 // src/setupTests.js
 import '@testing-library/jest-dom';
+import { afterAll, afterEach, beforeAll } from 'vitest';
 import { server } from './mocks/server.js';
-import { resetUsers } from './mocks/handlers.js';
+import { resetUsers, resetRoles, resetPermissions } from './mocks/handlers.js';
 
 // Establish API mocking before all tests.
 beforeAll(() => server.listen());
@@ -11,6 +12,8 @@ beforeAll(() => server.listen());
 afterEach(() => {
     server.resetHandlers();
     resetUsers();
+    resetRoles();
+    resetPermissions();
     localStorage.clear();
 });
 

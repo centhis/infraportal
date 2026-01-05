@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogTitle, DialogContent, Box, Button, IconButton, CircularProgress } from "@mui/material";
 import { useTranslation } from 'react-i18next';
 import RefreshIcon from '@mui/icons-material/Refresh';

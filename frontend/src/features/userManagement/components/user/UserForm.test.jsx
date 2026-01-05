@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import UserForm from './UserForm';
@@ -60,6 +59,7 @@ describe('UserForm', () => {
             login: 'edituser',
             name: 'Edit User Name',
             is_active: false,
+            type: 'local', // Добавляем type для теста
         };
         render(<UserForm onSubmit={mockOnSubmit} defaultValues={defaultValues} />);
 
@@ -73,5 +73,26 @@ describe('UserForm', () => {
 
         // Check for the correct button text
         expect(screen.getByRole('button', { name: /user_management.users.form.save_changes/i })).toBeInTheDocument();
+    });
+
+    it('должен блокировать поля login, name и is_active для built_in пользователей', () => {
+        const mockOnSubmit = vi.fn();
+        const defaultValues = {
+            id: 1,
+            login: 'admin',
+            name: 'Admin User',
+            is_active: true,
+            type: 'built_in',
+        };
+        render(<UserForm onSubmit={mockOnSubmit} defaultValues={defaultValues} />);
+
+        // Эти поля должны быть заблокированы
+        expect(screen.getByLabelText(/user_management.users.form.login/i)).toBeDisabled();
+        expect(screen.getByLabelText(/user_management.users.form.name/i)).toBeDisabled();
+        expect(screen.getByLabelText(/user_management.users.form.is_active/i)).toBeDisabled();
+        
+        // Эти поля должны быть активны
+        expect(screen.getByLabelText(/user_management.users.form.password/i)).not.toBeDisabled();
+        expect(screen.getByRole('button', { name: /user_management.users.form.save_changes/i })).not.toBeDisabled();
     });
 });

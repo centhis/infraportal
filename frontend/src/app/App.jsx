@@ -10,7 +10,6 @@
 // import ProtectedRoute from '../components/auth/ProtectedRoutes'
 
 
-import React from "react";
 import { AuthProvider } from "./providers/AuthProvider";
 import { I18nProvider } from "./providers/I18nProvider";
 import AppRoutes from "./routes/AppRoutes"

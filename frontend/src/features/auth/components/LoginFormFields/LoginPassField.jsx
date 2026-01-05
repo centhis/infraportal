@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import {
   FormControl,
@@ -11,13 +11,7 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export default function LoginPassField({ label, name, control, ...rest }) {
-    const [showPassword, setShowPassword] = React.useState(false);
-
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-    const handleMouseDownPassword = (event) => {
-        event.preventDefault();
-    };
+    const [showPassword, setShowPassword] = useState(false);
 
     return (
         <Controller
