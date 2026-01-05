@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
+from app.users.permissions.schemas import PermissionResponseSchema
 
 class CreateRoleSchema(BaseModel):
     name: str = Field(..., min_length=3, max_length=50)
@@ -21,6 +22,7 @@ class RoleResponseSchema(BaseModel):
     description: str
     built_in: bool
     created_at: datetime
+    permissions: List[PermissionResponseSchema]
 
     model_config = ConfigDict(from_attributes=True)
 

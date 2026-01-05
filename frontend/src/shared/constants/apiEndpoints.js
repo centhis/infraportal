@@ -6,6 +6,9 @@ export const API_ENDPOINTS = {
         REFRESH: "/auth/refresh"
     },
     USER_MANAGEMENT: {
-        USERS: "/users"
+        USERS: "/users",
+        ROLES: "/roles",
+        GROUPS: "/groups",
+        PERMISSIONS: "/permissions",
     }
 }

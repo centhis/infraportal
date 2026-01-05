@@ -26,6 +26,18 @@ def test_update_built_in_user_login(authenticated_client: TestClient):
     assert response.status_code == 400
     assert response.json()["detail"] == "Cannot change login of a built-in user"
 
+def test_update_built_in_user_name(authenticated_client: TestClient):
+    admin_user = authenticated_client.get("/api/v1/users/by-login/admin").json()
+    response = authenticated_client.put(f"/api/v1/users/{admin_user['id']}", json={"name": "newname"})
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Cannot change name of a built-in user"
+
+def test_update_built_in_user_is_active(authenticated_client: TestClient):
+    admin_user = authenticated_client.get("/api/v1/users/by-login/admin").json()
+    response = authenticated_client.put(f"/api/v1/users/{admin_user['id']}", json={"is_active": False})
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Cannot change is_active of a built-in user"
+
 def test_update_built_in_group_name(authenticated_client: TestClient):
     admins_group = authenticated_client.get("/api/v1/groups?skip=0&limit=1").json()["groups"][0]
     response = authenticated_client.put(f"/api/v1/groups/{admins_group['id']}", json={"name": "newname"})

@@ -8,7 +8,8 @@ class CreateUserSchema(BaseModel):
     password: str = Field(..., min_length=3)
     name: str = Field(..., min_length=1)
     is_active: bool = True
-    is_ldap: bool = False
+    type: str = "local"
+    group_ids: Optional[list[int]] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -17,6 +18,15 @@ class UpdateUserSchema(BaseModel):
     password: str | None = None
     name: str | None = None
     is_active: bool | None = None
+    type: str | None = None
+    group_ids: Optional[list[int]] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class GroupBasicResponseSchema(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,8 +35,9 @@ class UserResponseSchema(BaseModel):
     login: str
     name: str
     is_active: bool = True
-    is_ldap: bool = False
+    type: str
     created_at: datetime
+    groups: List[GroupBasicResponseSchema] = []
 
     model_config = ConfigDict(from_attributes=True)
 

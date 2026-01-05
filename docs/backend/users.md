@@ -29,12 +29,12 @@
 ## 3. Модели Данных (`models.py`)
 
 Четыре основные модели ORM и их связи "многие-ко-многим" определены здесь:
--   `User`: Связан с `Group` через таблицу `user_group_association`.
+-   `User`: Связан с `Group` через таблицу `user_group_association`. Поле `type: str` используется для определения типа пользователя (`local`, `built_in`, `ldap` и т.д.).
 -   `Group`: Связан с `User` и `Role` через `user_group_association` и `group_role_association`.
 -   `Role`: Связан с `Group` и `Permission` через `group_role_association` и `role_permission_association`.
 -   `Permission`: Атомарная сущность, связанная с `Role`.
 
-Флаг `built_in: bool` используется во всех моделях и ассоциациях для защиты системных сущностей (например, пользователя `admin`) от случайного удаления или изменения.
+Флаг `built_in: bool` используется в моделях `Group`, `Role`, `Permission` и ассоциациях для защиты системных сущностей от случайного удаления или изменения.
 
 ## 4. Сервисы (Бизнес-логика)
 
@@ -43,7 +43,7 @@
 ### `UserService` (`local/services.py`)
 -   Реализует стандартные CRUD-операции (Create, Read, Update, Delete) для локальных пользователей.
 -   При создании и обновлении пользователя хеширует пароль с помощью `argon2`.
--   Защищает встроенных (`built_in`) пользователей от удаления или смены логина.
+-   Защищает встроенных пользователей (`type='built_in'`) от удаления или смены `login`, `name` и `is_active`.
 
 ### `GroupService` (`groups/services.py`)
 -   Реализует CRUD для групп.

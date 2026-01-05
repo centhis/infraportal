@@ -17,7 +17,7 @@ def init_data(db: Session):
             login=settings.DEFAULT_ADMIN_USER,
             password=hash_password(settings.DEFAULT_ADMIN_PASSWORD),
             name=settings.DEFAULT_ADMIN_USER,
-            built_in=True,
+            type='built_in',
             is_active=True
         )
         db.add(new_admin)
@@ -25,9 +25,9 @@ def init_data(db: Session):
         admin_user = new_admin
     else:
         logger.info("Default admin user found")
-        if not admin_user.built_in:
-            logger.info("Updating default admin user built_in flag to True")
-            admin_user.built_in = True
+        if admin_user.type != 'built_in':
+            logger.info("Updating default admin user type to 'built_in'")
+            admin_user.type = 'built_in'
     
     # Create or get 'admins' group
     admins_group = db.query(Group).filter(Group.name == "admins").first()
@@ -56,7 +56,7 @@ def init_data(db: Session):
             admin_role.built_in = True
 
     db.commit() # Commit entities before creating associations
-
+    
     # Create permissions
     permissions_to_create = [
         {'name': 'users:view', 'description': 'View all users, groups, and roles'},
@@ -88,7 +88,6 @@ def init_data(db: Session):
         )
         existing_association = db.execute(stmt).first()
         if not existing_association:
-            logger.info(f"Assigning permission '{permission.name}' to 'admin' role")
             db.execute(
                 insert(role_permission_association).values(
                     role_id=admin_role.id,
@@ -97,9 +96,7 @@ def init_data(db: Session):
                 )
             )
         else:
-            logger.info(f"Permission '{permission.name}' already assigned to 'admin' role")
             if not existing_association.built_in:
-                logger.info(f"Updating built_in flag for role_permission_association")
                 db.execute(
                     role_permission_association.update()
                     .where(role_permission_association.c.role_id == admin_role.id)
@@ -114,7 +111,6 @@ def init_data(db: Session):
     )
     existing_association = db.execute(stmt).first()
     if not existing_association:
-        logger.info("Creating group_role_association for 'admins' group and 'admin' role")
         db.execute(
             insert(group_role_association).values(
                 group_id=admins_group.id,
@@ -123,9 +119,7 @@ def init_data(db: Session):
             )
         )
     else:
-        logger.info("group_role_association already exists for 'admins' group and 'admin' role")
         if not existing_association.built_in:
-            logger.info("Updating built_in flag for group_role_association")
             db.execute(
                 group_role_association.update()
                 .where(group_role_association.c.group_id == admins_group.id)
@@ -140,7 +134,6 @@ def init_data(db: Session):
     )
     existing_association = db.execute(stmt).first()
     if not existing_association:
-        logger.info("Creating user_group_association for default admin user and 'admins' group")
         db.execute(
             insert(user_group_association).values(
                 user_id=admin_user.id,
@@ -149,9 +142,7 @@ def init_data(db: Session):
             )
         )
     else:
-        logger.info("user_group_association already exists for default admin user and 'admins' group")
         if not existing_association.built_in:
-            logger.info("Updating built_in flag for user_group_association")
             db.execute(
                 user_group_association.update()
                 .where(user_group_association.c.user_id == admin_user.id)

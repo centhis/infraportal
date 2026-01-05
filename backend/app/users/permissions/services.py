@@ -24,3 +24,9 @@ class PermissionService:
         ).distinct().all()
 
         return [p[0] for p in permissions]
+
+    def list_permissions(self) -> List[Permission]:
+        """
+        Get a list of all permissions.
+        """
+        return self.db.query(Permission).all()

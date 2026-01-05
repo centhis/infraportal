@@ -12,8 +12,15 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: 'src/setupTests.js',
-    moduleNameMapper: {
-      '\\.css$': '<rootDir>/src/mocks/fileMock.js',
-    }
+    server: {
+      deps: {
+        inline: ['@mui/x-data-grid']
+      }
+    },
+    css: {
+      modules: {
+        classNameStrategy: 'non-scoped',
+      },
+    },
   }
 })

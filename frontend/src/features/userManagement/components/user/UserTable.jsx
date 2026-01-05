@@ -1,11 +1,30 @@
 import React, { useMemo } from "react";
-import { DataGrid, GridActionsCellItem, gridClasses } from "@mui/x-data-grid";
+import { DataGrid, gridClasses } from "@mui/x-data-grid";
 import { Box, IconButton, Chip } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from 'react-i18next';
 
 import usePersistentState from "../../hooks/usePersistentState";
+
+const AuthTypeChip = ({ type, t }) => {
+    const typeMap = {
+        built_in: { label: t('user_management.users.table.auth_type.built_in'), color: "info" },
+        local: { label: t('user_management.users.table.auth_type.local'), color: "default" },
+        ldap: { label: t('user_management.users.table.auth_type.ldap'), color: "warning" },
+        openid: { label: t('user_management.users.table.auth_type.openid'), color: "secondary" },
+    };
+
+    const { label, color } = typeMap[type] || { label: type, color: "default" };
+
+    return (
+        <Chip
+            label={label}
+            color={color}
+            variant="outlined"
+            size="small"
+        />
+    );
+};
 
 const UserTable = React.memo(({ 
     users, 
@@ -23,7 +42,17 @@ const UserTable = React.memo(({
         { field: "id", headerName: t('user_management.users.table.id'), width: 90 },
         { field: "login", headerName: t('user_management.users.table.login'), flex: 1 },
         { field: "name", headerName: t('user_management.users.table.name'), flex: 1 },
-        { field: "auth_type", headerName: t('user_management.users.table.auth'), flex: 1 },
+        { 
+            field: "type", 
+            headerName: t('user_management.users.table.type'), 
+            flex: 1,
+            renderCell: (params) => (
+                <AuthTypeChip 
+                    type={params.value}
+                    t={t} 
+                />
+            )
+        },
         { field: "created_at", headerName: t('user_management.users.table.created_at'), flex: 1 },
         { 
             field: "is_active", 
@@ -48,16 +77,16 @@ const UserTable = React.memo(({
             disableColumnMenu: true,
             renderCell: (params) => (
                 <Box>
-                    <IconButton aria-label="edit" color="primary" onClick={() => onEdit(params.row)}>
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton aria-label="delete" color="error" onClick={() => onDelete(params.row.id)}>
+                    <IconButton aria-label="delete" color="error" onClick={(event) => {
+                        event.stopPropagation();
+                        onDelete(params.row.id);
+                    }} disabled={params.row.type === 'built_in'}>
                         <DeleteIcon />
                     </IconButton>
                 </Box>
             ),
         },
-    ], [t, onEdit, onDelete]);
+    ], [t, onDelete]);
 
     return (
         <DataGrid 
@@ -67,6 +96,7 @@ const UserTable = React.memo(({
             rowCount={rowCount}
             paginationModel={paginationModel}
             onPaginationModelChange={onPaginationModelChange}
+            onRowClick={(params) => onEdit(params.row)}
             pagination
             paginationMode="server"
             showToolbar

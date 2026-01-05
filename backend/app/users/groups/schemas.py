@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
+from app.users.local.schemas import UserResponseSchema
+from app.users.roles.schemas import RoleResponseSchema
 
 class CreateGroupSchema(BaseModel):
     name: str = Field(..., min_length=3, max_length=50)
@@ -21,6 +23,8 @@ class GroupResponseSchema(BaseModel):
     description: str
     built_in: bool
     created_at: datetime
+    roles: List[RoleResponseSchema] = []
+    users: List[UserResponseSchema] = []
 
     model_config = ConfigDict(from_attributes=True)
 

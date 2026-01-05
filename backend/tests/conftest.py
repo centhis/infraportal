@@ -9,7 +9,7 @@ from app.db.database import get_db
 from app.core.config import settings
 from app.users.local.services import UserService
 from app.users.local.schemas import CreateUserSchema
-from app.users.models import Group
+from app.users.models import Group, User
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -18,7 +18,8 @@ def run_migrations():
     Apply alembic migrations to the test database before the test session starts.
     """
     try:
-        subprocess.run(["alembic", "upgrade", "head"], check=True, capture_output=True, text=True)
+        # Note: We are in the 'backend' directory when running pytest
+        subprocess.run(["./.venv/bin/alembic", "upgrade", "head"], check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         print("Alembic migration failed:")
         print(e.stdout)
@@ -26,7 +27,7 @@ def run_migrations():
         raise
     yield
     # Optional: downgrade to base after tests
-    # subprocess.run(["alembic", "downgrade", "base"], check=True)
+    # subprocess.run(["./.venv/bin/alembic", "downgrade", "base"], check=True)
 
 @pytest.fixture(scope="session")
 def db_engine():
@@ -81,10 +82,17 @@ def tmp_user(db_session):
     """
     user_schema = CreateUserSchema(login="testuser", password="password", name="Test User")
     user_service = UserService(db_session)
-    user = user_service.create_user(user_schema)
+    
+    # create_user returns a Pydantic schema, not the SQLAlchemy model
+    created_user_schema = user_service.create_user(user_schema)
+    
+    # Fetch the SQLAlchemy model instance from the database
+    user = db_session.query(User).filter(User.id == created_user_schema.id).first()
     
     admins_group = db_session.query(Group).filter(Group.name == "admins").first()
-    user.groups.append(admins_group)
-    db_session.commit()
+    if admins_group:
+        user.groups.append(admins_group)
+        db_session.commit()
+        db_session.refresh(user)
     
     return user
