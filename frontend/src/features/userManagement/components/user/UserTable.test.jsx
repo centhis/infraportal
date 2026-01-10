@@ -1,14 +1,7 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '../../../../mocks/test-utils';
 import { vi } from 'vitest';
 
 import UserTable from './UserTable';
-
-// Мокаем i18n, так как прямой импорт вызывал проблемы
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: (key) => key, // Просто возвращаем ключ, как обычно делают моки
-    }),
-}));
 
 const mockUsers = [
     { id: 1, login: 'admin', name: 'Admin User', type: 'built_in', created_at: '2025-01-01', is_active: true },
@@ -32,7 +25,7 @@ describe('UserTable', () => {
     }));
 
     describe('Поведение', () => {
-        it('должен вызывать onEdit при клике на строку', async () => {
+        it('should call onEdit when clicking on a row', async () => {
             render(
                 <UserTable 
                     users={mockUsers}
@@ -41,6 +34,7 @@ describe('UserTable', () => {
                     rowCount={mockUsers.length}
                     paginationModel={{ page: 0, pageSize: 5 }}
                     onPaginationModelChange={() => {}}
+                    canDelete={true} // Pass canDelete as true
                 />
             );
     
@@ -52,7 +46,7 @@ describe('UserTable', () => {
             expect(mockOnDelete).not.toHaveBeenCalled();
         });
     
-        it('должен вызывать onDelete при клике на иконку удаления', async () => {
+        it('should call onDelete when clicking the delete icon', async () => {
             render(
                 <UserTable 
                     users={mockUsers}
@@ -61,6 +55,7 @@ describe('UserTable', () => {
                     rowCount={mockUsers.length}
                     paginationModel={{ page: 0, pageSize: 5 }}
                     onPaginationModelChange={() => {}}
+                    canDelete={true} // Pass canDelete as true
                 />
             );
     
@@ -73,7 +68,7 @@ describe('UserTable', () => {
             expect(mockOnEdit).not.toHaveBeenCalled();
         });
 
-        it('кнопка удаления должна быть заблокирована для built_in пользователя', async () => {
+        it('delete button should be disabled for a built_in user', async () => {
             render(
                 <UserTable
                     users={mockUsers}
@@ -82,6 +77,7 @@ describe('UserTable', () => {
                     rowCount={mockUsers.length}
                     paginationModel={{ page: 0, pageSize: 5 }}
                     onPaginationModelChange={() => {}}
+                    canDelete={true} // Pass canDelete as true, still expect built-in to be disabled
                 />
             );
 
@@ -91,7 +87,7 @@ describe('UserTable', () => {
         });
     });
 
-    describe('Отображение', () => {
+    describe('Display', () => {
         beforeEach(() => {
             render(
                 <UserTable 
@@ -101,25 +97,26 @@ describe('UserTable', () => {
                     rowCount={mockUsers.length}
                     paginationModel={{ page: 0, pageSize: 5 }}
                     onPaginationModelChange={() => {}}
+                    canDelete={true}
                 />
             );
         });
 
-        it('должен отображать "Встроенная" для built_in пользователя', async () => {
+        it('should display "Built-in" for built_in user', async () => {
             const adminRow = (await screen.findByText('admin')).closest('.MuiDataGrid-row');
-            const chip = within(adminRow).getByText('user_management.users.table.auth_type.built_in');
+            const chip = within(adminRow).getByText('Built-in');
             expect(chip).toBeInTheDocument();
         });
 
-        it('должен отображать "Локальная" для local пользователя', async () => {
+        it('should display "Local" for local user', async () => {
             const viewerRow = (await screen.findByText('viewer')).closest('.MuiDataGrid-row');
-            const chip = within(viewerRow).getByText('user_management.users.table.auth_type.local');
+            const chip = within(viewerRow).getByText('Local');
             expect(chip).toBeInTheDocument();
         });
 
-        it('должен отображать "LDAP" для ldap пользователя', async () => {
+        it('should display "LDAP" for ldap user', async () => {
             const ldapRow = (await screen.findByText('ldap_user')).closest('.MuiDataGrid-row');
-            const chip = within(ldapRow).getByText('user_management.users.table.auth_type.ldap');
+            const chip = within(ldapRow).getByText('LDAP');
             expect(chip).toBeInTheDocument();
         });
     });

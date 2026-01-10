@@ -1,14 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '../../../mocks/test-utils';
 import { vi } from 'vitest';
 import RoleTabPage from './RoleTabPage';
 import useRoles from '../hooks/useRoles';
-
-// Mock the i18n hook
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: (key) => key,
-    }),
-}));
 
 // Mock the custom hook useRoles
 vi.mock('../hooks/useRoles');

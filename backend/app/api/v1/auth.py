@@ -65,8 +65,14 @@ def logout(request: Request, response: Response, service: AuthService = Depends(
     return {"message": "Logged out successfully"}
 
 @router.get("/me", response_model=CurrenUserSchema)
-def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+def get_me(
+    current_user: User = Depends(get_current_user),
+    permission_service: PermissionService = Depends()
+):
+    user_permissions = permission_service.get_user_permissions(current_user.id)
+    user_dict = current_user.__dict__
+    user_dict['permissions'] = user_permissions
+    return CurrenUserSchema.model_validate(user_dict)
 
 @router.get("/sessions", response_model=List[SessionResponseSchema])
 def list_sessions(

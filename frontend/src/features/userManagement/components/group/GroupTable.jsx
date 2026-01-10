@@ -13,6 +13,7 @@ const GroupTable = React.memo(({
     rowCount,
     paginationModel,
     onPaginationModelChange,
+    canDelete,
 }) => {
     const { t } = useTranslation('user_management');
 
@@ -67,13 +68,13 @@ const GroupTable = React.memo(({
                     <IconButton aria-label="delete" color="error" onClick={(event) => {
                         event.stopPropagation();
                         onDelete(params.row.id);
-                    }} disabled={params.row.built_in}>
+                    }} disabled={!canDelete || params.row.built_in}>
                         <DeleteIcon />
                     </IconButton>
                 </Box>
             ),
         },
-    ], [t, onDelete]);
+    ], [t, onDelete, canDelete]);
 
     return (
         <DataGrid

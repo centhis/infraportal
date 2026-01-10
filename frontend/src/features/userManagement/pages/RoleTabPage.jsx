@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
 import useRoles from "../hooks/useRoles";
-import usePermissions from "../hooks/usePermissions";
+import { usePermissions as useUserPermissions } from "../../../app/providers/PermissionsProvider";
+import useAllPermissions from "../hooks/usePermissions";
 import RoleTable from "../components/role/RoleTable";
 import RoleForm from "../components/role/RoleForm";
 import ConfirmDialog from "../../../components/layout/ConfirmDialog/ConfirmDialog";
@@ -12,7 +13,8 @@ import ConfirmDialog from "../../../components/layout/ConfirmDialog/ConfirmDialo
 const RoleTabPage = () => {
     const { t } = useTranslation('user_management');
     const rolesState = useRoles();
-    const { permissions: allPermissions, loading: permissionsLoading } = usePermissions();
+    const { can, loading: userPermissionsLoading } = useUserPermissions();
+    const { permissions: allPermissions, loading: allPermissionsLoading } = useAllPermissions();
     
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingRole, setEditingRole] = useState(null);
@@ -64,7 +66,7 @@ const RoleTabPage = () => {
         setRoleToDelete(null);
     };
 
-    if (rolesState.loading || permissionsLoading) {
+    if (rolesState.loading || userPermissionsLoading || allPermissionsLoading) {
         return (
             <Box p={4} display="flex" justifyContent="center">
                 <CircularProgress />
@@ -84,7 +86,7 @@ const RoleTabPage = () => {
                         color='primary'
                         onClick={handleAddRole}
                         ref={addRoleButtonRef}
-                        disabled={permissionsLoading}
+                        disabled={!can('users:create')}
                     >
                         {t('user_management.roles.actions.add_role_button')}
                     </Button>
@@ -92,7 +94,8 @@ const RoleTabPage = () => {
                 <RoleTable 
                     roles={rolesState.roles}
                     onEdit={handleEditRole}
-                    onDelete={handleDeleteRequest}
+                    onDelete={can('users:delete') ? handleDeleteRequest : undefined}
+                    canDelete={can('users:delete')}
                     rowCount={rolesState.rowCount}
                     paginationModel={rolesState.paginationModel}
                     onPaginationModelChange={rolesState.setPaginationModel}
@@ -105,6 +108,7 @@ const RoleTabPage = () => {
                         onSubmit={handleFormSubmit}
                         defaultValues={editingRole}
                         allPermissions={allPermissions}
+                        isViewOnly={editingRole ? !can('users:update') : false}
                     />
                 </DialogContent>
             </Dialog>

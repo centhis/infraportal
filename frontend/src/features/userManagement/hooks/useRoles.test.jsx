@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import useRoles from './useRoles';
 import { rolesService } from '../services/rolesService';
 import usePersistentState from './usePersistentState';
+import { AllTheProviders } from '../../../mocks/test-utils'; // Import AllTheProviders
 
 // Mock dependencies
 vi.mock('../services/rolesService');
@@ -20,15 +21,15 @@ describe('useRoles', () => {
         vi.resetAllMocks();
         setPaginationModel = vi.fn();
         // Mock usePersistentState to behave like a simple useState
-        usePersistentState.mockReturnValue([
+        vi.mocked(usePersistentState).mockReturnValue([
             { page: 0, pageSize: 10 },
             setPaginationModel,
         ]);
-        rolesService.list.mockResolvedValue(mockInitialData);
+        vi.mocked(rolesService).list.mockResolvedValue(mockInitialData);
     });
 
     it('should fetch paginated roles on initial render', async () => {
-        const { result } = renderHook(() => useRoles());
+        const { result } = renderHook(() => useRoles(), { wrapper: AllTheProviders });
 
         expect(result.current.loading).toBe(true);
 
@@ -42,19 +43,21 @@ describe('useRoles', () => {
     });
 
     it('should fetch all roles when paginated is false', async () => {
-        renderHook(() => useRoles({ paginated: false }));
-
+        const { result } = renderHook(() => useRoles({ paginated: false }), { wrapper: AllTheProviders });
+        
         await waitFor(() => {
-            expect(rolesService.list).toHaveBeenCalledWith({ limit: 1000, skip: 0 });
+            expect(result.current.loading).toBe(false);
         });
+
+        expect(rolesService.list).toHaveBeenCalledWith({ limit: 1000, skip: 0 });
     });
 
     it('should optimistically add a role on createRole', async () => {
-        const { result } = renderHook(() => useRoles());
+        const { result } = renderHook(() => useRoles(), { wrapper: AllTheProviders });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         const newRole = { id: 3, name: 'viewer' };
-        rolesService.create.mockResolvedValue(newRole);
+        vi.mocked(rolesService).create.mockResolvedValue(newRole);
 
         await act(async () => {
             await result.current.createRole({ name: 'viewer' });
@@ -67,11 +70,11 @@ describe('useRoles', () => {
     });
 
     it('should optimistically update a role on updateRole', async () => {
-        const { result } = renderHook(() => useRoles());
+        const { result } = renderHook(() => useRoles(), { wrapper: AllTheProviders });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         const updatedRole = { id: 1, name: 'super-admin' };
-        rolesService.update.mockResolvedValue(updatedRole);
+        vi.mocked(rolesService).update.mockResolvedValue(updatedRole);
 
         await act(async () => {
             await result.current.updateRole(1, { name: 'super-admin' });
@@ -82,10 +85,10 @@ describe('useRoles', () => {
     });
 
     it('should optimistically remove a role on deleteRole', async () => {
-        const { result } = renderHook(() => useRoles());
+        const { result } = renderHook(() => useRoles(), { wrapper: AllTheProviders });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
-        rolesService.remove.mockResolvedValue({});
+        vi.mocked(rolesService).remove.mockResolvedValue({});
 
         await act(async () => {
             await result.current.deleteRole(1);

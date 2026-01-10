@@ -19,6 +19,7 @@ class CurrenUserSchema(BaseModel):
     id: int
     login: str
     name: str
+    permissions: List[str]
 
     model_config = ConfigDict(from_attributes=True)
 

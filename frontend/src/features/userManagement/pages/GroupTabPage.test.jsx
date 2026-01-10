@@ -1,15 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '../../../mocks/test-utils';
 import { vi } from 'vitest';
 import GroupTabPage from './GroupTabPage';
 import useGroups from '../hooks/useGroups';
 import useRoles from '../hooks/useRoles';
+import useUsers from '../hooks/useUsers'; // Import useUsers
 
 // Mock dependencies
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key) => key }),
-}));
 vi.mock('../hooks/useGroups');
 vi.mock('../hooks/useRoles');
+vi.mock('../hooks/useUsers'); // Mock useUsers
 
 describe('GroupTabPage', () => {
     beforeEach(() => {
@@ -24,6 +23,10 @@ describe('GroupTabPage', () => {
         useRoles.mockReturnValue({
             loading: false,
             roles: [],
+        });
+        useUsers.mockReturnValue({ // Mock useUsers
+            loading: false,
+            users: [],
         });
     });
 

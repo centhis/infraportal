@@ -5,6 +5,8 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 
 import useGroups from "../hooks/useGroups";
 import useRoles from "../hooks/useRoles";
+import useUsers from "../../userManagement/hooks/useUsers";
+import { usePermissions } from "../../../app/providers/PermissionsProvider";
 import GroupTable from "../components/group/GroupTable";
 import GroupForm from "../components/group/GroupForm";
 import ConfirmDialog from "../../../components/layout/ConfirmDialog/ConfirmDialog";
@@ -13,6 +15,8 @@ const GroupTabPage = () => {
     const { t } = useTranslation('user_management');
     const groupsState = useGroups();
     const { roles: allRoles, loading: rolesLoading } = useRoles({ paginated: false });
+    const { users: allUsers, loading: usersLoading } = useUsers({ paginated: false });
+    const { can, loading: userPermissionsLoading } = usePermissions();
     
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingGroup, setEditingGroup] = useState(null);
@@ -64,7 +68,7 @@ const GroupTabPage = () => {
         setGroupToDelete(null);
     };
 
-    if (groupsState.loading || rolesLoading) {
+    if (groupsState.loading || rolesLoading || usersLoading || userPermissionsLoading) {
         return (
             <Box p={4} display="flex" justifyContent="center">
                 <CircularProgress />
@@ -84,7 +88,7 @@ const GroupTabPage = () => {
                         color='primary'
                         onClick={handleAddGroup}
                         ref={addGroupButtonRef}
-                        disabled={rolesLoading}
+                        disabled={!can('users:create')}
                     >
                         {t('user_management.groups.actions.add_group_button')}
                     </Button>
@@ -92,7 +96,8 @@ const GroupTabPage = () => {
                 <GroupTable 
                     groups={groupsState.groups}
                     onEdit={handleEditGroup}
-                    onDelete={handleDeleteRequest}
+                    onDelete={can('users:delete') ? handleDeleteRequest : undefined}
+                    canDelete={can('users:delete')}
                     rowCount={groupsState.rowCount}
                     paginationModel={groupsState.paginationModel}
                     onPaginationModelChange={groupsState.setPaginationModel}
@@ -105,6 +110,8 @@ const GroupTabPage = () => {
                         onSubmit={handleFormSubmit}
                         defaultValues={editingGroup}
                         allRoles={allRoles}
+                        allUsers={allUsers}
+                        isViewOnly={editingGroup ? !can('users:update') : false}
                     />
                 </DialogContent>
             </Dialog>

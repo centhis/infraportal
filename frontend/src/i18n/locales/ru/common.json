@@ -5,5 +5,9 @@
     "confirm_dialog": {
         "cancel": "Отмена",
         "confirm": "Подтвердить"
+    },
+    "transfer_list": {
+        "available": "Доступные",
+        "assigned": "Назначенные"
     }
 }

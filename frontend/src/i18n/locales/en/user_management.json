@@ -23,7 +23,8 @@
                     "local": "Local",
                     "ldap": "LDAP",
                     "openid": "OpenID"
-                }
+                },
+                "permissions_report_button": "Permissions Report"
             },
             "actions": {
                 "add_user_button": "Add user"
@@ -38,10 +39,23 @@
                 "password": "Password",
                 "password_edit_helper": "Leave blank to keep the current password",
                 "is_active": "Active",
+                "groups_title": "Groups",
                 "save_changes": "Save Changes",
                 "create_user": "Create User",
                 "edit_title": "Edit User",
                 "create_title": "Create New User"
+            },
+            "permissions_report": {
+                "title": "Permissions Report for User: {{username}}",
+                "all_permissions_section_title": "All Available Permissions",
+                "breakdown_section_title": "Breakdown by Groups and Roles",
+                "group_accordion_title": "Group: {{groupName}}",
+                "role_accordion_title": "Role: {{roleName}}",
+                "no_permissions": "No permissions",
+                "no_groups_found": "User is not a member of any group that provides permissions.",
+                "no_roles_found": "This group does not contain any roles providing permissions.",
+                "no_data": "Failed to load report data.",
+                "direct_permissions_in_group": "Group permissions (via roles):"
             }
         },
         "roles": {
@@ -103,6 +117,7 @@
                 "name": "Group Name",
                 "description": "Description",
                 "roles_title": "Roles",
+                "users_title": "Users",
                 "save_changes": "Save Changes",
                 "create_group": "Create Group",
                 "edit_title": "Edit Group",

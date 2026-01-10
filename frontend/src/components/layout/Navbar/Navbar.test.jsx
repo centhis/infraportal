@@ -1,22 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '../../../mocks/test-utils';
 import { vi } from 'vitest';
-import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
-import { useAuthContext } from '../../../app/providers/AuthProvider';
 import { ROUTES } from '../../../shared/constants/routes';
 
 // Mock dependencies
-vi.mock('react-router-dom', async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-        ...actual,
-        useLocation: vi.fn(),
-        Link: vi.fn(({ to, children }) => <a href={to}>{children}</a>), // Mock Link to be an anchor tag
-    };
-});
-vi.mock('../../../app/providers/AuthProvider', () => ({
-    useAuthContext: vi.fn(),
-}));
+vi.mock('../../../features/auth/hooks/useAuth'); // Mock the useAuth hook
 vi.mock('./UserMenu', () => ({
     __esModule: true,
     default: vi.fn(({ user, onLogout }) => (
@@ -26,51 +14,50 @@ vi.mock('./UserMenu', () => ({
         </div>
     )),
 }));
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key) => key }),
-}));
-
-const renderNavbar = (authContextValue, initialPath = ROUTES.HOME) => {
-    useAuthContext.mockReturnValue(authContextValue);
-    useLocation.mockReturnValue({ pathname: initialPath });
-
-    return render(
-        <MemoryRouter initialEntries={[initialPath]}>
-            <Routes>
-                <Route path="*" element={<Navbar />} />
-            </Routes>
-        </MemoryRouter>
-    );
-};
 
 describe('Navbar', () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it('should render current title based on route', async () => {
-        renderNavbar({ user: null, logout: vi.fn(), loading: false }, ROUTES.HOME);
-        // Query the AppBar title specifically
-        expect(screen.getByRole('heading', { name: 'nav_items.home' })).toBeInTheDocument();
-
-        useLocation.mockReturnValue({ pathname: ROUTES.USER_MANAGEMENT });
-        renderNavbar({ user: null, logout: vi.fn(), loading: false }, ROUTES.USER_MANAGEMENT);
-        expect(screen.getByRole('heading', { name: 'nav_items.user_management' })).toBeInTheDocument();
+    it('should render correct title when user has permission', async () => {
+        render(
+            <Navbar />,
+            {
+                authHookValue: { user: { name: 'test' }, permissions: ['users:view'], logout: vi.fn(), loading: false },
+                initialEntries: [ROUTES.USER_MANAGEMENT]
+            }
+        );
+        expect(screen.getByRole('heading', { name: 'Users' })).toBeInTheDocument();
     });
 
-    it('should render navigation items', () => {
-        renderNavbar({ user: null, logout: vi.fn(), loading: false });
+    it('should render navigation items if user has permission', () => {
+        render(
+            <Navbar />,
+            { authHookValue: { user: { name: 'test' }, permissions: ['users:view'], logout: vi.fn(), loading: false } }
+        );
+        expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Users' })).toBeInTheDocument();
+    });
 
-        // Query navigation links specifically
-        expect(screen.getByRole('link', { name: 'nav_items.home' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'nav_items.about' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'nav_items.user_management' })).toBeInTheDocument();
+    it('should not render user management link if user lacks permission', () => {
+        render(
+            <Navbar />,
+            { authHookValue: { user: { name: 'test' }, permissions: [], logout: vi.fn(), loading: false } } // User lacks 'users:view'
+        );
+        expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument();
+        expect(screen.queryByRole('link', { name: 'Users' })).not.toBeInTheDocument();
     });
 
     it('should pass user and logout to UserMenu when authenticated', () => {
         const mockUser = { name: 'Test User' };
         const mockLogout = vi.fn();
-        renderNavbar({ user: mockUser, logout: mockLogout, loading: false });
+        render(
+            <Navbar />,
+            { authHookValue: { user: mockUser, permissions: ['users:view'], logout: mockLogout, loading: false } } // User has permissions
+        );
 
         expect(screen.getByTestId('mock-user-menu')).toBeInTheDocument();
         expect(screen.getByTestId('user-name')).toHaveTextContent('Test User');
@@ -80,15 +67,31 @@ describe('Navbar', () => {
         expect(mockLogout).toHaveBeenCalledTimes(1);
     });
 
-    it('should not render user-related content or logout button when not authenticated', () => {
-        renderNavbar({ user: null, logout: vi.fn(), loading: false });
-
+    it('should not render UserMenu content when not authenticated', () => {
+        render(
+            <Navbar />,
+            { authHookValue: { user: null, permissions: [], logout: vi.fn(), loading: false } }
+        );
+        // Assert that specific content within the mock-user-menu is not present
         expect(screen.queryByTestId('user-name')).not.toBeInTheDocument();
         expect(screen.queryByTestId('logout-button')).not.toBeInTheDocument();
     });
 
     it('should render nothing when loading', () => {
-        const { container } = renderNavbar({ user: null, logout: vi.fn(), loading: true });
-        expect(container).toBeEmptyDOMElement();
+        render(
+            <Navbar />,
+            { authHookValue: { user: null, permissions: [], logout: vi.fn(), loading: true } }
+        );
+        expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('mock-user-menu')).not.toBeInTheDocument();
+        expect(screen.queryByRole('heading', { name: 'Users' })).not.toBeInTheDocument();
+    });
+
+    it('should render user management link if user has users:view permission', () => {
+        render(
+            <Navbar />,
+            { authHookValue: { user: { name: 'test' }, permissions: ['users:view'], logout: vi.fn(), loading: false } }
+        );
+        expect(screen.getByRole('link', { name: 'Users' })).toBeInTheDocument();
     });
 });

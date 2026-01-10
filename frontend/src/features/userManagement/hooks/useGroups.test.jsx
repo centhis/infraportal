@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import useGroups from './useGroups';
 import { groupsService } from '../services/groupsService';
 import usePersistentState from './usePersistentState';
+import { AllTheProviders } from '../../../mocks/test-utils'; // Import AllTheProviders
 
 // Mock dependencies
 vi.mock('../services/groupsService');
@@ -20,15 +21,15 @@ describe('useGroups', () => {
         vi.resetAllMocks();
         setPaginationModel = vi.fn();
         // Mock usePersistentState to behave like a simple useState
-        usePersistentState.mockReturnValue([
+        vi.mocked(usePersistentState).mockReturnValue([
             { page: 0, pageSize: 10 },
             setPaginationModel,
         ]);
-        groupsService.list.mockResolvedValue(mockInitialData);
+        vi.mocked(groupsService).list.mockResolvedValue(mockInitialData);
     });
 
     it('should fetch paginated groups on initial render', async () => {
-        const { result } = renderHook(() => useGroups());
+        const { result } = renderHook(() => useGroups(), { wrapper: AllTheProviders });
 
         expect(result.current.loading).toBe(true);
 
@@ -42,19 +43,21 @@ describe('useGroups', () => {
     });
 
     it('should fetch all groups when paginated is false', async () => {
-        renderHook(() => useGroups({ paginated: false }));
-
+        const { result } = renderHook(() => useGroups({ paginated: false }), { wrapper: AllTheProviders });
+        
         await waitFor(() => {
-            expect(groupsService.list).toHaveBeenCalledWith({ limit: 1000, skip: 0 });
+            expect(result.current.loading).toBe(false);
         });
+
+        expect(groupsService.list).toHaveBeenCalledWith({ limit: 1000, skip: 0 });
     });
 
     it('should optimistically add a group on createGroup', async () => {
-        const { result } = renderHook(() => useGroups());
+        const { result } = renderHook(() => useGroups(), { wrapper: AllTheProviders });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         const newGroup = { id: 3, name: 'Viewers' };
-        groupsService.create.mockResolvedValue(newGroup);
+        vi.mocked(groupsService).create.mockResolvedValue(newGroup);
 
         await act(async () => {
             await result.current.createGroup({ name: 'Viewers' });
@@ -67,11 +70,11 @@ describe('useGroups', () => {
     });
 
     it('should optimistically update a group on updateGroup', async () => {
-        const { result } = renderHook(() => useGroups());
+        const { result } = renderHook(() => useGroups(), { wrapper: AllTheProviders });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         const updatedGroup = { id: 1, name: 'Super Admins' };
-        groupsService.update.mockResolvedValue(updatedGroup);
+        vi.mocked(groupsService).update.mockResolvedValue(updatedGroup);
 
         await act(async () => {
             await result.current.updateGroup(1, { name: 'Super Admins' });
@@ -82,10 +85,10 @@ describe('useGroups', () => {
     });
 
     it('should optimistically remove a group on deleteGroup', async () => {
-        const { result } = renderHook(() => useGroups());
+        const { result } = renderHook(() => useGroups(), { wrapper: AllTheProviders });
         await waitFor(() => expect(result.current.loading).toBe(false));
 
-        groupsService.remove.mockResolvedValue({});
+        vi.mocked(groupsService).remove.mockResolvedValue({});
 
         await act(async () => {
             await result.current.deleteGroup(1);
@@ -97,3 +100,4 @@ describe('useGroups', () => {
         expect(result.current.rowCount).toBe(1);
     });
 });
+

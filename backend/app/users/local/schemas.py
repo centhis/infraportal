@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
-
+from app.users.permissions.schemas import PermissionResponseSchema
+from app.users.roles.schemas import RoleResponseSchema # Добавлен импорт RoleResponseSchema
 
 class CreateUserSchema(BaseModel):
     login: str = Field(..., min_length=3, max_length=50)
@@ -14,11 +15,11 @@ class CreateUserSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class UpdateUserSchema(BaseModel):
-    login: str | None = None
-    password: str | None = None
-    name: str | None = None
-    is_active: bool | None = None
-    type: str | None = None
+    login: Optional[str] = Field(None, min_length=3, max_length=50)
+    password: Optional[str] = Field(None, min_length=3)
+    name: Optional[str] = Field(None, min_length=1)
+    is_active: Optional[bool] = None
+    type: Optional[str] = None
     group_ids: Optional[list[int]] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -38,9 +39,34 @@ class UserResponseSchema(BaseModel):
     type: str
     created_at: datetime
     groups: List[GroupBasicResponseSchema] = []
+    built_in_group_ids: List[int] = Field(default_factory=list) # New field
 
     model_config = ConfigDict(from_attributes=True)
 
 class PaginatedUserResponse(BaseModel):
     total: int
     users: List[UserResponseSchema]
+
+class RoleWithPermissionsSchema(BaseModel):
+    id: int
+    name: str
+    built_in: bool
+    permissions: List[PermissionResponseSchema] # Используем PermissionResponseSchema как Detail
+
+    model_config = ConfigDict(from_attributes=True)
+
+class GroupWithRolesAndPermissionsSchema(BaseModel):
+    id: int
+    name: str
+    built_in: bool
+    roles: List[RoleWithPermissionsSchema]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class UserPermissionsReportSchema(BaseModel):
+    user_id: int
+    username: str
+    all_unique_permissions: List[PermissionResponseSchema]
+    groups_with_roles_and_permissions: List[GroupWithRolesAndPermissionsSchema]
+
+    model_config = ConfigDict(from_attributes=True)

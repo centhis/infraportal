@@ -2,6 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import usePermissions from './usePermissions';
 import { permissionsService } from '../services/permissionsService';
+import { AllTheProviders } from '../../../mocks/test-utils'; // Import AllTheProviders
 
 // Mock dependencies
 vi.mock('../services/permissionsService');
@@ -14,11 +15,11 @@ describe('usePermissions', () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
-        permissionsService.list.mockResolvedValue(mockPermissions);
+        vi.mocked(permissionsService).list.mockResolvedValue(mockPermissions);
     });
 
     it('should have correct initial state and fetch permissions', async () => {
-        const { result } = renderHook(() => usePermissions());
+        const { result } = renderHook(() => usePermissions(), { wrapper: AllTheProviders });
 
         expect(result.current.loading).toBe(true);
         expect(result.current.permissions).toEqual([]);
@@ -33,7 +34,7 @@ describe('usePermissions', () => {
     });
 
     it('should refetch permissions when refetch is called', async () => {
-        const { result } = renderHook(() => usePermissions());
+        const { result } = renderHook(() => usePermissions(), { wrapper: AllTheProviders });
 
         await waitFor(() => expect(result.current.loading).toBe(false));
         expect(permissionsService.list).toHaveBeenCalledTimes(1);

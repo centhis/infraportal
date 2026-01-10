@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { DataGrid, gridClasses } from "@mui/x-data-grid";
 import { Box, IconButton, Chip } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import PolicyIcon from "@mui/icons-material/Policy"; // Импортируем PolicyIcon
 import { useTranslation } from 'react-i18next';
 
 import usePersistentState from "../../hooks/usePersistentState";
@@ -33,6 +34,8 @@ const UserTable = React.memo(({
     rowCount,
     paginationModel,
     onPaginationModelChange,
+    onPermissionsReport, // Добавлен новый пропс
+    canDelete,
 }) => {
     const {t} = useTranslation('user_management');
 
@@ -71,22 +74,32 @@ const UserTable = React.memo(({
             field: "actions",
             headerName: t('user_management.users.table.actions'),
             renderHeader: () => null,
-            width: 120,
+            width: 120, // Увеличить ширину для новой кнопки
             sortable: false,
             filterable: false,
             disableColumnMenu: true,
             renderCell: (params) => (
                 <Box>
+                    <IconButton 
+                        aria-label={t('user_management.users.table.permissions_report_button')} // Используем перевод
+                        color="primary" // Можно выбрать другой цвет, например "info"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onPermissionsReport(params.row.id, params.row.name); // Передаем id и имя пользователя
+                        }}
+                    >
+                        <PolicyIcon />
+                    </IconButton>
                     <IconButton aria-label="delete" color="error" onClick={(event) => {
                         event.stopPropagation();
                         onDelete(params.row.id);
-                    }} disabled={params.row.type === 'built_in'}>
+                    }} disabled={!canDelete || params.row.type === 'built_in'}>
                         <DeleteIcon />
                     </IconButton>
                 </Box>
             ),
         },
-    ], [t, onDelete]);
+    ], [t, onDelete, onPermissionsReport, canDelete]); // Добавляем canDelete в зависимости useMemo
 
     return (
         <DataGrid 

@@ -13,6 +13,7 @@ import { Link, useLocation, Outlet } from "react-router-dom";
 
 import UserMenu from './UserMenu';
 import { useAuthContext } from "../../../app/providers/AuthProvider";
+import { Can } from "../../../app/providers/PermissionsProvider";
 import { ROUTES } from "../../../shared/constants/routes";
 
 const drawerWidth = 240;
@@ -28,7 +29,7 @@ export default function Navbar() {
     { text: t('nav_items.about'), path: ROUTES.ABOUT, icon: <InfoIcon/> },
   ], [t]);
   const settingsItems = useMemo(() => [
-    { text: t('nav_items.user_management'), path: ROUTES.USER_MANAGEMENT, icon: <GroupIcon/> },
+    { text: t('nav_items.user_management'), path: ROUTES.USER_MANAGEMENT, icon: <GroupIcon/>, permission: 'users:view' },
   ], [t]);
 
   const allItems = useMemo(() => [...navItems, ...settingsItems], [navItems, settingsItems]);
@@ -90,17 +91,19 @@ export default function Navbar() {
         <Divider />
         <List>
           {settingsItems.map((item) => (
-            <ListItem key={item.text} disablePadding>
-              <ListItemButton
-                component={Link}
-                to={item.path}
-                state={{ resetTab: true }}
-                selected={location.pathname === item.path}
-              >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            </ListItem>
+            <Can do={item.permission} key={item.text}>
+              <ListItem disablePadding>
+                <ListItemButton
+                  component={Link}
+                  to={item.path}
+                  state={{ resetTab: true }}
+                  selected={location.pathname === item.path}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </ListItem>
+            </Can>
           ))}
         </List>
       </Drawer>

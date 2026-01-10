@@ -48,7 +48,7 @@ class AuthService:
 
         return access, refresh
     
-    def referesh_access_token(self, refresh_token: str):
+    def referesh_access_token(self, refresh_token: str): # Original signature without 'request'
         payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":
             raise HTTPException(

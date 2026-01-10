@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '../../mocks/test-utils';
 import IpAlert from './IpAlert';
 
 describe('IpAlert', () => {

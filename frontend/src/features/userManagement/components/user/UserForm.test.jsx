@@ -1,98 +1,168 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '../../../../mocks/test-utils';
 import { vi } from 'vitest';
 import UserForm from './UserForm';
 
-// Mock the translation hook
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: (key) => key, // Returns the key itself for testing
-    }),
+// Mock the TransferList to simplify the UserForm tests
+vi.mock('../../../../components/forms/TransferList', () => ({
+    __esModule: true,
+    default: ({ disabled }) => <div data-testid="mock-transfer-list" data-disabled={String(disabled)}></div>,
 }));
 
+const mockAllGroups = [
+    { id: 1, name: 'group1' },
+    { id: 2, name: 'group2' },
+];
+
+const mockUser = {
+    id: 1,
+    login: 'testuser',
+    name: 'Test User',
+    is_active: true,
+    type: 'local',
+    groups: [mockAllGroups[0]],
+};
+
 describe('UserForm', () => {
-    it('should submit the form with valid data in create mode', async () => {
-        const mockOnSubmit = vi.fn();
-        render(<UserForm onSubmit={mockOnSubmit} />);
+    
+    const baseAuthHook = {
+        user: { name: 'test' },
+        loading: false,
+    };
 
-        // Fill out the form
-        fireEvent.change(screen.getByLabelText(/user_management.users.form.login/i), { target: { value: 'newuser' } });
-        fireEvent.change(screen.getByLabelText(/user_management.users.form.name/i), { target: { value: 'New User Name' } });
-        fireEvent.change(screen.getByLabelText(/user_management.users.form.password/i), { target: { value: 'password123' } });
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
 
-        // Submit the form
-        fireEvent.click(screen.getByRole('button', { name: /user_management.users.form.create_user/i }));
+    describe('Create Mode', () => {
+        const createProps = {
+            onSubmit: vi.fn(),
+            allGroups: mockAllGroups,
+        };
 
-        // Wait for submission and check if onSubmit was called
-        await waitFor(() => {
-            expect(mockOnSubmit).toHaveBeenCalledTimes(1);
-            // react-hook-form will call it with the form values
-            expect(mockOnSubmit).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    login: 'newuser',
-                    name: 'New User Name',
-                    password: 'password123',
-                    is_active: true, // default value
-                }),
-                expect.anything() // react-hook-form also passes the event
-            );
+        it('should submit the form with valid data', async () => {
+            const authHookValue = { ...baseAuthHook, permissions: ['users:create'] };
+            render(<UserForm {...createProps} />, { authHookValue });
+
+            fireEvent.change(screen.getByLabelText(/login/i), { target: { value: 'newuser' } });
+            fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'New User' } });
+            fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+            
+            fireEvent.click(screen.getByRole('button', { name: /Create User/i }));
+
+            await waitFor(() => {
+                expect(createProps.onSubmit).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        login: 'newuser',
+                        name: 'New User',
+                        password: 'password123',
+                    }),
+                    expect.anything()
+                );
+            });
+        });
+
+        it('should display validation errors for required fields', async () => {
+            const authHookValue = { ...baseAuthHook, permissions: ['users:create'] };
+            render(<UserForm {...createProps} />, { authHookValue });
+
+            // Make the form dirty by changing an optional field.
+            // This enables the submit button so that validation can be triggered.
+            fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'p' } });
+
+            fireEvent.click(screen.getByRole('button', { name: /Create User/i }));
+
+            await waitFor(() => {
+                expect(screen.getByText('Login is required')).toBeInTheDocument();
+                expect(screen.getByText('Name is required')).toBeInTheDocument();
+            });
+            
+            expect(createProps.onSubmit).not.toHaveBeenCalled();
+        });
+
+        it('should have a disabled submit button if user lacks create permission', () => {
+            const authHookValue = { ...baseAuthHook, permissions: [] }; // No permissions
+            render(<UserForm {...createProps} />, { authHookValue });
+            expect(screen.getByRole('button', { name: /Create User/i })).toBeDisabled();
         });
     });
 
-    it('should display validation errors for required fields', async () => {
-        const mockOnSubmit = vi.fn();
-        render(<UserForm onSubmit={mockOnSubmit} />);
+    describe('Edit Mode', () => {
+        const editProps = {
+            onSubmit: vi.fn(),
+            allGroups: mockAllGroups,
+            defaultValues: mockUser,
+        };
 
-        // Submit the form with empty fields
-        fireEvent.click(screen.getByRole('button', { name: /user_management.users.form.create_user/i }));
+        it('should render with default values', () => {
+            const authHookValue = { ...baseAuthHook, permissions: ['users:update'] };
+            render(<UserForm {...editProps} />, { authHookValue });
 
-        // Check for validation messages
-        expect(await screen.findByText('Login is required')).toBeInTheDocument();
-        expect(screen.getByText('Name is required')).toBeInTheDocument();
+            expect(screen.getByLabelText(/login/i)).toHaveValue('testuser');
+            expect(screen.getByLabelText(/name/i)).toHaveValue('Test User');
+            expect(screen.getByLabelText(/password/i)).toHaveValue('');
+        });
 
-        // Check that onSubmit was not called
-        expect(mockOnSubmit).not.toHaveBeenCalled();
+        it('should have submit button disabled if form is not dirty', () => {
+            const authHookValue = { ...baseAuthHook, permissions: ['users:update'] };
+            render(<UserForm {...editProps} />, { authHookValue });
+            expect(screen.getByRole('button', { name: /Save Changes/i })).toBeDisabled();
+        });
+
+        it('should have a disabled submit button if user lacks update permission', () => {
+            const authHookValue = { ...baseAuthHook, permissions: [] }; // No permissions
+            render(<UserForm {...editProps} />, { authHookValue });
+            
+            fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'A New Name' } });
+            
+            expect(screen.getByRole('button', { name: /Save Changes/i })).toBeDisabled();
+        });
     });
 
-    it('should render with default values in editing mode', () => {
-        const mockOnSubmit = vi.fn();
-        const defaultValues = {
-            login: 'edituser',
-            name: 'Edit User Name',
-            is_active: false,
-            type: 'local', // Добавляем type для теста
-        };
-        render(<UserForm onSubmit={mockOnSubmit} defaultValues={defaultValues} />);
+    describe('View Only Mode', () => {
+        it('should disable all fields and button when isViewOnly is true', () => {
+            const props = {
+                defaultValues: mockUser,
+                allGroups: mockAllGroups,
+                isViewOnly: true,
+                onSubmit: vi.fn(),
+            };
+            const authHookValue = { ...baseAuthHook, permissions: ['users:update'] }; // Has permission, but view only overrides
+            render(<UserForm {...props} />, { authHookValue });
 
-        // Check if fields are pre-filled
-        expect(screen.getByLabelText(/user_management.users.form.login/i)).toHaveValue('edituser');
-        expect(screen.getByLabelText(/user_management.users.form.name/i)).toHaveValue('Edit User Name');
-        // Password should be empty
-        expect(screen.getByLabelText(/user_management.users.form.password/i)).toHaveValue('');
-        // Switch should be unchecked
-        expect(screen.getByLabelText(/user_management.users.form.is_active/i)).not.toBeChecked();
-
-        // Check for the correct button text
-        expect(screen.getByRole('button', { name: /user_management.users.form.save_changes/i })).toBeInTheDocument();
+            expect(screen.getByLabelText(/login/i)).toBeDisabled();
+            expect(screen.getByLabelText(/name/i)).toBeDisabled();
+            expect(screen.getByLabelText(/password/i)).toBeDisabled();
+            expect(screen.getByLabelText(/Active/i)).toBeDisabled();
+            
+            expect(screen.getByTestId('mock-transfer-list')).toHaveAttribute('data-disabled', 'true');
+            expect(screen.getByRole('button', { name: /Save Changes/i })).toBeDisabled();
+        });
     });
 
-    it('должен блокировать поля login, name и is_active для built_in пользователей', () => {
-        const mockOnSubmit = vi.fn();
-        const defaultValues = {
-            id: 1,
-            login: 'admin',
-            name: 'Admin User',
-            is_active: true,
-            type: 'built_in',
-        };
-        render(<UserForm onSubmit={mockOnSubmit} defaultValues={defaultValues} />);
+    describe('Built-in User Mode', () => {
+        it('should enable save button for built-in user when form is dirty', () => {
+            const props = {
+                defaultValues: { ...mockUser, type: 'built_in' },
+                allGroups: mockAllGroups,
+                onSubmit: vi.fn(),
+            };
+            const authHookValue = { ...baseAuthHook, permissions: ['users:update'] };
+            render(<UserForm {...props} />, { authHookValue });
 
-        // Эти поля должны быть заблокированы
-        expect(screen.getByLabelText(/user_management.users.form.login/i)).toBeDisabled();
-        expect(screen.getByLabelText(/user_management.users.form.name/i)).toBeDisabled();
-        expect(screen.getByLabelText(/user_management.users.form.is_active/i)).toBeDisabled();
-        
-        // Эти поля должны быть активны
-        expect(screen.getByLabelText(/user_management.users.form.password/i)).not.toBeDisabled();
-        expect(screen.getByRole('button', { name: /user_management.users.form.save_changes/i })).not.toBeDisabled();
+            // Initially, the button is disabled because the form is not dirty
+            expect(screen.getByRole('button', { name: /Save Changes/i })).toBeDisabled();
+
+            // Some fields should be disabled
+            expect(screen.getByLabelText(/login/i)).toBeDisabled();
+            expect(screen.getByLabelText(/name/i)).toBeDisabled();
+            expect(screen.getByLabelText(/Active/i)).toBeDisabled();
+            
+            // Password can be changed
+            expect(screen.getByLabelText(/password/i)).not.toBeDisabled();
+            fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'new-password' } });
+
+            // Now the button should be enabled because the form is dirty
+            expect(screen.getByRole('button', { name: /Save Changes/i })).not.toBeDisabled();
+        });
     });
 });

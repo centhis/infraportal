@@ -1,14 +1,8 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '../../../mocks/test-utils';
 import { vi } from 'vitest';
 import UserMenu from './UserMenu';
 
 // Mock dependencies
-vi.mock('react-router-dom', () => ({
-    Link: vi.fn(({ to, children, onClick }) => <a href={to} onClick={onClick}>{children}</a>),
-}));
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key) => key }),
-}));
 vi.mock('./UserAvatar', () => ({
     __esModule: true,
     default: vi.fn(({ user }) => <div data-testid="mock-user-avatar">{user.name}</div>),
@@ -37,8 +31,8 @@ describe('UserMenu', () => {
         fireEvent.click(screen.getByRole('button'));
 
         await waitFor(() => {
-            expect(screen.getByText('user_menu.profile')).toBeInTheDocument();
-            expect(screen.getByText('user_menu.logout')).toBeInTheDocument();
+            expect(screen.getByText('Profile')).toBeInTheDocument();
+            expect(screen.getByText('Exit')).toBeInTheDocument();
         });
     });
 
@@ -50,12 +44,12 @@ describe('UserMenu', () => {
 
         // Click the Logout menu item
         await waitFor(() => {
-            fireEvent.click(screen.getByText('user_menu.logout'));
+            fireEvent.click(screen.getByText('Exit'));
         });
 
         expect(mockOnLogout).toHaveBeenCalledTimes(1);
         await waitFor(() => { // Wait for the menu to close
-            expect(screen.queryByText('user_menu.logout')).not.toBeInTheDocument();
+            expect(screen.queryByText('Exit')).not.toBeInTheDocument();
         });
     });
 
@@ -67,12 +61,12 @@ describe('UserMenu', () => {
 
         // Click the Profile menu item
         await waitFor(() => {
-            expect(screen.getByText('user_menu.profile')).toBeInTheDocument();
-            fireEvent.click(screen.getByText('user_menu.profile'));
+            expect(screen.getByText('Profile')).toBeInTheDocument();
+            fireEvent.click(screen.getByText('Profile'));
         });
 
         await waitFor(() => { // Wait for the menu to close
-            expect(screen.queryByText('user_menu.profile')).not.toBeInTheDocument();
+            expect(screen.queryByText('Profile')).not.toBeInTheDocument();
         });
     });
 });

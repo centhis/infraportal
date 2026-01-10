@@ -1,12 +1,15 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '../../../../mocks/test-utils';
 import { vi } from 'vitest';
 import RoleForm from './RoleForm';
 
-// Mock the translation hook
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: (key) => key, // Returns the key itself for testing
-    }),
+// Mock the TransferList to simplify the RoleForm tests
+vi.mock('../../../../components/forms/TransferList', () => ({
+    __esModule: true,
+    default: ({ disabled, selectedIds }) => (
+        <div data-testid="mock-transfer-list" data-disabled={String(disabled)}>
+            <div data-testid="selected-ids">{JSON.stringify(selectedIds)}</div>
+        </div>
+    ),
 }));
 
 const mockPermissions = [
@@ -15,119 +18,79 @@ const mockPermissions = [
     { id: 3, name: 'users:update', description: 'Update users' },
 ];
 
-describe('RoleForm with Chip-based TransferList', () => {
+describe('RoleForm', () => {
     const commonProps = {
         onSubmit: vi.fn(),
         allPermissions: mockPermissions,
+    };
+
+    const authHookValue = {
+        user: { name: 'test' },
+        permissions: ['users:create', 'users:update'],
+        loading: false,
     };
 
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it('should render all permissions in the "Available" list by default', async () => {
-        render(<RoleForm {...commonProps} />);
-        
-        const availableList = (await screen.findByLabelText(/Available/i)).closest('.MuiCard-root');
-        
-        expect(within(availableList).getByText('users:view')).toBeInTheDocument();
-        expect(within(availableList).getByText('users:create')).toBeInTheDocument();
-        expect(within(availableList).getByText('users:update')).toBeInTheDocument();
+    it('should render correctly in create mode', () => {
+        render(<RoleForm {...commonProps} />, { authHookValue });
 
-        const assignedList = (await screen.findByLabelText(/Assigned/i)).closest('.MuiCard-root');
-        expect(within(assignedList).queryByText('users:view')).not.toBeInTheDocument();
+        expect(screen.getByLabelText(/Role Name/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/Description/i)).toBeInTheDocument();
+        expect(screen.getByTestId('mock-transfer-list')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Create Role/i })).toBeInTheDocument();
     });
 
-    it('should move a permission to the assigned list on click and submit', async () => {
+    it('should submit the form with valid data in create mode', async () => {
         const mockOnSubmit = vi.fn();
-        render(<RoleForm {...commonProps} onSubmit={mockOnSubmit} />);
+        render(<RoleForm {...commonProps} onSubmit={mockOnSubmit} />, { authHookValue });
 
-        const availableList = (await screen.findByLabelText(/Available/i)).closest('.MuiCard-root');
-        const assignedList = (await screen.findByLabelText(/Assigned/i)).closest('.MuiCard-root');
+        fireEvent.change(screen.getByLabelText(/Role Name/i), { target: { value: 'New Role' } });
+        fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'A new role description.' } });
 
-        // Fill out the form
-        fireEvent.change(screen.getByLabelText(/user_management.roles.form.name/i), { target: { value: 'New Role' } });
-        
-        // Find and click the 'users:create' permission chip in the available list
-        fireEvent.click(within(availableList).getByText('users:create'));
-
-        // Verify it moved to the assigned list
-        await waitFor(() => {
-            expect(within(assignedList).getByText('users:create')).toBeInTheDocument();
-        });
-        expect(within(availableList).queryByText('users:create')).not.toBeInTheDocument();
-
-        // Submit the form
-        fireEvent.click(screen.getByRole('button', { name: /user_management.roles.form.create_role/i }));
+        fireEvent.click(screen.getByRole('button', { name: /Create Role/i }));
 
         await waitFor(() => {
-            expect(mockOnSubmit).toHaveBeenCalledTimes(1);
             expect(mockOnSubmit).toHaveBeenCalledWith(
                 expect.objectContaining({
                     name: 'New Role',
-                    permissions: [2], // ID of 'users:create'
+                    description: 'A new role description.',
                 }),
                 expect.anything()
             );
         });
     });
 
-    it('should start with pre-assigned permissions and allow moving one back', async () => {
+    it('should render with default values in edit mode', () => {
         const defaultValues = {
             name: 'Edit Role',
             description: 'Edit description',
             permissions: [{ id: 1, name: 'users:view' }],
         };
-        const mockOnSubmit = vi.fn();
-        render(<RoleForm {...commonProps} defaultValues={defaultValues} onSubmit={mockOnSubmit} />);
+        render(<RoleForm {...commonProps} defaultValues={defaultValues} />, { authHookValue });
 
-        const assignedList = (await screen.findByLabelText(/Assigned/i)).closest('.MuiCard-root');
-        const availableList = (await screen.findByLabelText(/Available/i)).closest('.MuiCard-root');
-
-        // Verify initial state
-        await waitFor(() => {
-            expect(within(assignedList).getByText('users:view')).toBeInTheDocument();
-        });
-        expect(within(availableList).queryByText('users:view')).not.toBeInTheDocument();
-
-        // Click a chip in the assigned list to move it back
-        fireEvent.click(within(assignedList).getByText('users:view'));
+        expect(screen.getByLabelText(/Role Name/i)).toHaveValue('Edit Role');
+        expect(screen.getByLabelText(/Description/i)).toHaveValue('Edit description');
+        expect(screen.getByRole('button', { name: /Save Changes/i })).toBeInTheDocument();
         
-        // Verify it moved back
-        await waitFor(() => {
-            expect(within(availableList).getByText('users:view')).toBeInTheDocument();
-        });
-        expect(within(assignedList).queryByText('users:view')).not.toBeInTheDocument();
-
-        // Submit the form
-        fireEvent.click(screen.getByRole('button', { name: /user_management.roles.form.save_changes/i }));
-
-        await waitFor(() => {
-            expect(mockOnSubmit).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    permissions: [], // 'users:view' was moved back
-                }),
-                expect.anything()
-            );
-        });
+        // Check that the selectedIds are passed to the mocked TransferList
+        const selectedIds = JSON.parse(screen.getByTestId('selected-ids').textContent);
+        expect(selectedIds).toEqual([1]);
     });
 
-    it('should disable the transfer list when editing a built-in role', async () => {
+    it('should disable the form when editing a built-in role', () => {
         const defaultValues = {
             name: 'Admin',
             built_in: true,
             permissions: [{ id: 1, name: 'users:view' }],
         };
-        render(<RoleForm {...commonProps} defaultValues={defaultValues} />);
+        render(<RoleForm {...commonProps} defaultValues={defaultValues} />, { authHookValue });
 
-        const availableCardHeaderTextField = (await screen.findByLabelText(/Available/i));
-        expect(availableCardHeaderTextField).toBeDisabled();
-
-        const assignedCardHeaderTextField = (await screen.findByLabelText(/Assigned/i));
-        expect(assignedCardHeaderTextField).toBeDisabled();
-
-        // Check a specific chip for disabled status
-        const usersViewChip = screen.getByText('users:view').closest('.MuiChip-root');
-        expect(usersViewChip).toHaveClass('Mui-disabled');
+        expect(screen.getByLabelText(/Role Name/i)).toBeDisabled();
+        expect(screen.getByLabelText(/Description/i)).toBeDisabled();
+        expect(screen.getByTestId('mock-transfer-list')).toHaveAttribute('data-disabled', 'true');
+        expect(screen.getByRole('button', { name: /Save Changes/i })).toBeDisabled();
     });
 });

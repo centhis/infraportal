@@ -23,7 +23,8 @@
                     "local": "Локальная",
                     "ldap": "LDAP",
                     "openid": "OpenID"
-                }
+                },
+                "permissions_report_button": "Отчет по разрешениям"
             },
             "actions": {
                 "add_user_button": "Создать пользователя"
@@ -38,10 +39,23 @@
                 "password": "Пароль",
                 "password_edit_helper": "Оставьте пустым, чтобы сохранить текущий пароль",
                 "is_active": "Активен",
+                "groups_title": "Группы",
                 "save_changes": "Сохранить изменения",
                 "create_user": "Создать пользователя",
                 "edit_title": "Редактировать пользователя",
                 "create_title": "Создать нового пользователя"
+            },
+            "permissions_report": {
+                "title": "Отчет по разрешениям для пользователя: {{username}}",
+                "all_permissions_section_title": "Все доступные разрешения",
+                "breakdown_section_title": "Детализация по группам и ролям",
+                "group_accordion_title": "Группа: {{groupName}}",
+                "role_accordion_title": "Роль: {{roleName}}",
+                "no_permissions": "Нет разрешений",
+                "no_groups_found": "Пользователь не состоит ни в одной группе, предоставляющей разрешения.",
+                "no_roles_found": "В этой группе нет ролей, предоставляющих разрешения.",
+                "no_data": "Не удалось загрузить данные отчета.",
+                "direct_permissions_in_group": "Разрешения группы (через роли):"
             }
         },
         "roles": {
@@ -103,6 +117,7 @@
                 "name": "Название группы",
                 "description": "Описание",
                 "roles_title": "Роли",
+                "users_title": "Пользователи",
                 "save_changes": "Сохранить изменения",
                 "create_group": "Создать группу",
                 "edit_title": "Редактировать группу",

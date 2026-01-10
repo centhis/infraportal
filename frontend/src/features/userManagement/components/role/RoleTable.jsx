@@ -13,6 +13,7 @@ const RoleTable = ({
     rowCount,
     paginationModel,
     onPaginationModelChange,
+    canDelete // New prop
 }) => {
     const { t } = useTranslation('user_management');
 
@@ -58,13 +59,13 @@ const RoleTable = ({
                     <IconButton aria-label="delete" color="error" onClick={(event) => {
                         event.stopPropagation(); // Prevent onRowClick from firing
                         onDelete(params.row.id);
-                    }} disabled={params.row.built_in}>
+                    }} disabled={!canDelete || params.row.built_in}>
                         <DeleteIcon />
                     </IconButton>
                 </Box>
             ),
         },
-    ], [t, onDelete]); // Removed onEdit from dependencies as it's not used directly here anymore
+    ], [t, onDelete, canDelete]); // Added canDelete to dependencies
 
     return (
         <DataGrid

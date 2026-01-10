@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status # Добавлены HTTPException, status
 from typing import List
 
 from app.users.local.services import UserService
-from app.users.local.schemas import UserResponseSchema, CreateUserSchema, UpdateUserSchema, PaginatedUserResponse
+from app.users.permissions.services import PermissionService # Добавлен импорт PermissionService
+from app.users.local.schemas import UserResponseSchema, CreateUserSchema, UpdateUserSchema, PaginatedUserResponse, UserPermissionsReportSchema # Добавлен UserPermissionsReportSchema
 from app.auth.dependencies import get_current_user, permission_checker
 
 router = APIRouter(prefix="/users", tags=['Users'])
@@ -23,25 +24,47 @@ def list_users(
 @router.get(
     "/{user_id}", 
     response_model=UserResponseSchema,
-    dependencies=[Depends(permission_checker(["users:view"]))]
 )
 def get_user_by_id(
     user_id: int, 
     service: UserService = Depends(),
+    permission_service: PermissionService = Depends(), # Добавлен PermissionService
     current_user = Depends(get_current_user)
-    ):
+):
+    # Allow user to view their own profile without users:view permission
+    if user_id == current_user.id:
+        return service.get_user_by_id(user_id)
+    
+    # For any other user, require users:view permission
+    user_permissions_report = permission_service.get_user_permissions_report(current_user.id)
+    if "users:view" not in [p.name for p in user_permissions_report.all_unique_permissions]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action"
+        )
     return service.get_user_by_id(user_id)
 
 @router.get(
     "/by-login/{login}", 
     response_model=UserResponseSchema,
-    dependencies=[Depends(permission_checker(["users:view"]))]
 )
 def get_user_by_login(
     login: str, 
     service: UserService = Depends(), 
+    permission_service: PermissionService = Depends(), # Добавлен PermissionService
     current_user = Depends(get_current_user)
 ):
+    # Allow user to view their own profile by login without users:view permission
+    if login == current_user.login:
+        return service.get_user_by_login(login)
+    
+    # For any other user, require users:view permission
+    user_permissions_report = permission_service.get_user_permissions_report(current_user.id)
+    if "users:view" not in [p.name for p in user_permissions_report.all_unique_permissions]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action"
+        )
     return service.get_user_by_login(login)
 
 @router.post(
@@ -79,3 +102,15 @@ def delete_user(
     current_user = Depends(get_current_user)
 ):
     return service.delete_user(user_id)
+
+@router.get(
+    "/{user_id}/permissions_report",
+    response_model=UserPermissionsReportSchema,
+    dependencies=[Depends(permission_checker(["users:view"]))] # Разрешение на просмотр пользователей достаточно
+)
+def get_user_permissions_report(
+    user_id: int,
+    permission_service: PermissionService = Depends(), # Используем PermissionService
+    current_user = Depends(get_current_user)
+):
+    return permission_service.get_user_permissions_report(user_id)

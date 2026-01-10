@@ -11,7 +11,12 @@ export const usersApi = {
         return response.data;
     },
     update: async (userId, userData) => {
-        const response = await AxiosInstance.put(`${API_ENDPOINTS.USER_MANAGEMENT.USERS}/${userId}`, userData);
+        const dataToSend = { ...userData };
+        if (dataToSend.groups !== undefined) {
+            dataToSend.group_ids = dataToSend.groups;
+            delete dataToSend.groups;
+        }
+        const response = await AxiosInstance.put(`${API_ENDPOINTS.USER_MANAGEMENT.USERS}/${userId}`, dataToSend);
         return response.data;
     },
     remove: async (userId) => {

@@ -12,7 +12,8 @@
 
 import { AuthProvider } from "./providers/AuthProvider";
 import { I18nProvider } from "./providers/I18nProvider";
-import AppRoutes from "./routes/AppRoutes"
+import AppContent from "./AppContent";
+// import AppRoutes from "./routes/AppRoutes" // Removed AppRoutes from here
 console.log("App render before AppRoutes");
 
 function App() {
@@ -21,7 +22,7 @@ function App() {
   return (
     <I18nProvider>
       <AuthProvider>
-        <AppRoutes />
+        <AppContent />
       </AuthProvider>
     </I18nProvider>
   )

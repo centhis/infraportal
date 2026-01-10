@@ -33,3 +33,23 @@ def test_list_permissions_success(client: TestClient, tmp_user):
     permission_names = [p["name"] for p in json_response]
     assert "users:view" in permission_names
     assert "users:create" in permission_names
+
+def test_list_permissions_forbidden(client: TestClient, user_factory):
+    """
+    Test that an authenticated user without sufficient permissions cannot list permissions.
+    """
+    # Create a user with no special permissions
+    user = user_factory("no_perm_user", "password")
+
+    # Login this user to get an access token
+    login_response = client.post("/api/v1/auth/login", json={"login": "no_perm_user", "password": "password"})
+    assert login_response.status_code == 200
+    access_token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    # Attempt to list permissions
+    response = client.get("/api/v1/permissions/", headers=headers)
+    
+    # Assert that the request is forbidden
+    assert response.status_code == 403
+    assert response.json()["detail"] == "You do not have permission to perform this action"

@@ -1,12 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '../../../mocks/test-utils';
 import { vi } from 'vitest';
 import UserTabPage from './UserTabPage.jsx';
 import useUsers from '../hooks/useUsers.jsx';
 
 // Mock dependencies
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key) => key }),
-}));
+
 vi.mock('../hooks/useUsers.jsx');
 
 describe('UserTabPage', () => {

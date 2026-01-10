@@ -1,43 +1,23 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { vi } from 'vitest';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { screen, fireEvent } from '@testing-library/react';
+import { vi as _vi } from 'vitest';
+import { Routes, Route } from 'react-router-dom';
 import Login from './Login';
-import { AuthProvider } from '../../../app/providers/AuthProvider';
 import { ROUTES } from '../../../shared/constants/routes';
 import { MOCK_API_MESSAGES } from '../../../mocks/mockData';
-
-// Mock dependencies
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key) => key }),
-    I18nextProvider: ({ children }) => children,
-}));
-vi.mock('../../../app/providers/I18nProvider', () => ({
-    useI18n: () => ({
-        currentLanguage: 'en',
-        changeLanguage: vi.fn(),
-    }),
-    I18nProvider: ({ children }) => children,
-}));
+import { render } from '../../../mocks/test-utils'; // Import render from test-utils
 
 // A mock Home component to test navigation
 const HomeComponent = () => <div>Welcome Home</div>;
 
-const renderWithProviders = (initialEntries = [ROUTES.LOGIN]) => {
-    return render(
-        <MemoryRouter initialEntries={initialEntries}>
-            <AuthProvider>
-                <Routes>
-                    <Route path={ROUTES.LOGIN} element={<Login />} />
-                    <Route path={ROUTES.HOME} element={<HomeComponent />} />
-                </Routes>
-            </AuthProvider>
-        </MemoryRouter>
-    );
-};
-
 describe('Login Page Integration Test', () => {
     it('should successfully log in and redirect to home', async () => {
-        renderWithProviders();
+        render(
+            <Routes>
+                <Route path={ROUTES.LOGIN} element={<Login />} />
+                <Route path={ROUTES.HOME} element={<HomeComponent />} />
+            </Routes>,
+            { initialEntries: [ROUTES.LOGIN] }
+        );
 
         // Fill out the form
         fireEvent.change(screen.getByLabelText(/login_page.login/i), { target: { value: 'testuser' } });
@@ -51,7 +31,13 @@ describe('Login Page Integration Test', () => {
     });
 
     it('should show an error message on failed login', async () => {
-        renderWithProviders();
+        render(
+            <Routes>
+                <Route path={ROUTES.LOGIN} element={<Login />} />
+                <Route path={ROUTES.HOME} element={<HomeComponent />} />
+            </Routes>,
+            { initialEntries: [ROUTES.LOGIN] }
+        );
 
         // Fill out the form with wrong credentials
         fireEvent.change(screen.getByLabelText(/login_page.login/i), { target: { value: 'wronguser' } });

@@ -6,6 +6,7 @@ from app.users.permissions.schemas import PermissionResponseSchema
 class CreateRoleSchema(BaseModel):
     name: str = Field(..., min_length=3, max_length=50)
     description: str = Field(None, max_length=255)
+    permissions: List[int] = Field(default_factory=list) # Add permissions field
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -23,6 +24,7 @@ class RoleResponseSchema(BaseModel):
     built_in: bool
     created_at: datetime
     permissions: List[PermissionResponseSchema]
+    built_in_permission_ids: List[int] = Field(default_factory=list) # New field
 
     model_config = ConfigDict(from_attributes=True)
 

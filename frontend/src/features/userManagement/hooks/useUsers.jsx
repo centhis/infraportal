@@ -15,20 +15,22 @@ export default function useUsers() {
         const { page, pageSize } = paginationModel;
         const params = { skip: page * pageSize, limit: pageSize };
         const data = await usersService.list(params);
-        setUsers(data.users);
+        setUsers(data.users); // Expect data.users to already contain groups
         setRowCount(data.total);
         setLoading(false);
     }, [paginationModel]);
 
     const createUser = async (user) => {
+        // user object will now contain a 'groups' array of IDs from the form
         const newUser = await usersService.create(user);
         setUsers(prev => [...prev, newUser]);
         setRowCount(prev => prev + 1); // Optimistically update row count
     };
 
     const updateUser = async (id, updateUser) => {
-        const newUser = await usersService.update(id, updateUser);
-        setUsers(prev => prev.map(u => (u.id === id ? newUser: u)));
+        // updateUser object will now contain a 'groups' array of IDs from the form
+        const updatedUser = await usersService.update(id, updateUser);
+        setUsers(prev => prev.map(u => (u.id === id ? updatedUser: u)));
     };
 
     const deleteUser = async (id) => {

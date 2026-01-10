@@ -1,13 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '../../../mocks/test-utils';
 import { vi } from 'vitest';
 import ConfirmDialog from './ConfirmDialog';
-
-// Mock the translation hook
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: (key) => key, // Returns the key itself for testing
-    }),
-}));
 
 describe('ConfirmDialog', () => {
     const mockOnClose = vi.fn();
@@ -28,8 +21,8 @@ describe('ConfirmDialog', () => {
 
         expect(screen.getByText('Test Title')).toBeInTheDocument();
         expect(screen.getByText('Test Message')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'confirm_dialog.cancel' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'confirm_dialog.confirm' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument();
     });
 
     it('should not render when closed', () => {
@@ -42,7 +35,7 @@ describe('ConfirmDialog', () => {
     it('should call onClose when Cancel button is clicked', () => {
         render(<ConfirmDialog {...defaultProps} open={true} />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'confirm_dialog.cancel' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
         expect(mockOnClose).toHaveBeenCalledTimes(1);
         expect(mockOnConfirm).not.toHaveBeenCalled();
     });
@@ -50,7 +43,7 @@ describe('ConfirmDialog', () => {
     it('should call onConfirm when Confirm button is clicked', () => {
         render(<ConfirmDialog {...defaultProps} open={true} />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'confirm_dialog.confirm' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
         expect(mockOnConfirm).toHaveBeenCalledTimes(1);
         expect(mockOnClose).not.toHaveBeenCalled();
     });
