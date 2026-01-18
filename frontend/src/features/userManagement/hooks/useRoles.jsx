@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { rolesService } from "../services/rolesService";
-import usePersistentState from "./usePersistentState";
+import usePersistentState from "../../../shared/hooks/usePersistentState";
 import { ROLE_PAGINATION_KEY } from "../../../shared/constants/keys";
 
 // This hook is refactored to be consistent with useUsers.jsx,

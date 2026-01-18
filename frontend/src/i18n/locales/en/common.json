@@ -9,5 +9,13 @@
     "transfer_list": {
         "available": "Available",
         "assigned": "Assigned"
-    }
+    },
+    "save": "Save",
+    "save_all": "Save All",
+    "save_success": "Settings saved successfully",
+    "save_error": "Error saving settings",
+    "cancel": "Cancel",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "sensitive_value_masked": "Sensitive value is masked"
 }

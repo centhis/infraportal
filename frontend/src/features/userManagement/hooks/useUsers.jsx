@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 
 import { usersService } from "../services/usersService";
-import usePersistentState from "./usePersistentState";
+import usePersistentState from "../../../shared/hooks/usePersistentState";
 import { USER_PAGINATION_KEY } from "../../../shared/constants/keys";
 
 export default function useUsers() {
@@ -30,7 +30,7 @@ export default function useUsers() {
     const updateUser = async (id, updateUser) => {
         // updateUser object will now contain a 'groups' array of IDs from the form
         const updatedUser = await usersService.update(id, updateUser);
-        setUsers(prev => prev.map(u => (u.id === id ? updatedUser: u)));
+        setUsers(prev => prev.map(u => (u.id === id ? updatedUser : u)));
     };
 
     const deleteUser = async (id) => {

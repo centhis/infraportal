@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 
@@ -12,6 +12,15 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     DEFAULT_ADMIN_USER: str = "admin"
     DEFAULT_ADMIN_PASSWORD: str = "admin"
+
+    # LDAP Settings (Initial seeding via environment)
+    LDAP_ENABLED: bool = False
+    LDAP_URI: Optional[str] = None
+    LDAP_BASE_DN: Optional[str] = None
+    LDAP_BIND_DN: Optional[str] = None
+    LDAP_BIND_PASSWORD: Optional[str] = None
+    LDAP_USER_FILTER: Optional[str] = None
+    LDAP_SYNC_SCHEDULE: str = "0 0 * * *"
 
     @field_validator("API_PREFIX")
     def strip_prefix(cls, v: str) -> str:

@@ -2,12 +2,12 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import useUsers from './useUsers';
 import { usersService } from '../services/usersService';
-import usePersistentState from './usePersistentState';
+import usePersistentState from "../../../shared/hooks/usePersistentState";
 import { AllTheProviders } from '../../../mocks/test-utils'; // Import AllTheProviders
 
 // Mock dependencies
 vi.mock('../services/usersService');
-vi.mock('./usePersistentState');
+vi.mock('../../../shared/hooks/usePersistentState');
 
 describe('useUsers', () => {
     const mockUsers = [

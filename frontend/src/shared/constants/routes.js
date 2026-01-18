@@ -3,5 +3,5 @@ export const ROUTES = {
     HOME: "/home",
     ABOUT: "/about",
     USER_MANAGEMENT: "/user_management",
-
+    SETTINGS: "/settings",
 }

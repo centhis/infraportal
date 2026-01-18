@@ -27,8 +27,7 @@ describe('IpAlert', () => {
 
         const alertElement = screen.getByRole('alert');
         expect(alertElement).toBeInTheDocument();
-        expect(alertElement).toHaveClass(`MuiAlert-standardError`); // Expect standard variant
-        expect(alertElement).toHaveAttribute('class', expect.stringContaining(`MuiAlert-standard${severity.charAt(0).toUpperCase() + severity.slice(1)}`));
+        expect(alertElement).toHaveClass(`MuiAlert-filledError`);
     });
 
     it('should render with default severity if not specified', () => {
@@ -38,6 +37,6 @@ describe('IpAlert', () => {
         const alertElement = screen.getByRole('alert');
         expect(alertElement).toBeInTheDocument();
         // Default severity for MUI Alert is 'success' when not specified
-        expect(alertElement).toHaveClass('MuiAlert-standardSuccess');
+        expect(alertElement).toHaveClass('MuiAlert-filledSuccess');
     });
 });

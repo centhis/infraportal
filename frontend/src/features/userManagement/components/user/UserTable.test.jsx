@@ -19,7 +19,7 @@ describe('UserTable', () => {
     });
 
     // Мокаем usePersistentState, чтобы он не мешал.
-    vi.mock('../../hooks/usePersistentState', () => ({
+    vi.mock('../../../../shared/hooks/usePersistentState', () => ({
         __esModule: true,
         default: vi.fn(() => [{}, vi.fn()]),
     }));
@@ -27,42 +27,42 @@ describe('UserTable', () => {
     describe('Поведение', () => {
         it('should call onEdit when clicking on a row', async () => {
             render(
-                <UserTable 
+                <UserTable
                     users={mockUsers}
                     onEdit={mockOnEdit}
                     onDelete={mockOnDelete}
                     rowCount={mockUsers.length}
                     paginationModel={{ page: 0, pageSize: 5 }}
-                    onPaginationModelChange={() => {}}
+                    onPaginationModelChange={() => { }}
                     canDelete={true} // Pass canDelete as true
                 />
             );
-    
+
             const viewerRow = await screen.findByText('viewer');
             fireEvent.click(viewerRow.closest('.MuiDataGrid-row'));
-    
+
             expect(mockOnEdit).toHaveBeenCalledTimes(1);
             expect(mockOnEdit).toHaveBeenCalledWith(mockUsers[1]);
             expect(mockOnDelete).not.toHaveBeenCalled();
         });
-    
+
         it('should call onDelete when clicking the delete icon', async () => {
             render(
-                <UserTable 
+                <UserTable
                     users={mockUsers}
                     onEdit={mockOnEdit}
                     onDelete={mockOnDelete}
                     rowCount={mockUsers.length}
                     paginationModel={{ page: 0, pageSize: 5 }}
-                    onPaginationModelChange={() => {}}
+                    onPaginationModelChange={() => { }}
                     canDelete={true} // Pass canDelete as true
                 />
             );
-    
+
             const viewerRow = (await screen.findByText('viewer')).closest('.MuiDataGrid-row');
             const deleteButton = within(viewerRow).getByRole('button', { name: /delete/i });
             fireEvent.click(deleteButton);
-    
+
             expect(mockOnDelete).toHaveBeenCalledTimes(1);
             expect(mockOnDelete).toHaveBeenCalledWith(mockUsers[1].id);
             expect(mockOnEdit).not.toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe('UserTable', () => {
                     onDelete={mockOnDelete}
                     rowCount={mockUsers.length}
                     paginationModel={{ page: 0, pageSize: 5 }}
-                    onPaginationModelChange={() => {}}
+                    onPaginationModelChange={() => { }}
                     canDelete={true} // Pass canDelete as true, still expect built-in to be disabled
                 />
             );
@@ -90,13 +90,13 @@ describe('UserTable', () => {
     describe('Display', () => {
         beforeEach(() => {
             render(
-                <UserTable 
+                <UserTable
                     users={mockUsers}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
+                    onEdit={() => { }}
+                    onDelete={() => { }}
                     rowCount={mockUsers.length}
                     paginationModel={{ page: 0, pageSize: 5 }}
-                    onPaginationModelChange={() => {}}
+                    onPaginationModelChange={() => { }}
                     canDelete={true}
                 />
             );

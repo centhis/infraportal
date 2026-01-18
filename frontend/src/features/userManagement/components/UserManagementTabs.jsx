@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 import UserTabPage from '../pages/UserTabPage';
 import RoleTabPage from '../pages/RoleTabPage';
 import GroupTabPage from '../pages/GroupTabPage';
-import usePersistentState from '../hooks/usePersistentState';
+import usePersistentState from '../../../shared/hooks/usePersistentState';
 
 
 function CustomTabPanel(props) {
@@ -44,8 +44,8 @@ function a11yProps(index) {
 export default function UserManagementTabs() {
   const [value, setValue] = usePersistentState('userManagementTab', 0);
   const location = useLocation();
-  const {t} = useTranslation('user_management');
-  
+  const { t } = useTranslation('user_management');
+
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
@@ -62,9 +62,9 @@ export default function UserManagementTabs() {
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange} aria-label="settings-tabs">
-          <Tab label={ t('user_management.tabs.users_tab') } {...a11yProps(0)} />
-          <Tab label={ t('user_management.tabs.groups_tab') } {...a11yProps(1)} /> {/* Swapped */}
-          <Tab label={ t('user_management.tabs.roles_tab') } {...a11yProps(2)} /> {/* Swapped */}
+          <Tab label={t('user_management.tabs.users_tab')} {...a11yProps(0)} />
+          <Tab label={t('user_management.tabs.groups_tab')} {...a11yProps(1)} /> {/* Swapped */}
+          <Tab label={t('user_management.tabs.roles_tab')} {...a11yProps(2)} /> {/* Swapped */}
         </Tabs>
       </Box>
       <CustomTabPanel value={value} index={0}>

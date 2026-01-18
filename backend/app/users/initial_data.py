@@ -63,6 +63,8 @@ def init_data(db: Session):
         {'name': 'users:create', 'description': 'Create users, groups, and roles'},
         {'name': 'users:update', 'description': 'Update users, groups, and roles'},
         {'name': 'users:delete', 'description': 'Delete users, groups, and roles'},
+        {'name': 'settings:view', 'description': 'View core and LDAP settings'},
+        {'name': 'settings:update', 'description': 'Update core and LDAP settings'},
     ]
     for perm_data in permissions_to_create:
         permission = db.query(Permission).filter(Permission.name == perm_data['name']).first()

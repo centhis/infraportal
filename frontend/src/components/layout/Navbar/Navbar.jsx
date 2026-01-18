@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import GroupIcon from "@mui/icons-material/Group";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { Link, useLocation, Outlet } from "react-router-dom";
 
 import UserMenu from './UserMenu';
@@ -19,17 +20,18 @@ import { ROUTES } from "../../../shared/constants/routes";
 const drawerWidth = 240;
 
 export default function Navbar() {
-  const {user, logout, loading} = useAuthContext();
+  const { user, logout, loading } = useAuthContext();
   const location = useLocation();
 
-  const {t} = useTranslation('layout');
+  const { t } = useTranslation('layout');
 
   const navItems = useMemo(() => [
-    { text: t('nav_items.home'), path: ROUTES.HOME, icon: <HomeIcon/> },   
-    { text: t('nav_items.about'), path: ROUTES.ABOUT, icon: <InfoIcon/> },
+    { text: t('nav_items.home'), path: ROUTES.HOME, icon: <HomeIcon /> },
+    { text: t('nav_items.about'), path: ROUTES.ABOUT, icon: <InfoIcon /> },
   ], [t]);
   const settingsItems = useMemo(() => [
-    { text: t('nav_items.user_management'), path: ROUTES.USER_MANAGEMENT, icon: <GroupIcon/>, permission: 'users:view' },
+    { text: t('nav_items.user_management'), path: ROUTES.USER_MANAGEMENT, icon: <GroupIcon />, permission: 'users:view' },
+    { text: t('nav_items.settings'), path: ROUTES.SETTINGS, icon: <SettingsIcon />, permission: 'settings:view' },
   ], [t]);
 
   const allItems = useMemo(() => [...navItems, ...settingsItems], [navItems, settingsItems]);
@@ -38,7 +40,7 @@ export default function Navbar() {
       item => location.pathname === item.path || location.pathname.startsWith(item.path + "/")
     );
   }, [location.pathname, allItems])
-  
+
   const currentTitle = currentNav ? currentNav.text : t('nav_items.default');
 
   if (loading) return null;
@@ -48,13 +50,13 @@ export default function Navbar() {
       <CssBaseline />
       <AppBar
         position="fixed"
-        sx={{ 
-          bgcolor: "primary.main" 
+        sx={{
+          bgcolor: "primary.main"
         }}
       >
         <Toolbar>
           <Typography variant="h6" noWrap component="h1" sx={{ flexGrow: 1 }}>
-            {currentTitle}    
+            {currentTitle}
           </Typography>
           <UserMenu user={user} onLogout={logout} />
         </Toolbar>
@@ -112,7 +114,7 @@ export default function Navbar() {
         sx={{ flexGrow: 1, bgcolor: 'background.default', p: 3 }}
       >
         <Toolbar />
-          <Outlet />
+        <Outlet />
       </Box>
     </Box>
   );

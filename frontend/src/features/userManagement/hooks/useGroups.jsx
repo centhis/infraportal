@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { groupsService } from "../services/groupsService";
-import usePersistentState from "./usePersistentState";
+import usePersistentState from "../../../shared/hooks/usePersistentState";
 import { GROUP_PAGINATION_KEY } from "../../../shared/constants/keys";
 
 // This hook is refactored to be consistent with useUsers.jsx,

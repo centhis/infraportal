@@ -3,15 +3,18 @@ import { MemoryRouter } from 'react-router-dom';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { vi } from 'vitest';
 import i18n from 'i18next';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 import { AuthProvider } from '../app/providers/AuthProvider';
 import { PermissionsProvider } from '../app/providers/PermissionsProvider';
+import { ToastProvider } from '../app/providers/ToastProvider';
 import { useAuth } from '../features/auth/hooks/useAuth';
 
 // Import translations
 import userManagementTranslations from '../i18n/locales/en/user_management.json';
 import commonTranslations from '../i18n/locales/en/common.json';
-import layoutTranslations from '../i18n/locales/en/layout.json'; // Import layout translations
+import layoutTranslations from '../i18n/locales/en/layout.json';
+import settingsTranslations from '../i18n/locales/en/settings.json';
 
 
 // Mock the actual hooks we want to control
@@ -24,13 +27,14 @@ const i18nTest = i18n.createInstance();
 i18nTest.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['user_management', 'common', 'layout'], // Add layout namespace
-  defaultNS: 'common', // Set default namespace to common, as it is a common dependency
+  ns: ['user_management', 'common', 'layout', 'settings'],
+  defaultNS: 'common',
   resources: {
     en: {
-      user_management: userManagementTranslations, // Add user_management translations
-      common: commonTranslations, // Add common translations
-      layout: layoutTranslations, // Add layout translations
+      user_management: userManagementTranslations,
+      common: commonTranslations,
+      layout: layoutTranslations,
+      settings: settingsTranslations,
     },
   },
   interpolation: {
@@ -46,7 +50,9 @@ const AllTheProviders = ({ children, initialEntries }) => {
     <MemoryRouter initialEntries={initialEntries}>
       <I18nextProvider i18n={i18nTest}>
         <AuthProvider>
-          <PermissionsProvider>{children}</PermissionsProvider>
+          <ToastProvider>
+            <PermissionsProvider>{children}</PermissionsProvider>
+          </ToastProvider>
         </AuthProvider>
       </I18nextProvider>
     </MemoryRouter>
@@ -74,7 +80,9 @@ const renderWithProviders = (
 
   return render(ui, {
     wrapper: ({ children }) => (
-      <AllTheProviders initialEntries={initialEntries}>{children}</AllTheProviders>
+      <ThemeProvider theme={createTheme()}>
+        <AllTheProviders initialEntries={initialEntries}>{children}</AllTheProviders>
+      </ThemeProvider>
     ),
     ...renderOptions,
   });

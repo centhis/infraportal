@@ -2,12 +2,12 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import useGroups from './useGroups';
 import { groupsService } from '../services/groupsService';
-import usePersistentState from './usePersistentState';
+import usePersistentState from "../../../shared/hooks/usePersistentState";
 import { AllTheProviders } from '../../../mocks/test-utils'; // Import AllTheProviders
 
 // Mock dependencies
 vi.mock('../services/groupsService');
-vi.mock('./usePersistentState');
+vi.mock('../../../shared/hooks/usePersistentState');
 
 describe('useGroups', () => {
     const mockGroups = [
@@ -44,7 +44,7 @@ describe('useGroups', () => {
 
     it('should fetch all groups when paginated is false', async () => {
         const { result } = renderHook(() => useGroups({ paginated: false }), { wrapper: AllTheProviders });
-        
+
         await waitFor(() => {
             expect(result.current.loading).toBe(false);
         });

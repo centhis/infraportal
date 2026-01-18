@@ -1,0 +1,64 @@
+{
+    "tabs": {
+        "core": "Основные",
+        "ldap": "LDAP"
+    },
+    "core": {
+        "title": "Системные настройки",
+        "subtitle": "Управление фундаментальными параметрами работы портала",
+        "no_settings": "Настройки не найдены"
+    },
+    "keys": {
+        "SITE_NAME": {
+            "label": "Название сайта",
+            "description": "Отображается в заголовке вкладки и навигационной панели"
+        },
+        "LDAP_ENABLED": {
+            "label": "Интеграция LDAP",
+            "description": "Включает или выключает возможность авторизации через Active Directory / OpenLDAP"
+        },
+        "ADMIN_EMAIL": {
+            "label": "Email администратора",
+            "description": "Используется для системных уведомлений и обратной связи"
+        },
+        "LDAP_URI": {
+            "label": "LDAP URI",
+            "description": "Адрес сервера (например, ldap://127.0.0.1:389 или ldaps://ldap.example.com)"
+        },
+        "LDAP_BASE_DN": {
+            "label": "Base DN",
+            "description": "Точка начала поиска в каталоге (например, dc=example,dc=com)"
+        },
+        "LDAP_BIND_DN": {
+            "label": "Bind DN",
+            "description": "Учетная запись для подключения к LDAP (например, cn=admin,dc=example,dc=com)"
+        },
+        "LDAP_BIND_PASSWORD": {
+            "label": "Bind Password",
+            "description": "Пароль учетной записи Bind DN"
+        },
+        "LDAP_USER_FILTER": {
+            "label": "User Filter",
+            "description": "Фильтр для поиска пользователей (например, (sAMAccountName=%(user)s) для AD)"
+        },
+        "LDAP_SYNC_SCHEDULE": {
+            "label": "Расписание синхронизации",
+            "description": "Формат Cron (например, `0 0 * * *` для полночи)",
+            "error_invalid": "Неверный формат Cron (мин час день мес дн_нед)"
+        }
+    },
+    "ldap": {
+        "title": "Интеграция LDAP/AD",
+        "subtitle": "Настройка аутентификации пользователей через корпоративный каталог",
+        "no_settings": "Настройки LDAP не инициализированы",
+        "test_connection": "Проверить соединение",
+        "test_success": "Соединение успешно установлено",
+        "test_failed": "Ошибка проверки соединения",
+        "groups": {
+            "general": "Общие настройки",
+            "connection": "Параметры подключения",
+            "users": "Фильтрация пользователей",
+            "sync": "Синхронизация"
+        }
+    }
+}

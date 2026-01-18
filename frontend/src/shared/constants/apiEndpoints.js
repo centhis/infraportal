@@ -11,5 +11,11 @@ export const API_ENDPOINTS = {
         ROLES: "/roles",
         GROUPS: "/groups",
         PERMISSIONS: "/permissions",
+    },
+    SETTINGS: {
+        CORE: "/settings/core",
+        LDAP: "/settings/ldap",
+        LDAP_TEST: "/settings/ldap/test",
+        LDAP_IS_ENABLED: "/settings/ldap/is_enabled",
     }
 }

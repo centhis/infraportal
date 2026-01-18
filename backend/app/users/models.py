@@ -67,6 +67,8 @@ class User(Base):
     name = Column(String, index=True)
     is_active = Column(Boolean, default=False)
     type = Column(String, default="local", nullable=False)
+    ldap_id = Column(String, unique=True, index=True, nullable=True)
+    ldap_dn = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     groups = relationship("Group", secondary=user_group_association, back_populates="users")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")

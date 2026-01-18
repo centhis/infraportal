@@ -95,6 +95,15 @@ export default function TransferList({ allItems, selectedIds, onChange, disabled
         newSelectedIds.push(usersViewPermission.id);
       }
     }
+
+    // Automatic addition of 'settings:view' if 'settings:update' is added
+    if (itemType === 'permission' && item.name === 'settings:update') {
+      const settingsViewPermission = allItems.find(p => p.name === 'settings:view');
+      if (settingsViewPermission && !newSelectedIds.includes(settingsViewPermission.id)) {
+        newSelectedIds.push(settingsViewPermission.id);
+      }
+    }
+
     onChange(newSelectedIds);
   };
 
@@ -115,6 +124,15 @@ export default function TransferList({ allItems, selectedIds, onChange, disabled
         return; // Early return to prevent unassignment
       }
     }
+
+    // If the unassigned item is 'settings:view', check if 'settings:update' remains.
+    if (itemType === 'permission' && item.name === 'settings:view') {
+      const settingsUpdatePermission = allItems.find(p => p.name === 'settings:update');
+      if (settingsUpdatePermission && newSelectedIds.includes(settingsUpdatePermission.id)) {
+        return; // Early return to prevent unassignment if 'settings:update' is still selected
+      }
+    }
+
     onChange(newSelectedIds);
   };
 

@@ -1,0 +1,64 @@
+{
+    "tabs": {
+        "core": "Core",
+        "ldap": "LDAP"
+    },
+    "core": {
+        "title": "System Settings",
+        "subtitle": "Manage fundamental portal operating parameters",
+        "no_settings": "No settings found"
+    },
+    "keys": {
+        "SITE_NAME": {
+            "label": "Site Name",
+            "description": "Displayed in browser tabs and navigation bar"
+        },
+        "LDAP_ENABLED": {
+            "label": "LDAP Integration",
+            "description": "Enables or disables authentication via Active Directory / OpenLDAP"
+        },
+        "ADMIN_EMAIL": {
+            "label": "Admin Email",
+            "description": "Used for system notifications and feedback"
+        },
+        "LDAP_URI": {
+            "label": "LDAP URI",
+            "description": "Server address (e.g., ldap://127.0.0.1:389 or ldaps://ldap.example.com)"
+        },
+        "LDAP_BASE_DN": {
+            "label": "Base DN",
+            "description": "The search base (e.g., dc=example,dc=com)"
+        },
+        "LDAP_BIND_DN": {
+            "label": "Bind DN",
+            "description": "Account for LDAP binding (e.g., cn=admin,dc=example,dc=com)"
+        },
+        "LDAP_BIND_PASSWORD": {
+            "label": "Bind Password",
+            "description": "Password for the Bind DN account"
+        },
+        "LDAP_USER_FILTER": {
+            "label": "User Filter",
+            "description": "Filter for finding users (e.g., (sAMAccountName=%(user)s) for AD)"
+        },
+        "LDAP_SYNC_SCHEDULE": {
+            "label": "Synchronization Schedule",
+            "description": "Cron format (e.g., `0 0 * * *` for midnight)",
+            "error_invalid": "Invalid Cron format (min hour day month day_of_week)"
+        }
+    },
+    "ldap": {
+        "title": "LDAP/AD Integration",
+        "subtitle": "Configure user authentication via corporate directory",
+        "no_settings": "LDAP settings not initialized",
+        "test_connection": "Test Connection",
+        "test_success": "Connection established successfully",
+        "test_failed": "Connection test failed",
+        "groups": {
+            "general": "General Settings",
+            "connection": "Connection Parameters",
+            "users": "User Filtering",
+            "sync": "Synchronization"
+        }
+    }
+}

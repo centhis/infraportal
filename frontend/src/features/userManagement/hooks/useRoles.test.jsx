@@ -2,12 +2,12 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import useRoles from './useRoles';
 import { rolesService } from '../services/rolesService';
-import usePersistentState from './usePersistentState';
+import usePersistentState from "../../../shared/hooks/usePersistentState";
 import { AllTheProviders } from '../../../mocks/test-utils'; // Import AllTheProviders
 
 // Mock dependencies
 vi.mock('../services/rolesService');
-vi.mock('./usePersistentState');
+vi.mock('../../../shared/hooks/usePersistentState');
 
 describe('useRoles', () => {
     const mockRoles = [
@@ -44,7 +44,7 @@ describe('useRoles', () => {
 
     it('should fetch all roles when paginated is false', async () => {
         const { result } = renderHook(() => useRoles({ paginated: false }), { wrapper: AllTheProviders });
-        
+
         await waitFor(() => {
             expect(result.current.loading).toBe(false);
         });

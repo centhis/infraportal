@@ -5,7 +5,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import PolicyIcon from "@mui/icons-material/Policy"; // Импортируем PolicyIcon
 import { useTranslation } from 'react-i18next';
 
-import usePersistentState from "../../hooks/usePersistentState";
+import usePersistentState from "../../../../shared/hooks/usePersistentState";
 
 const AuthTypeChip = ({ type, t }) => {
     const typeMap = {
@@ -27,9 +27,9 @@ const AuthTypeChip = ({ type, t }) => {
     );
 };
 
-const UserTable = React.memo(({ 
-    users, 
-    onEdit, 
+const UserTable = React.memo(({
+    users,
+    onEdit,
     onDelete,
     rowCount,
     paginationModel,
@@ -37,7 +37,7 @@ const UserTable = React.memo(({
     onPermissionsReport, // Добавлен новый пропс
     canDelete,
 }) => {
-    const {t} = useTranslation('user_management');
+    const { t } = useTranslation('user_management');
 
     const [columnVisibilityModel, setColumnVisibilityModel] = usePersistentState('user-table-visibility', {});
 
@@ -45,24 +45,24 @@ const UserTable = React.memo(({
         { field: "id", headerName: t('user_management.users.table.id'), width: 90 },
         { field: "login", headerName: t('user_management.users.table.login'), flex: 1 },
         { field: "name", headerName: t('user_management.users.table.name'), flex: 1 },
-        { 
-            field: "type", 
-            headerName: t('user_management.users.table.type'), 
+        {
+            field: "type",
+            headerName: t('user_management.users.table.type'),
             flex: 1,
             renderCell: (params) => (
-                <AuthTypeChip 
+                <AuthTypeChip
                     type={params.value}
-                    t={t} 
+                    t={t}
                 />
             )
         },
         { field: "created_at", headerName: t('user_management.users.table.created_at'), flex: 1 },
-        { 
-            field: "is_active", 
-            headerName: t('user_management.users.table.is_active'), 
+        {
+            field: "is_active",
+            headerName: t('user_management.users.table.is_active'),
             flex: 1,
             renderCell: (params) => (
-                <Chip 
+                <Chip
                     label={params.value ? t('user_management.users.table.status.active') : t('user_management.users.table.status.inactive')}
                     color={params.value ? "success" : "error"}
                     variant="outlined"
@@ -80,7 +80,7 @@ const UserTable = React.memo(({
             disableColumnMenu: true,
             renderCell: (params) => (
                 <Box>
-                    <IconButton 
+                    <IconButton
                         aria-label={t('user_management.users.table.permissions_report_button')} // Используем перевод
                         color="primary" // Можно выбрать другой цвет, например "info"
                         onClick={(event) => {
@@ -102,7 +102,7 @@ const UserTable = React.memo(({
     ], [t, onDelete, onPermissionsReport, canDelete]); // Добавляем canDelete в зависимости useMemo
 
     return (
-        <DataGrid 
+        <DataGrid
             rows={users}
             columns={columns}
             getRowId={(row) => row.id}
@@ -120,16 +120,16 @@ const UserTable = React.memo(({
             columnVisibilityModel={columnVisibilityModel}
             onColumnVisibilityModelChange={setColumnVisibilityModel}
             sx={{
-              [`& .${gridClasses.columnHeader}, & .${gridClasses.cell}`]: {
-                outline: 'transparent',
-              },
-              [`& .${gridClasses.columnHeader}:focus-within, & .${gridClasses.cell}:focus-within`]:
-                {
-                  outline: 'none',
+                [`& .${gridClasses.columnHeader}, & .${gridClasses.cell}`]: {
+                    outline: 'transparent',
                 },
-              [`& .${gridClasses.row}:hover`]: {
-                cursor: 'pointer',
-              },
+                [`& .${gridClasses.columnHeader}:focus-within, & .${gridClasses.cell}:focus-within`]:
+                {
+                    outline: 'none',
+                },
+                [`& .${gridClasses.row}:hover`]: {
+                    cursor: 'pointer',
+                },
             }}
         />
     )

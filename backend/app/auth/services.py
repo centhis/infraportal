@@ -1,11 +1,14 @@
-from fastapi import HTTPException, status, Depends, Request
 from datetime import datetime, timezone
+
+from fastapi import HTTPException, status, Depends, Request
 
 from app.db.database import db_dependency
 from app.users.models import User
 from app.auth.models import UserSession
 from app.core.security import ACCESS_TOKEN_EXPIRE, REFRESH_TOKEN_EXPIRE, verify_password, create_token, decode_token
 from app.users.permissions.services import PermissionService
+from app.settings.ldap.services import is_ldap_enabled
+from app.users.ldap.services import authenticate_ldap_user, get_ldap_user_info
 
 
 class AuthService:
@@ -18,14 +21,62 @@ class AuthService:
         self.permission_service = permission_service
 
     def authenticate_user(self, login: str, password: str):
-        user = self.db.query(User).filter(User.login == login.lower()).first()
-        if not user or not verify_password(password, user.password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid_credentials"
-            )
-        return user
-    
+        # 1. Сначала ищем пользователя в локальной базе данных
+        login_lower = login.lower()
+        user = self.db.query(User).filter(User.login == login_lower).first()
+        
+        # 2. Если пользователь локальный или встроенный -> обычная проверка пароля
+        if user and user.type in ["built_in", "local"]:
+            if not verify_password(password, user.password):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid_credentials"
+                )
+            return user
+
+        # 3. LDAP интеграция (если пользователь помечен как ldap или не найден вовсе)
+        if is_ldap_enabled(self.db):
+            # Пытаемся аутентифицировать через LDAP
+            # Используем ldap_id для поиска, если пользователь уже есть в базе (защита от переименования)
+            ldap_id = user.ldap_id if user else None
+            
+            ldap_result = authenticate_ldap_user(self.db, login_lower, password, ldap_id=ldap_id)
+            if ldap_result:
+                ldap_entry, server_type = ldap_result
+                user_info = get_ldap_user_info(ldap_entry, server_type)
+                
+                if user_info:
+                    # Если пользователя нет в базе по логину, ищем по ldap_id (мог смениться логин)
+                    if not user:
+                        user = self.db.query(User).filter(User.ldap_id == user_info["ldap_id"]).first()
+                        
+                        if not user:
+                            # 2.4.3. Автоматическое создание пользователя (Auto-provisioning)
+                            user = User(
+                                login=user_info["username"].lower(),
+                                name=user_info["full_name"],
+                                type="ldap",
+                                ldap_id=user_info["ldap_id"],
+                                ldap_dn=user_info["ldap_dn"],
+                                is_active=True # Пользователь из LDAP активен по умолчанию
+                            )
+                            self.db.add(user)
+                    
+                    # 2.4.2 / 2.4.4. Синхронизация данных (Login, Name, DN)
+                    user.login = user_info["username"].lower()
+                    user.name = user_info["full_name"]
+                    user.ldap_dn = user_info["ldap_dn"]
+                    
+                    self.db.commit()
+                    self.db.refresh(user)
+                    return user
+
+        # 4. Если ничего не помогло -> ошибка входа
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid_credentials"
+        )
+
     def create_tokens(self, user: User, request: Request):
         permissions = self.permission_service.get_user_permissions(user.id)
         access_payload = {
@@ -47,7 +98,7 @@ class AuthService:
         self.db.commit()
 
         return access, refresh
-    
+
     def referesh_access_token(self, refresh_token: str): # Original signature without 'request'
         payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":

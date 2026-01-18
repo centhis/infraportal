@@ -1,8 +1,14 @@
+from datetime import timedelta
+from typing import Optional
+import base64
+
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
-from datetime import timedelta
-from app.core.jwt_prvider import JwtProvider
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
+from app.core.jwt_prvider import JwtProvider
 from app.core.config import settings
 
 pwd_context = CryptContext(schemes=['argon2'], deprecated='auto')
@@ -24,3 +30,34 @@ def create_token(data: dict, expires_delta: timedelta, token_type: str):
 
 def decode_token(token: str):
     return jwt_provider.decode_token(token)
+
+# --- Reversible Encryption (Fernet) ---
+
+def _get_fernet() -> Fernet:
+    """
+    Generates a Fernet instance using the application's SECRET_KEY.
+    """
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=settings.SECRET_KEY.encode(),
+        iterations=100000,
+    )
+    # Derive key from a static application context string
+    # uniqueness is guaranteed by the salt (SECRET_KEY)
+    key = base64.urlsafe_b64encode(kdf.derive(b"infraportal_app_key"))
+    return Fernet(key)
+
+def encrypt_value(value: str) -> str:
+    """Encrypts a string value using Fernet (reversible)."""
+    if not value:
+        return value
+    f = _get_fernet()
+    return f.encrypt(value.encode()).decode()
+
+def decrypt_value(encrypted_value: str) -> str:
+    """Decrypts a Fernet-encrypted string value."""
+    if not encrypted_value:
+        return encrypted_value
+    f = _get_fernet()
+    return f.decrypt(encrypted_value.encode()).decode()

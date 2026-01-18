@@ -4,7 +4,7 @@ import { Box, IconButton, Chip } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from 'react-i18next';
 
-import usePersistentState from "../../hooks/usePersistentState";
+import usePersistentState from "../../../../shared/hooks/usePersistentState";
 
 const RoleTable = ({
     roles,
@@ -86,16 +86,16 @@ const RoleTable = ({
             onColumnVisibilityModelChange={setColumnVisibilityModel}
             onRowClick={(params) => onEdit(params.row)} // <--- Added onRowClick
             sx={{
-              [`& .${gridClasses.columnHeader}, & .${gridClasses.cell}`]: {
-                outline: 'transparent',
-              },
-              [`& .${gridClasses.columnHeader}:focus-within, & .${gridClasses.cell}:focus-within`]:
-                {
-                  outline: 'none',
+                [`& .${gridClasses.columnHeader}, & .${gridClasses.cell}`]: {
+                    outline: 'transparent',
                 },
-              [`& .${gridClasses.row}:hover`]: {
-                cursor: 'pointer',
-              },
+                [`& .${gridClasses.columnHeader}:focus-within, & .${gridClasses.cell}:focus-within`]:
+                {
+                    outline: 'none',
+                },
+                [`& .${gridClasses.row}:hover`]: {
+                    cursor: 'pointer',
+                },
             }}
         />
     )

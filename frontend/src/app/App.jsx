@@ -12,17 +12,16 @@
 
 import { AuthProvider } from "./providers/AuthProvider";
 import { I18nProvider } from "./providers/I18nProvider";
+import { ToastProvider } from "./providers/ToastProvider";
 import AppContent from "./AppContent";
-// import AppRoutes from "./routes/AppRoutes" // Removed AppRoutes from here
-console.log("App render before AppRoutes");
 
 function App() {
-  console.log("App render");
-
   return (
     <I18nProvider>
       <AuthProvider>
-        <AppContent />
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
       </AuthProvider>
     </I18nProvider>
   )

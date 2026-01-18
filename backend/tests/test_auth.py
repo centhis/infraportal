@@ -126,7 +126,6 @@ def test_access_token_expired(client: TestClient, user_factory, token_factory):
     assert response.status_code == 401
     assert response.json()["detail"] == "User not found"
 
-
 def test_verify_token_success(client: TestClient, tmp_user):
     """
     Test successful token verification.

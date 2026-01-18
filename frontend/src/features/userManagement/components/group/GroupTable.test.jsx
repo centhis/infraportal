@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import GroupTable from './GroupTable';
 
 // Mock dependencies
-vi.mock('../../hooks/usePersistentState', () => ({
+vi.mock('../../../../shared/hooks/usePersistentState', () => ({
     __esModule: true,
     default: vi.fn((key, initialValue) => [initialValue, vi.fn()]),
 }));
@@ -16,14 +16,14 @@ describe('GroupTable', () => {
 
     const mockOnEdit = vi.fn();
     const mockOnDelete = vi.fn();
-    
+
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
     it('should render group names and descriptions', async () => {
         render(
-            <GroupTable 
+            <GroupTable
                 groups={mockGroups}
                 onEdit={mockOnEdit}
                 onDelete={mockOnDelete}
@@ -37,10 +37,10 @@ describe('GroupTable', () => {
         expect(screen.getByText('Developers')).toBeInTheDocument();
         expect(screen.getByText('Admin group')).toBeInTheDocument();
     });
-    
+
     it('should call onEdit when a row is clicked', async () => {
         render(
-            <GroupTable 
+            <GroupTable
                 groups={mockGroups}
                 onEdit={mockOnEdit}
                 onDelete={mockOnDelete}
@@ -57,7 +57,7 @@ describe('GroupTable', () => {
 
     it('should call onDelete when delete icon is clicked', async () => {
         render(
-            <GroupTable 
+            <GroupTable
                 groups={mockGroups}
                 onEdit={mockOnEdit}
                 onDelete={mockOnDelete}
@@ -70,7 +70,7 @@ describe('GroupTable', () => {
         const developerRow = (await screen.findByText('Developers')).closest('.MuiDataGrid-row');
         const deleteButton = within(developerRow).getByRole('button', { name: /delete/i });
         fireEvent.click(deleteButton);
-        
+
         expect(mockOnDelete).toHaveBeenCalledTimes(1);
         expect(mockOnDelete).toHaveBeenCalledWith(mockGroups[1].id);
         expect(mockOnEdit).not.toHaveBeenCalled();
