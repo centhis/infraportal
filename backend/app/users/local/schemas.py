@@ -1,8 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List, Literal
+from typing import Optional, List
 from datetime import datetime
 from app.users.permissions.schemas import PermissionResponseSchema
-from app.users.roles.schemas import RoleResponseSchema # Добавлен импорт RoleResponseSchema
 
 class CreateUserSchema(BaseModel):
     login: str = Field(..., min_length=3, max_length=50)

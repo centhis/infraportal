@@ -5,15 +5,15 @@
 ## 1. Создание независимых сервисов `celery_worker` и `celery_beat`
 
 ### 1.1. Создание базовой структуры
-*   1.1.1. (pending) Создать новую корневую папку `celery_worker/`. Описание: Это директория сервиса, отвечающего за выполнение бизнес-логики асинхронных задач.
-*   1.1.2. (pending) Создать новую корневую папку `celery_beat/`. Описание: Это директория легковесного сервиса, отвечающего исключительно за чтение расписания из БД и постановку задач в очередь.
+*   1.1.1. (completed) Создать новую корневую папку `celery_worker/`. Описание: Это директория сервиса, отвечающего за выполнение бизнес-логики асинхронных задач. Создать виртуальное окружение с помощью uv.
+*   1.1.2. (completed) Создать новую корневую папку `celery_beat/`. Описание: Это директория легковесного сервиса, отвечающего исключительно за чтение расписания из БД и постановку задач в очередь. Создать виртуальное окружение с помощью uv.
 
 ---
 
 ## 2. Настройка сервиса `celery_worker`
 
 ### 2.1. Файлы `celery_worker/`
-*   2.1.1. (pending) Создать файл `celery_worker/celery_app.py`. Описание: Инициализация Celery-приложения для worker-а.
+*   2.1.1. (completed) Создать файл `celery_worker/celery_app.py`. Описание: Инициализация Celery-приложения для worker-а.
     ```python
     # celery_worker/celery_app.py
     from celery import Celery
@@ -21,14 +21,14 @@
 
     celery_app = Celery(
         "celery_worker",
-        broker=settings.CELERY_BROKER_URL,
-        backend=settings.CELERY_RESULT_BACKEND
+        broker=settings.REDIS_TASK_URL,
+        backend=settings.REDIS_RESULT_URL
     )
     celery_app.config_from_object('celery_worker.config')
     # worker будет автообнаруживать задачи из celery_worker.tasks
     celery_app.autodiscover_tasks(['celery_worker.tasks'])
     ```
-*   2.1.2. (pending) Создать файл `celery_worker/tasks.py`. Описание: Реализация единственной задачи-диспетчера, которая маршрутизирует выполнение на основе `task_type`.
+*   2.1.2. (completed) Создать файл `celery_worker/tasks.py`. Описание: Реализация единственной задачи-диспетчера, которая маршрутизирует выполнение на основе `task_type`.
     ```python
     # celery_worker/tasks.py
     import logging
@@ -49,14 +49,14 @@
     ) -> Any:
         """
         Диспетчер задач.
-        Принимает тип задачи (task_type), schedule_id (для запланированных задач),
-        execution_id (для ручных задач) и произвольные аргументы (kwargs).
-        Маршрутизирует выполнение на соответствующую бизнес-логику внутри worker.
+        Принимает тип задачи (task_type), получает необходимые для выполнения секреты
+        из центрального бэкенда и маршрутизирует выполнение на соответствующую бизнес-логику.
         """
         current_task_type = task_type
         current_execution_id = execution_id
         current_kwargs = kwargs
 
+        # 1. Если задача плановая, сначала получаем ее execution_id и параметры
         if schedule_id:
             logger.info(f"Получена запланированная задача с schedule_id='{schedule_id}'. Обращаемся к бэкенду за execution_id и параметрами.")
             try:
@@ -86,16 +86,38 @@
                 raise ValueError(f"Некорректный ответ от бэкенда при обработке schedule_id '{schedule_id}'")
 
         if not current_execution_id:
-            logger.error(f"Не удалось получить execution_id ни из аргументов, ни от бэкенда для задачи с task_type='{current_task_type}' и schedule_id='{schedule_id}'.")
+            logger.error(f"Не удалось получить execution_id для задачи с task_type='{current_task_type}'.")
             raise ValueError("Отсутствует execution_id для выполнения задачи.")
 
-        logger.info(f"Начинаем выполнение задачи task_type='{current_task_type}' (execution_id='{current_execution_id}') с параметрами: {current_kwargs}")
+        # 2. Получаем секрет, необходимый для выполнения этой задачи
+        secret = None
+        try:
+            logger.info(f"Запрашиваем секрет для task_type='{current_task_type}' (execution_id='{current_execution_id}')")
+            headers = {"X-API-Key": settings.CELERY_WORKER_API_KEY}
+            response = httpx.post(
+                f"{settings.BACKEND_INTERNAL_API_URL}/secrets",
+                json={"task_type": current_task_type},
+                headers=headers,
+                timeout=10.0
+            )
+            response.raise_for_status()
+            secret = response.json().get("secret")
+            logger.info(f"Секрет для task_type='{current_task_type}' успешно получен.")
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Ошибка HTTP при получении секрета для task_type '{current_task_type}': {e.response.status_code} - {e.response.text}")
+            raise ValueError(f"Не удалось получить секрет: HTTP {e.response.status_code}")
+        except httpx.RequestError as e:
+            logger.error(f"Ошибка запроса при получении секрета для task_type '{current_task_type}': {e}")
+            raise ValueError(f"Не удалось подключиться к бэкенду для получения секрета: {e}")
 
-        from celery_worker.task_registry import get_task_handler
+        # 3. Выполняем саму бизнес-логику
+        logger.info(f"Начинаем выполнение задачи task_type='{current_task_type}' (execution_id='{current_execution_id}') с параметрами: {current_kwargs}")
+        
         handler = get_task_handler(current_task_type)
         if handler:
             try:
-                result = handler(execution_id=current_execution_id, **current_kwargs)
+                # Передаем секрет в обработчик вместе с остальными параметрами
+                result = handler(execution_id=current_execution_id, secret=secret, **current_kwargs)
                 logger.info(f"Задача task_type='{current_task_type}' (execution_id='{current_execution_id}') завершена успешно.")
                 return result
             except Exception as e:
@@ -105,15 +127,15 @@
             logger.error(f"Обработчик для task_type '{current_task_type}' не найден (execution_id='{current_execution_id}').")
             raise ValueError(f"Обработчик для task_type '{current_task_type}' не найден.")
     ```
-*   2.1.3. (pending) Создать файл `celery_worker/config.py`. Описание: Конфигурация для worker-а.
+*   2.1.3. (completed) Создать файл `celery_worker/config.py`. Описание: Конфигурация для worker-а.
     ```python
     # celery_worker/config.py
     from pydantic_settings import BaseSettings, SettingsConfigDict
     import os
 
     class WorkerSettings(BaseSettings):
-        CELERY_BROKER_URL: str = "redis://redis:6379/0"
-        CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
+        REDIS_TASK_URL: str = "redis://redis:6379/0"
+        REDIS_RESULT_URL: str = "redis://redis:6379/1"
         CELERY_TIMEZONE: str = "Europe/Moscow"
         CELERY_ENABLE_UTC: bool = True
         CELERY_ACCEPT_CONTENT: list[str] = ['json']
@@ -127,16 +149,15 @@
         model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     settings = WorkerSettings()
     ```
-*   2.1.4. (pending) Создать структуру `celery_worker/handlers/` и `celery_worker/task_registry.py`. Описание: Место для реализации и регистрации бизнес-логики конкретных задач.
-*   2.1.5. (pending) Создать файл `celery_worker/requirements.txt` с полным набором зависимостей.
+*   2.1.4. (completed) Создать структуру `celery_worker/handlers/` и `celery_worker/task_registry.py`. Описание: Место для реализации и регистрации бизнес-логики конкретных задач.
+*   2.1.5. (completed) установить с помощью uv полный набор зависимостей.
     ```
     celery
     redis
     pydantic-settings
     httpx
-    # Добавьте все остальные библиотеки, необходимые для выполнения бизнес-логики
     ```
-*   2.1.6. (pending) Создать файл `celery_worker/start_worker.sh`. Скрипт для запуска worker-а.
+*   2.1.6. (completed) Создать файл `celery_worker/start_worker.sh`. Скрипт для запуска worker-а.
     ```bash
     #!/bin/bash
     # celery_worker/start_worker.sh
@@ -150,13 +171,13 @@
 ## 3. Настройка сервиса `celery_beat`
 
 ### 3.1. Файлы `celery_beat/`
-*   3.1.1. (pending) Создать файл `celery_beat/celery_app.py`. Описание: Легковесная инициализация Celery-приложения для beat-а.
+*   3.1.1. (completed) Создать файл `celery_beat/celery_app.py`. Описание: Легковесная инициализация Celery-приложения для beat-а.
     ```python
     # celery_beat/celery_app.py
     from celery import Celery
     from .config import settings
 
-    celery_app = Celery("celery_beat", broker=settings.CELERY_BROKER_URL)
+    celery_app = Celery("celery_beat", broker=settings.REDIS_TASK_URL)
     celery_app.config_from_object('celery_beat.config')
     # Celery Beat не импортирует задачи, он получает их имена из БД.
     celery_app.conf.update(
@@ -165,14 +186,14 @@
         CELERY_BEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule' # Файл для PersistentScheduler
     )
     ```
-*   3.1.2. (pending) Создать файл `celery_beat/config.py`. Описание: Минимальная конфигурация для beat-а.
+*   3.1.2. (completed) Создать файл `celery_beat/config.py`. Описание: Минимальная конфигурация для beat-а.
     ```python
     # celery_beat/config.py
     from pydantic_settings import BaseSettings, SettingsConfigDict
     import os
 
     class BeatSettings(BaseSettings):
-        CELERY_BROKER_URL: str = "redis://redis:6379/0"
+        REDIS_TASK_URL: str = "redis://redis:6379/0"
         CELERY_BEAT_SCHEDULER: str = "celery.beat.PersistentScheduler"
         CELERY_BEAT_DB_URL: str # URL к PostgreSQL для хранения расписания
         CELERY_TIMEZONE: str = "Europe/Moscow" # Часовой пояс для beat
@@ -180,7 +201,7 @@
         model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     settings = BeatSettings()
     ```
-*   3.1.3. (pending) Создать файл `celery_beat/requirements.txt` с минимальными зависимостями.
+*   3.1.3. (completed) Установить с помощью uv минимальный набор зависимостей.
     ```
     celery
     redis
@@ -188,7 +209,7 @@
     psycopg2-binary # Драйвер для PostgreSQL
     sqlalchemy # Часто требуется для PersistentScheduler
     ```
-*   3.1.4. (pending) Создать файл `celery_beat/start_beat.sh`. Скрипт для запуска beat-а.
+*   3.1.4. (completed) Создать файл `celery_beat/start_beat.sh`. Скрипт для запуска beat-а.
     ```bash
     #!/bin/bash
     # celery_beat/start_beat.sh
@@ -203,152 +224,193 @@
 
 ## 4. Интеграция с Основным FastAPI-бэкендом (`backend/`)
 
-*   4.1. (pending) Адаптировать `backend/app/core/config.py` для взаимодействия с Celery. Описание: В конфигурации `backend` теперь должна присутствовать `CELERY_BROKER_URL` для корректной работы локального Celery-клиента. Также остаются `FLOWER_API_URL` и `CELERY_WORKER_API_KEY`.
-    ```python
-    # backend/app/core/config.py (в классе Settings)
-    from pydantic_settings import BaseSettings, SettingsConfigDict
+Этот раздел описывает, как основной бэкенд будет инициировать задачи, управлять секретами и предоставлять API для взаимодействия с системой фоновых задач. Архитектура построена на принципах слабой связанности и инверсии управления.
 
+### 4.1. (completed) Адаптация конфигурации и создание клиента Celery
+*   **4.1.1. `backend/app/core/config.py`**: В основной класс `Settings` необходимо добавить переменные, связанные с Celery:
+    ```python
     class Settings(BaseSettings):
-        # ... другие настройки бэкенда ...
-        CELERY_BROKER_URL: str = "redis://redis:6379/0" # URL брокера для локального клиента
-        FLOWER_API_URL: str = "http://flower-service:5555" # URL для обращения к Flower
-        CELERY_WORKER_API_KEY: str # API-ключ для авторизации worker-а
-
-        model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-    settings = Settings()
+        # ... другие настройки
+        REDIS_TASK_URL: str = "redis://redis:6379/0"
+        FLOWER_API_URL: str = "http://flower-service:5555"
+        CELERY_WORKER_API_KEY: str # Секретный ключ для авторизации celery-worker
     ```
-*   4.2. (pending) Создать файл `backend/app/core/celery_client.py` и модифицировать эндпоинты в `backend/` для постановки задач.
-    *   **Описание:** `backend` будет использовать свой собственный, локально определенный Celery-клиент для отправки задач в очередь.
+*   **4.1.2. `backend/app/core/celery_client.py`**: Создать локальный экземпляр клиента Celery. Он используется только для отправки задач в брокер и не загружает никакой логики выполнения.
     ```python
-    # backend/app/core/celery_client.py
     from celery import Celery
     from .config import settings
 
     celery_client = Celery(
         'backend_client',
-        broker=settings.CELERY_BROKER_URL,
-        backend=None, # Бэкенду не нужно читать результаты напрямую
-        include=[] # Убедимся, что он не ищет и не загружает никакие задачи
+        broker=settings.REDIS_TASK_URL,
+        backend=None, # Бэкенду не нужно читать результаты
+        include=[] # Убедимся, что он не ищет и не загружает код задач
     )
     ```
-    *   **Пример реализации (псевдокод) для ручного запуска в FastAPI эндпоинте:**
+
+### 4.2. (completed) Архитектура реестра задач с автообнаружением
+Для масштабирования на сотни задач мы используем паттерн "Реестр с автообнаружением".
+
+*   **4.2.1. Создание реестра (`backend/app/tasks/registry.py`)**:
+    *   **Описание**: Этот модуль определяет `TaskDefinition` (класс для описания задачи) и `TASK_REGISTRY` (глобальный словарь для их хранения). Ключевое здесь — функция `autodiscover_tasks`, которая при старте приложения будет находить и регистрировать все задачи.
+    *   **`TaskDefinition`**: Хранит имя задачи (например, `users:sync_ldap`), Pydantic-схему для ее параметров и требуемое для запуска разрешение.
+    *   **`autodiscover_tasks()`**: Проходит по всем модулям приложения (например, `users`, `reports`), ищет в них файлы `tasks.py` и подгружает из них списки `TASK_DEFINITIONS`.
+
+*   **4.2.2. Декларация задач в модулях**:
+    *   **Описание**: Каждый модуль, которому нужны фоновые задачи, декларирует их в своем файле `tasks.py`, не имея прямой зависимости от реестра.
+    *   **Пример (`backend/app/users/tasks.py`)**:
         ```python
-        # backend/app/api/v1/tasks.py (пример нового эндпоинта)
-        from fastapi import APIRouter, Depends, HTTPException, status
-        from sqlalchemy.ext.asyncio import AsyncSession
-        from backend.app.db.dependencies import get_async_session
-        from backend.app.models.task_execution import TaskExecution
-        from backend.app.schemas.task_execution import TaskExecutionCreate
-        from backend.app.core.celery_client import celery_client # Импорт локального клиента
-        from uuid import uuid4
+        from pydantic import BaseModel, Field
 
-        router = APIRouter()
+        class SyncLdapParams(BaseModel):
+            group_dn: str = Field(description="DN группы для синхронизации")
 
-        @router.post("/run-manual-task", status_code=status.HTTP_202_ACCEPTED)
-        async def run_manual_task(
-            task_data: TaskExecutionCreate,
-            current_user: User = Depends(get_current_user),
-            session: AsyncSession = Depends(get_async_session)
-        ):
-            execution_id = uuid4()
-            db_task_execution = TaskExecution(
-                id=execution_id,
-                task_type=task_data.task_type,
-                params=task_data.params,
-                triggered_by="USER",
-                trigger_source="MANUAL_UI",
-                created_by=current_user.id,
-                status="PENDING"
-            )
-            session.add(db_task_execution)
-            await session.commit()
-            await session.refresh(db_task_execution)
-
-            celery_client.send_task(
-                "tasks.dispatch", # Имя задачи-диспетчера в celery_worker
-                kwargs={
-                    "task_type": task_data.task_type,
-                    "execution_id": str(execution_id),
-                    **task_data.params
-                }
-            )
-            return {"message": "Задача успешно поставлена в очередь", "execution_id": execution_id}
+        # Просто список кортежей, который будет обнаружен автоматически
+        TASK_DEFINITIONS = [
+            ( "users:sync_ldap", SyncLdapParams, "users:tasks:sync" )
+        ]
         ```
-    *   **Важно:** Такой подход обеспечивает полную одностороннюю независимость `backend` от кода `celery_worker` и `celery_beat`. `backend` общается с ними исключительно через брокер сообщений.
 
-*   4.3. (pending) Добавить модели БД `TaskSchedule` и `TaskExecution` в `backend/app/db/models/`. Описание: Этот пункт остается без изменений, за исключением того, что ссылки на `tasks_service` теперь будут уточнены как `celery_worker` или `celery_beat` при необходимости.
+*   **4.2.3. Запуск автообнаружения (`backend/main.py`)**:
+    *   При старте приложения в `main.py` необходимо вызвать `autodiscover_tasks()` для наполнения реестра.
 
-*   4.4. (pending) Реализовать внутренние API-эндпоинты в `backend/app/api/v1/internal.py` для `celery_worker`. Описание: Эндпоинты, предоставляющие чувствительные данные (например, LDAP-пароль) и функциональность для управления `TaskExecution`, будут использоваться `celery_worker` и защищены `CELERY_WORKER_API_KEY`.
+### 4.3. (completed) Универсальный API для управления задачами
+На основе наполненного реестра создаются два универсальных эндпоинта.
 
-*   4.5. (pending) Обновить `backend/start.sh` для запуска только основного FastAPI-бэкенда.
-*   4.5. (pending) Реализация дашборда статусов Celery.
-    *   **Описание:** Для отображения статусов Celery Worker-ов и активных задач будет реализован внутренний API-эндпоинт в FastAPI. Этот эндпоинт будет агрегировать информацию, полученную из Flower API, и предоставлять её для дашборда.
-    *   **Подробное описание:**
-        *   **FastAPI как прокси для Flower:** FastAPI будет выступать в роли прокси для Flower API, делая запросы к нему и обрабатывая полученные данные. Это позволяет централизовать доступ к информации о Celery через FastAPI и применять к нему существующие механизмы аутентификации и авторизации.
-        *   **Получаемые метрики:** Количество воркеров, их статус, активные задачи.
-        *   **Интеграция с Flower:** FastAPI-бэкенд будет выполнять HTTP-запросы к Flower API (доступному по `FLOWER_API_URL`).
-    *   **Пример реализации эндпоинта в FastAPI:**
-        ```python
-        # backend/app/api/v1/metrics.py (или другой подходящий модуль)
-        from fastapi import APIRouter, Depends, HTTPException, status
-        from typing import Dict, Any
-        from backend.app.core.config import settings
-        import httpx
-        import logging
+*   **4.3.1. Сервис задач (`backend/app/tasks/services.py`)**:
+    *   **Описание**: `TaskService` инкапсулирует логику запуска задач. Его метод `run_task_by_name` будет:
+        1.  Находить задачу в `TASK_REGISTRY` по имени.
+        2.  Проверять права доступа пользователя (сравнивая с `permission` из `TaskDefinition`).
+        3.  Валидировать переданные параметры с помощью `params_schema` из `TaskDefinition`.
+        4.  Создавать запись в таблице `TaskExecution` (см. п. 4.5).
+        5.  Использовать `celery_client` для отправки сообщения в Redis.
 
-        logger = logging.getLogger(__name__)
-        router = APIRouter()
+*   **4.3.2. API-эндпоинты (`backend/app/api/v1/tasks.py`)**:
+    *   `GET /tasks`: Возвращает список всех задач из `TASK_REGISTRY` с их именами и схемами параметров. Позволяет UI динамически строить формы для запуска.
+    *   `POST /tasks/{task_name}/run`: Универсальный эндпоинт для запуска любой задачи по ее имени. Принимает `task_name` в пути и `params` в теле запроса.
 
-        @router.get(
-            "/celery/dashboard_status",
-            response_model=Dict[str, Any],
-            status_code=status.HTTP_200_OK,
-            tags=["Metrics"]
-        )
-        async def get_celery_dashboard_status():
-            """
-            Предоставляет агрегированный статус Celery Worker-ов и активных задач для дашборда.
-            Информация извлекается из Flower API.
-            """
-            flower_url = settings.FLOWER_API_URL
-            if not flower_url:
-                logger.error("FLOWER_API_URL не настроен.")
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="URL Flower API не настроен в бэкенде.",
-                )
+### 4.4. Архитектура получения секретов (Dynamic Permissions)
+Для управления доступом задач к чувствительным настройкам используется система разрешений в базе данных.
 
-            async with httpx.AsyncClient() as client:
-                try:
-                    workers_response = await client.get(f"{flower_url}/api/workers", timeout=5.0)
-                    workers_response.raise_for_status()
-                    workers_data = workers_response.json()
+*   **4.4.1. Модель `TaskSecretMapping`**:
+    *   Создать модель `backend/app/settings/models.py`.
+    *   Поля: `id`, `task_type` (str, index), `setting_key` (str).
+    *   Назначение: Определяет, к каким ключам настроек имеет доступ конкретный тип задачи.
 
-                    active_tasks_response = await client.get(f"{flower_url}/api/tasks?state=ACTIVE", timeout=5.0)
-                    active_tasks_response.raise_for_status()
-                    active_tasks_data = active_tasks_response.json()
+*   **4.4.2. Инициализация прав (Initial Data)**:
+    *   Создать модуль инициализации `backend/app/settings/initial_permissions.py`.
+    *   При старте приложения автоматически создавать необходимые записи в `TaskSecretMapping` для системных задач.
+    *   Для задачи `users:sync_ldap` регистрируется доступ к `LdapSetting:LDAP_BIND_PASSWORD`.
 
-                    return {
-                        "num_workers": len(workers_data),
-                        "worker_statuses": {w: i.get("status", "unknown") for w, i in workers_data.items()},
-                        "active_tasks_count": len(active_tasks_data),
-                        "flower_api_status": "ok"
-                    }
+*   **4.4.3. Универсальный API-эндпоинт (`backend/app/settings/api/internal.py`)**:
+    *   Реализовать эндпоинт `POST /api/internal/secrets`.
+    *   **Входные параметры**: `task_type` (строка).
+    *   **Алгоритм работы**:
+        1.  Найти все разрешенные ключи в таблице `TaskSecretMapping`.
+        2.  **Resolution**: Ключ имеет формат `ModelName:KeyName` (например, `LdapSetting:LDAP_BIND_PASSWORD`).
+        3.  Распарсить ключ, найти соответствующую модель и извлечь значение.
+        4.  Вернуть словарь `{KeyName: value}` (или с префиксом, по договоренности).
+    *   Такой подход обеспечивает гибкость конфигурации и централизованный контроль доступа к секретам.
 
-                except (httpx.HTTPStatusError, httpx.RequestError) as e:
-                    logger.error(f"Ошибка при запросе к Flower API: {e}")
-                    raise HTTPException(
-                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                        detail=f"Не удалось получить данные от Flower API.",
-                    )
-        ```
-    *   **Настройка маршрутизатора:** Этот маршрутизатор должен быть включен в основное FastAPI-приложение.
+### 4.5. (completed) Модели и Миграции Базы Данных
+*   **4.5.1. `TaskExecution`**: Кастомная модель для хранения истории всех запусков задач. Структура включает `id`, `task_type`, `params`, `status`, `triggered_by`, `result`, **`heartbeat_at` (DateTime, для отказоустойчивости)**.
+*   **4.5.2. Модели планировщика**: Модели из `celery-sqlalchemy-scheduler` (`PeriodicTask`, `CrontabSchedule` и др.) импортируются в `backend` (например, в `backend/app/tasks/models.py`), чтобы Alembic мог управлять ими.
+*   **4.5.3. Миграции Alembic**: После определения всех моделей (кастомных и импортированных) генерируются и применяются миграции для создания всех необходимых таблиц в БД.
 
+### 4.6. Реализация Синхронизации LDAP (Task Implementation)
+Этот раздел описывает конкретную реализацию периодической задачи `users:sync_ldap`.
+
+*   **4.6.1. (completed) Обновление передачи настроек (Backend)**:
+    *   Модифицировать функцию `_sync_schedule` (в `settings/api/ldap.py` и `main.py`).
+    *   При формировании задачи `users:sync_ldap` добавлять в `kwargs` следующие не-секретные настройки: `URI`, `BASE_DN`, `BIND_DN`, `USER_FILTER`.
+    *   **Обработка секрета**: Пароль `LDAP_BIND_PASSWORD` **не передается** в параметрах задачи через Redis. Вместо этого, он остается в защищенном хранилище настроек бэкенда. Воркер получит его отдельно через Internal API.
+
+*   **4.6.2. Утилиты LDAP для Воркера (Worker)**:
+    *   Создать модуль `celery_worker/utils/ldap.py`.
+    *   **Default Mappings**: Определить две константы-словаря с максимально полным набором атрибутов:
+        *   `DEFAULT_AD_MAPPING`: `{"login": "sAMAccountName", "full_name": "displayName", "email": "mail", "ldap_id": "objectGUID", "is_active": "userAccountControl", ...}`
+        *   `DEFAULT_OPENLDAP_MAPPING`: `{"login": "uid", "full_name": "cn", "email": "mail", "ldap_id": "entryUUID", ...}`
+    *   Реализовать функции для работы с `ldap3`:
+        *   `connect_to_ldap(...)` -> Connection.
+        *   `detect_server_type(server_info)` -> 'ad' | 'openldap'.
+        *   `fetch_users(connection, base_dn, search_filter, attributes_list)` -> List[dict].
+    *   Логика должна принимать *список атрибутов* для запроса, делая функцию универсальной.
+
+*   **4.6.3. API для приема пользователей (Backend)**:
+    *   Создать модуль `backend/app/users/api/internal.py`.
+    *   Реализовать эндпоинт `POST /api/internal/users/sync`.
+    *   Принимаемая модель: список объектов `LdapUserSyncSchema` (ldap_id, login, email, full_name, dn, is_active).
+    *   Логика (`UserService.sync_batch`):
+        *   Получение списка существующих пользователей типа 'ldap'.
+        *   Upsert: Обновление данных для совпадений по `ldap_id` (или `login` как fallback), создание новых.
+        *   (Опционально) Обработка неактивных/удаленных в LDAP.
+
+*   **4.6.4. Реализация Хендлера (Worker)**:
+    *   Создать `celery_worker/handlers/users/sync.py`.
+    *   Реализовать функцию-хендлер `sync_users_handler(execution_id, secret, **ldap_settings)`.
+    *   **Алгоритм выполнения**:
+        1.  **Получение параметров**: Хендлер получает не-секретные настройки (`URI`, `DN`...) из аргументов функции (`**kwargs`).
+        2.  **Получение секрета**: Секрет (`bind_password`) передается в функцию диспетчером задач, который предварительно запрашивает его у бэкенда через `POST /api/internal/secrets` (см. п. 4.4.3).
+        3.  **Подключение**: Инициализация соединения с LDAP сервером используя полученные настройки и пароль.
+        4.  **Поиск**: Выполнение поиска всех пользователей с учетом фильтра.
+        5.  **Трансформация**: Преобразование результатов в список унифицированных словарей.
+        6.  **Отправка**: Отправка батча данных на бэкенд через `POST /api/internal/users/sync`.
+        7.  **Завершение**: Обновление статуса выполнения задачи и отправка метрик.
+
+### 4.7. (completed) Мониторинг и Дашборды
+Для обеспечения наблюдаемости системы необходимо реализовать два типа дашбордов.
+
+*   **4.7.1. Дашборд статуса Worker-ов (через Flower API)**:
+    *   **Описание**: Для отображения статусов Celery Worker-ов и активных задач в реальном времени будет реализован API-эндпоинт в FastAPI, который проксирует запросы к Flower API.
+    *   **Логика**: Бэкенд будет выполнять HTTP-запросы к Flower API (доступному по `FLOWER_API_URL`), агрегировать метрики (кол-во worker-ов, их статус, активные задачи) и предоставлять их для дашборда в UI.
+    *   **Эндпоинт**: `GET /api/v1/metrics/celery/status` в новом модуле `backend/app/api/v1/metrics.py`.
+
+*   **4.7.2. Дашборд истории выполнения задач**:
+    *   **Описание**: Для просмотра истории всех выполненных, текущих и проваленных задач будет создан отдельный дашборд в UI.
+    *   **Источник данных**: Этот дашборд будет напрямую использовать данные из кастомной таблицы `TaskExecution` (см. п. 4.5.1), запрашивая их через стандартный API бэкенда. Это позволит реализовать фильтрацию, поиск и детальный просмотр каждого запуска задачи, включая его параметры и результат/ошибку.
+    
+### 4.8. (completed) Обратная связь с UI и отказоустойчивость
+Этот раздел описывает механизм получения обратной связи о ходе выполнения задачи и защиту от "зависания" задач.
+
+*   **4.8.1. API для опроса статуса (Polling)**:
+    *   **Описание**: UI, запустив задачу и получив `execution_id`, будет периодически опрашивать бэкенд для получения обновлений статуса.
+    *   **Новый эндпоинт `GET /api/v1/task_executions/{execution_id}`**: Возвращает полную запись о выполнении задачи из таблицы `TaskExecution`, включая `status`, `progress`, `result` и т.д.
+    *   **Новый сервис `TaskExecutionService`**: Будет содержать логику для получения и обновления записей о выполнении задач.
+
+*   **4.8.2. Механизм обновления прогресса из Worker-а**:
+    *   **Описание**: Для отображения детального прогресса (например, в прогресс-баре) `celery-worker` будет сам сообщать о ходе выполнения.
+    *   **Новый эндпоинт `PATCH /api/internal/tasks/{execution_id}`**: Позволяет воркеру обновлять запись о выполнении, отправляя, например, процент выполнения, текстовый статус и `heartbeat_at`.
+    *   **Логика в Worker-е**: Обработчики задач в воркере (например, `perform_ldap_sync`) будут периодически вызывать этот `PATCH` эндпоинт.
+
+*   **4.8.3. Обработка "зависших" задач (Zombie Task Handling)**:
+    *   **Проблема**: Если `celery-worker` аварийно завершается, задача может навсегда остаться в статусе `IN_PROGRESS`.
+    *   **Решение (Heartbeat + Active Check)**:
+        1.  В модель `TaskExecution` добавляется поле `heartbeat_at` (DateTime).
+        2.  `Celery-worker`, выполняя задачу, через `PATCH` эндпоинт (п. 4.8.2) регулярно обновляет это поле, показывая, что он "жив".
+        3.  Создается **системная плановая задача** `system:cleanup_zombie_tasks`, которая запускается через `celery-beat` каждые 5-10 минут.
+        4.  **Логика**:
+            *   Воркер запрашивает у бэкенда (`POST /api/internal/tasks/stale`) список задач с просроченным heartbeat.
+            *   Для каждой задачи воркер проверяет через `app.control.inspect().active()`, выполняется ли она сейчас.
+            *   **Случай 1 (Зависание)**: Если задача **найдена** в списке активных:
+                *   Принудительно завершает её через `app.control.revoke(task_id, terminate=True)`.
+                *   Отправляет статус `FAILURE` с причиной "Task hung (timeout) and was terminated".
+            *   **Случай 2 (Крах воркера/Потеря)**: Если задача **не найдена** в списке активных (воркер перезагрузился или умер):
+                *   Просто отправляет статус `FAILURE` с причиной "Worker crashed or task lost".
+
+### 4.9. (completed) Аутентификация и RBAC
+*   **4.9.1. Права доступа**: Добавить в `initial_data.py` право `tasks:read`.
+*   **4.9.2. Защита API**:
+    *   `GET /api/v1/tasks`: Требует аутентификации и права `tasks:read`.
+    *   `POST /api/v1/tasks/{task_name}/run`: Требует аутентификации. Право на запуск проверяется динамически на основе требования конкретной задачи (например, `users:create`).
+*   **4.9.3. Интеграция в Service Layer**:
+    *   `TaskService` должен принимать текущего пользователя и его права.
+    *   Реализовать проверку прав перед запуском задачи.
+    *   Записывать реальное имя пользователя в поле `triggered_by`.
 ---
 
 ## 5. Рекомендации по Контейнеризации
 
-*   5.1. (pending) Описать рекомендации по контейнеризации (FastAPI, Celery Worker, Celery Beat, Flower, Redis, PostgreSQL), с учетом строгого разделения.
+*   5.1. (completed) Описать рекомендации по контейнеризации (FastAPI, Celery Worker, Celery Beat, Flower, Redis, PostgreSQL), с учетом строгого разделения.
     *   **FastAPI Container:**
         *   Dockerfile для создания образа из папки `backend/`.
         *   Устанавливает зависимости из `backend/pyproject.toml` (или `requirements.txt`).
@@ -371,3 +433,14 @@
         *   **Сетевое взаимодействие:** Настраивается так, чтобы сервисы могли общаться по имени контейнера.
         *   **Переменные окружения:** Все настройки передаются через переменные окружения, определенные в `docker-compose.yml` или в `.env` файлах для каждого сервиса.
         *   **Отсутствие общего кода:** В этой архитектуре `celery_worker` и `celery_beat` полностью независимы на уровне файловой системы, и не имеют прямых импортов друг в друга. Любой общий код (например, Pydantic-схемы для моделей БД, если они используются в разных сервисах) должен быть вынесен в отдельную "общую" библиотеку или дублироваться при осознанном решении.
+---
+## 6. Тестирование
+*   6.1. Unit-тесты: Покрыть сервисы (`TaskService`, `TaskExecutionService` и др.) и провайдеры юнит-тестами с использованием моков для БД и внешних вызовов.
+*   6.2. Интеграционные тесты: Написать тесты для API-эндпоинтов (`/tasks`, `/task_executions`, `/internal/secrets`), проверяющие полный цикл от HTTP-запроса до отправки задачи в (замоканный) Redis.
+*   6.3. Security-тесты: Проверить, что эндпоинты `/tasks` недоступны без токена, `GET /tasks` недоступен без права `tasks:read`, а запуск задачи невозможен без специфичного права.
+*   6.4. Тестирование Worker-а: Написать тесты для обработчиков задач в `celery-worker`, проверяющие корректность их бизнес-логики.
+
+## 7. Документация
+*   7.1. Актуализация архитектурной документации: Обновить существующие документы в папке `docs/`, отразив в них новую архитектуру асинхронных задач, сервисов `celery-worker` и `celery-beat`.
+*   7.2. Документация API: Убедиться, что все новые эндпоинты (включая внутренние) имеют исчерпывающие описания, Pydantic-схемы и примеры в сгенерированной OpenAPI (Swagger) документации. Security Schemes должны быть настроены.
+*   7.3. Руководство для разработчиков: Добавить раздел о том, как создавать и регистрировать новые фоновые задачи, их обработчики и провайдеры секретов согласно принятым паттернам. Описать процесс назначения прав для задач.

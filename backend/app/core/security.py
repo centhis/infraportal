@@ -1,17 +1,17 @@
 from datetime import timedelta
-from typing import Optional
 import base64
 
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from fastapi.security import OAuth2PasswordBearer
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from app.core.jwt_prvider import JwtProvider
+from app.core.jwt_provider import JwtProvider
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=['argon2'], deprecated='auto')
+ph = PasswordHasher()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.API_PREFIX + "/auth/login")
 
 ACCESS_TOKEN_EXPIRE = timedelta(minutes=15)
@@ -20,10 +20,14 @@ REFRESH_TOKEN_EXPIRE = timedelta(days=30)
 jwt_provider = JwtProvider()
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return ph.hash(password)
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        return ph.verify(hashed, plain)
+    except VerifyMismatchError:
+        return False
+
 
 def create_token(data: dict, expires_delta: timedelta, token_type: str):
     return jwt_provider.create_token(data, expires_delta, token_type)

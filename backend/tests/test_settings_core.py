@@ -90,7 +90,7 @@ def test_permissions_view_settings(client: TestClient, user_factory, core_settin
     Test 1.11.5: Permissions for viewing settings.
     """
     # User without permissions
-    user_no_perm = user_factory(login="no_perm_user", password="password")
+    user_factory(login="no_perm_user", password="password")
     token_no_perm = client.post("/api/v1/auth/login", json={"login": "no_perm_user", "password": "password"}).json()["access_token"]
     
     client_no_perm = TestClient(client.app)
@@ -100,7 +100,7 @@ def test_permissions_view_settings(client: TestClient, user_factory, core_settin
     assert response.status_code == 403
 
     # User with view permission
-    user_view = user_factory(login="view_user", password="password", roles=[{"name": "viewer", "permissions": ["settings:view"]}])
+    user_factory(login="view_user", password="password", roles=[{"name": "viewer", "permissions": ["settings:view"]}])
     token_view = client.post("/api/v1/auth/login", json={"login": "view_user", "password": "password"}).json()["access_token"]
     
     client_view = TestClient(client.app)
@@ -114,7 +114,7 @@ def test_permissions_update_settings(client: TestClient, user_factory, core_sett
     Test 1.11.5: Permissions for updating settings.
     """
     # User with view permission only (cannot update)
-    user_view = user_factory(login="viewer_comp", password="password", roles=[{"name": "viewer_c", "permissions": ["settings:view"]}])
+    user_factory(login="viewer_comp", password="password", roles=[{"name": "viewer_c", "permissions": ["settings:view"]}])
     token_view = client.post("/api/v1/auth/login", json={"login": "viewer_comp", "password": "password"}).json()["access_token"]
     
     client_view = TestClient(client.app)
@@ -124,7 +124,7 @@ def test_permissions_update_settings(client: TestClient, user_factory, core_sett
     assert response.status_code == 403
 
     # User with update permission
-    user_update = user_factory(login="updater", password="password", roles=[{"name": "updater", "permissions": ["settings:update"]}])
+    user_factory(login="updater", password="password", roles=[{"name": "updater", "permissions": ["settings:update"]}])
     token_update = client.post("/api/v1/auth/login", json={"login": "updater", "password": "password"}).json()["access_token"]
     
     client_update = TestClient(client.app)

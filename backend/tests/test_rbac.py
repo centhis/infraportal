@@ -1,6 +1,5 @@
-import pytest
 from fastapi.testclient import TestClient
-from app.users.models import User, Group, Role, Permission
+from app.users.models import Permission
 
 def test_delete_built_in_user(authenticated_client: TestClient):
     admin_user = authenticated_client.get("/api/v1/users/by-login/admin").json()
@@ -299,7 +298,7 @@ def test_permission_inheritance_through_groups_and_roles(authenticated_client: T
     # Scenario 1: User with 'users:view' permission
     # 1. Create permission
     view_permission_name = "users:view"
-    view_permission = tmp_permission(name=view_permission_name, description="View users")
+    tmp_permission(name=view_permission_name, description="View users")
 
     # 2. Create role and assign permission
     viewer_role_name = "viewer_role"
@@ -341,7 +340,7 @@ def test_permission_inheritance_through_groups_and_roles(authenticated_client: T
     # Scenario 2: User without 'users:view' permission, attempting to access 'users:view' protected endpoint
     # 1. Create a different permission
     create_permission_name = "users:create"
-    create_permission = tmp_permission(name=create_permission_name, description="Create users")
+    tmp_permission(name=create_permission_name, description="Create users")
 
     # 2. Create role and assign only 'users:create' permission
     creator_role_name = "creator_role"

@@ -1,11 +1,12 @@
 import logging
 import ssl
 import uuid
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, List
 
 from ldap3 import Server, Connection, ALL, Tls, SIMPLE
 from sqlalchemy.orm import Session
 
+from app.users.models import User
 from app.settings.ldap import services as ldap_settings_service
 
 logger = logging.getLogger(__name__)
@@ -257,10 +258,135 @@ def get_ldap_user_info(entry: Any, server_type: str) -> Optional[dict]:
         return {
             "ldap_id": ldap_id,
             "ldap_dn": entry.entry_dn,
-            "username": username,
+            "login": username, # Standardized key
             "email": email,
             "full_name": full_name
         }
     except Exception as e:
         logger.error(f"Error parsing LDAP entry info: {str(e)}")
         return None
+
+def create_or_update_ldap_user(db: Session, user_info: dict) -> Optional[User]:
+    """
+    Creates or updates a user based on LDAP info.
+    Common logic used by both Batch Sync and Login flows.
+    """
+    ldap_id = user_info.get("ldap_id")
+    login = user_info.get("login")
+    
+    if not ldap_id and not login:
+        logger.warning(f"Skipping user with missing ID and Login: {user_info}")
+        return None
+
+    # 1. Try to find existing user by LDAP ID
+    user = None
+    if ldap_id:
+        user = db.query(User).filter(User.ldap_id == ldap_id).first()
+    
+    # 2. Fallback: Find by login (if not found by ID)
+    if not user and login:
+        user = db.query(User).filter(User.login == login.lower()).first()
+
+    if user:
+        # UPDATE
+        # Critical check: Only update if user is already LDAP type.
+        if user.type != "ldap":
+             logger.warning(f"Skipping sync/update for user '{login}' matching LDAP user but has type '{user.type}'.")
+             return user # Return existing user but do not update it
+
+        if "login" in user_info and user_info["login"]:
+            user.login = user_info["login"].lower()
+        if "full_name" in user_info:
+            user.name = user_info["full_name"]
+
+        if "dn" in user_info:
+            user.ldap_dn = user_info["dn"]
+        # Handle "ldap_dn" key from backend service or "dn" from worker
+        elif "ldap_dn" in user_info:
+             user.ldap_dn = user_info["ldap_dn"]
+        
+        if ldap_id and user.ldap_id != ldap_id:
+            user.ldap_id = ldap_id
+        
+        # Active Status Handling
+        # Note: Login flow typically implies active (since they logged in), 
+        # but worker flow might pass status.
+        if "is_active" in user_info:
+             raw_status = user_info["is_active"]
+             if isinstance(raw_status, bool):
+                 user.is_active = raw_status
+             elif isinstance(raw_status, int):
+                 is_active = not ((raw_status & 2) == 2)
+                 user.is_active = is_active
+             elif str(raw_status).lower() in ["false", "0", "disabled"]:
+                 user.is_active = False
+
+    else:
+        # CREATE
+        if not login:
+             return None
+        
+        is_active = True
+        if "is_active" in user_info:
+             raw_status = user_info["is_active"]
+             if isinstance(raw_status, bool):
+                 is_active = raw_status
+             elif isinstance(raw_status, int):
+                 is_active = not ((raw_status & 2) == 2)
+             elif str(raw_status).lower() in ["false", "0", "disabled"]:
+                 is_active = False
+
+        user = User(
+            login=login.lower(),
+            name=user_info.get("full_name") or login,
+
+            ldap_id=ldap_id,
+            ldap_dn=user_info.get("dn") or user_info.get("ldap_dn"),
+            type="ldap",
+            is_active=is_active
+        )
+        db.add(user)
+    
+    # We do NOT commit here to allow callers to batch commits or rollback
+    return user
+
+
+def sync_ldap_users_batch(db: Session, users_data: List[dict]) -> dict:
+    """
+    Synchronizes a batch of LDAP users.
+    Returns stats: {'created': int, 'updated': int, 'errors': int}
+    """
+    stats = {"created": 0, "updated": 0, "errors": 0}
+    
+    for user_info in users_data:
+        try:
+            # Check existence before to know if it's create or update for stats
+            # Or simplified: verify if ID exists in a set?
+            # For accurate stats, we can check state of object returned.
+            # But SQLAlchemy object state inspection is complex given we flush/commit later.
+            # Let's simple check:
+            
+            ldap_id = user_info.get("ldap_id")
+            login = user_info.get("login")
+            exists = False
+            if ldap_id:
+                 exists = db.query(User).filter(User.ldap_id == ldap_id).count() > 0
+            elif login:
+                 exists = db.query(User).filter(User.login == login.lower()).count() > 0
+            
+            user = create_or_update_ldap_user(db, user_info)
+            
+            if user:
+                if exists:
+                    stats["updated"] += 1
+                else:
+                    stats["created"] += 1
+            else:
+                stats["errors"] += 1
+                
+        except Exception as e:
+            logger.error(f"Error syncing user {user_info.get('login')}: {e}")
+            stats["errors"] += 1
+            
+    db.commit()
+    return stats

@@ -32,7 +32,13 @@ class AuthService:
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid_credentials"
                 )
+            if not user.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User is inactive"
+                )
             return user
+
 
         # 3. LDAP интеграция (если пользователь помечен как ldap или не найден вовсе)
         if is_ldap_enabled(self.db):
@@ -46,30 +52,24 @@ class AuthService:
                 user_info = get_ldap_user_info(ldap_entry, server_type)
                 
                 if user_info:
-                    # Если пользователя нет в базе по логину, ищем по ldap_id (мог смениться логин)
-                    if not user:
-                        user = self.db.query(User).filter(User.ldap_id == user_info["ldap_id"]).first()
-                        
-                        if not user:
-                            # 2.4.3. Автоматическое создание пользователя (Auto-provisioning)
-                            user = User(
-                                login=user_info["username"].lower(),
-                                name=user_info["full_name"],
-                                type="ldap",
-                                ldap_id=user_info["ldap_id"],
-                                ldap_dn=user_info["ldap_dn"],
-                                is_active=True # Пользователь из LDAP активен по умолчанию
-                            )
-                            self.db.add(user)
+                    # 2.4.2 / 2.4.3 Using shared logic for provisioning/update
+                    # Import locally to avoid potential cycle if auth is imported by users (though users->auth usually fine)
+                    from app.users.ldap.services import create_or_update_ldap_user
                     
-                    # 2.4.2 / 2.4.4. Синхронизация данных (Login, Name, DN)
-                    user.login = user_info["username"].lower()
-                    user.name = user_info["full_name"]
-                    user.ldap_dn = user_info["ldap_dn"]
+                    user = create_or_update_ldap_user(self.db, user_info)
                     
+                    # Ensure changes are committed
                     self.db.commit()
                     self.db.refresh(user)
+
+                    if not user.is_active:
+                         raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="User is inactive"
+                        )
+
                     return user
+
 
         # 4. Если ничего не помогло -> ошибка входа
         raise HTTPException(

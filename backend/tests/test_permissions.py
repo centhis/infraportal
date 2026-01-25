@@ -39,7 +39,7 @@ def test_list_permissions_forbidden(client: TestClient, user_factory):
     Test that an authenticated user without sufficient permissions cannot list permissions.
     """
     # Create a user with no special permissions
-    user = user_factory("no_perm_user", "password")
+    user_factory("no_perm_user", "password")
 
     # Login this user to get an access token
     login_response = client.post("/api/v1/auth/login", json={"login": "no_perm_user", "password": "password"})

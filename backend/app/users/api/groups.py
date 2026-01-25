@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends
-from typing import List
 
 from app.users.groups.services import GroupService
 from app.users.groups.schemas import (

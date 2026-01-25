@@ -100,15 +100,19 @@ graph TD
     InitialData --> SQLAlchemySession
 
     %% Зависимости - API Layer
-    APIRouters --> Dependencies
-    APIRouters --> UserServices
-    APIRouters --> AuthService
-    APIRouters --> SettingsService
     APIRouters --> SQLAlchemySession
-
+ 
     %% Зависимости - Service Layer
     Dependencies --> Config
     Dependencies --> AuthService
+
+### 3. Автоматическая регистрация маршрутов (Auto-Discovery)
+В `backend/main.py` реализован механизм авто-обнаружения API роутеров. При запуске приложения система сканирует все подмодули в директории `app/` (например, `users`, `tasks`) и пытается импортировать из них файл `api`.
+
+*   **Public API**: Если в модуле `api` найден объект `router`, он подключается с префиксом `/api/v1`.
+*   **Internal API**: Если найден объект `internal_router`, он подключается с префиксом `/api/internal`.
+
+Это позволяет добавлять новые модули без необходимости ручного редактирования `main.py`.
     
     AuthService --> Models
     AuthService --> SQLAlchemySession

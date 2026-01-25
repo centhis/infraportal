@@ -1,12 +1,12 @@
-from typing import List, Dict, Any
+from typing import Dict, Any
 
-from fastapi import HTTPException, status, Depends
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select, insert, delete
+from fastapi import HTTPException, status
+from sqlalchemy.orm import joinedload
+from sqlalchemy import insert, delete
 from sqlalchemy.exc import IntegrityError
 
 from app.db.database import db_dependency
-from app.users.models import Group, Role, group_role_association, User, user_group_association
+from app.users.models import Group, Role, group_role_association, user_group_association
 from app.users.groups.schemas import CreateGroupSchema, UpdateGroupSchema, GroupResponseSchema
 
 
@@ -28,13 +28,13 @@ class GroupService:
         built_in_role_ids = [
             r.role_id for r in self.db.query(group_role_association.c.role_id).filter(
                 group_role_association.c.group_id == group_id,
-                group_role_association.c.built_in == True
+                group_role_association.c.built_in
             ).all()
         ]
         built_in_user_ids = [
             u.user_id for u in self.db.query(user_group_association.c.user_id).filter(
                 user_group_association.c.group_id == group_id,
-                user_group_association.c.built_in == True
+                user_group_association.c.built_in
             ).all()
         ]
         
@@ -93,13 +93,13 @@ class GroupService:
             built_in_role_ids = [
                 r.role_id for r in self.db.query(group_role_association.c.role_id).filter(
                     group_role_association.c.group_id == group.id,
-                    group_role_association.c.built_in == True
+                    group_role_association.c.built_in
                 ).all()
             ]
             built_in_user_ids = [
                 u.user_id for u in self.db.query(user_group_association.c.user_id).filter(
                     user_group_association.c.group_id == group.id,
-                    user_group_association.c.built_in == True
+                    user_group_association.c.built_in
                 ).all()
             ]
             
@@ -127,11 +127,11 @@ class GroupService:
         # Get current built_in role/user associations BEFORE updating
         current_built_in_role_ids = {r.role_id for r in self.db.query(group_role_association.c.role_id).filter(
             group_role_association.c.group_id == group_id,
-            group_role_association.c.built_in == True
+            group_role_association.c.built_in
         ).all()}
         current_built_in_user_ids = {u.user_id for u in self.db.query(user_group_association.c.user_id).filter(
             user_group_association.c.group_id == group_id,
-            user_group_association.c.built_in == True
+            user_group_association.c.built_in
         ).all()}
 
         # Handle role updates

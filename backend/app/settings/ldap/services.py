@@ -2,12 +2,12 @@ import json
 from typing import Any, List, Optional
 
 from sqlalchemy.orm import Session
-from ldap3 import Server, Connection, ALL, SASL, GSSAPI, NTLM
+from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import LDAPException, LDAPBindError, LDAPInvalidFilterError, LDAPInvalidDnError
 
 from app.core.security import decrypt_value, encrypt_value
 from app.settings.ldap.models import LdapSetting
-from app.settings.ldap.schemas import LdapTestResultSchema, LdapTestSettingsSchema
+from app.settings.ldap.schemas import LdapTestResultSchema
 
 
 def _convert_value_to_type(value: str, type_str: str) -> Any:

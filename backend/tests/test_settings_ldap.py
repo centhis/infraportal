@@ -2,12 +2,12 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from app.settings.ldap.models import LdapSetting
 from app.settings.ldap import services
 from app.core.security import encrypt_value, decrypt_value
-from ldap3.core.exceptions import LDAPBindError, LDAPInvalidDnError, LDAPInvalidFilterError, LDAPException
+from ldap3.core.exceptions import LDAPInvalidDnError, LDAPInvalidFilterError, LDAPException
 
 # --- Fixtures ---
 
@@ -273,7 +273,7 @@ def test_permissions_ldap_is_enabled_public(client: TestClient, user_factory, ld
     Test 1.12.5/1.10.5: is_enabled should be accessible by any authenticated user.
     """
     # User without specific settings permissions
-    user_common = user_factory(login="common_user", password="password")
+    user_factory(login="common_user", password="password")
     token_common = client.post("/api/v1/auth/login", json={"login": "common_user", "password": "password"}).json()["access_token"]
     
     client_common = TestClient(client.app)
@@ -286,7 +286,7 @@ def test_permissions_ldap_others_protected(client: TestClient, user_factory, lda
     """
     Test 1.12.7: Other endpoints should be protected.
     """
-    user_common = user_factory(login="common_user_2", password="password")
+    user_factory(login="common_user_2", password="password")
     token_common = client.post("/api/v1/auth/login", json={"login": "common_user_2", "password": "password"}).json()["access_token"]
     
     client_common = TestClient(client.app)

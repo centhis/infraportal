@@ -79,7 +79,23 @@ sh start.sh
 cd frontend
 npm run dev
 ```
-Фронтенд будет доступен по адресу `http://localhost:5173` (порт может отличаться).
+### 4. Запуск Celery (Celery Worker)
+Для выполнения фоновых задач необходимо запустить воркер:
+```bash
+cd celery_worker
+sh start_worker.sh
+```
+
+### 5. Запуск Планировщика (Celery Beat)
+Для выполнения периодических задач (если необходимо):
+```bash
+cd celery_beat
+sh start_beat.sh
+```
+
+### 6. Доступ к приложению
+Фронтенд будет доступен по адресу `http://localhost:5173`.
+Бэкенд по адресу `http://localhost:8000`.
 
 ### 4. Миграции Базы Данных (Database Migrations)
 

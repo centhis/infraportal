@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends
-from typing import List
 
 from app.users.roles.services import RoleService
 from app.users.roles.schemas import (

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List
+from typing import List
 from datetime import datetime
 from app.users.permissions.schemas import PermissionResponseSchema
 

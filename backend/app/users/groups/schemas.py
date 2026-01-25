@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List
+from typing import List
 from datetime import datetime
 from app.users.local.schemas import UserResponseSchema
 from app.users.roles.schemas import RoleResponseSchema

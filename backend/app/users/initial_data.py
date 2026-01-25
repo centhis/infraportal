@@ -4,6 +4,7 @@ from sqlalchemy import insert, select
 from app.users.models import User, Group, Role, Permission, user_group_association, group_role_association, role_permission_association
 from app.core.config import settings
 from app.core.security import hash_password
+from app.core.permissions_registry import autodiscover_permissions, DISCOVERED_PERMISSIONS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,15 +58,11 @@ def init_data(db: Session):
 
     db.commit() # Commit entities before creating associations
     
+    # 0. Autodiscover permissions
+    autodiscover_permissions("app")
+
     # Create permissions
-    permissions_to_create = [
-        {'name': 'users:view', 'description': 'View all users, groups, and roles'},
-        {'name': 'users:create', 'description': 'Create users, groups, and roles'},
-        {'name': 'users:update', 'description': 'Update users, groups, and roles'},
-        {'name': 'users:delete', 'description': 'Delete users, groups, and roles'},
-        {'name': 'settings:view', 'description': 'View core and LDAP settings'},
-        {'name': 'settings:update', 'description': 'Update core and LDAP settings'},
-    ]
+    permissions_to_create = DISCOVERED_PERMISSIONS
     for perm_data in permissions_to_create:
         permission = db.query(Permission).filter(Permission.name == perm_data['name']).first()
         if not permission:

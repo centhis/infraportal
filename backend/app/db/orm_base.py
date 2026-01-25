@@ -1,8 +1,10 @@
 import importlib
 from pathlib import Path
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
+
 
 def load_all_models():
     """

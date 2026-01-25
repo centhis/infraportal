@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from app.users.local.schemas import CreateUserSchema, UpdateUserSchema
+from app.users.local.schemas import CreateUserSchema
 from app.users.local.services import UserService
 from app.users.models import Group, User
 import pytest
@@ -112,7 +112,7 @@ def test_update_user_success(authenticated_client: TestClient, db_session):
     assert response.status_code == 200
     user_data = response.json()
     assert user_data["name"] == "Updated Name"
-    assert user_data["is_active"] == False
+    assert not user_data["is_active"]
     assert "groups" in user_data
 
 def test_update_user_not_found(authenticated_client: TestClient):
@@ -394,7 +394,7 @@ def test_update_user_duplicate_login(authenticated_client: TestClient, user_fact
     user1_login = "user_for_update_1"
     user2_login = "user_for_update_2"
     user1 = user_factory(login=user1_login, password="password1", name="User One")
-    user2 = user_factory(login=user2_login, password="password2", name="User Two")
+    user_factory(login=user2_login, password="password2", name="User Two")
 
     # Attempt to update user1's login to user2's login
     response = authenticated_client.put(

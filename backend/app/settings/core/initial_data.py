@@ -21,6 +21,12 @@ def init_data(db: Session):
             "value": "admin@example.com",
             "type": "string",
             "is_sensitive": False
+        },
+        {
+            "key": "TASK_TIMEOUT",
+            "value": str(settings.TASK_TIMEOUT),
+            "type": "integer",
+            "is_sensitive": False
         }
     ]
 

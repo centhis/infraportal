@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from app.core.config import settings
-from app.db.orm_base import Base
+from app.db.orm_base import Base  # noqa: F401
 
 engine = create_engine(
     settings.DATABASE_URL,

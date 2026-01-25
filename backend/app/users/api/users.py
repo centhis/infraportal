@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status # Добавлены HTTPException, status
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.users.local.services import UserService
-from app.users.permissions.services import PermissionService # Добавлен импорт PermissionService
-from app.users.local.schemas import UserResponseSchema, CreateUserSchema, UpdateUserSchema, PaginatedUserResponse, UserPermissionsReportSchema # Добавлен UserPermissionsReportSchema
+from app.users.permissions.services import PermissionService
+from app.users.local.schemas import UserResponseSchema, CreateUserSchema, UpdateUserSchema, PaginatedUserResponse, UserPermissionsReportSchema
 from app.auth.dependencies import get_current_user, permission_checker
 
 router = APIRouter(prefix="/users", tags=['Users'])
@@ -28,7 +27,7 @@ def list_users(
 def get_user_by_id(
     user_id: int, 
     service: UserService = Depends(),
-    permission_service: PermissionService = Depends(), # Добавлен PermissionService
+    permission_service: PermissionService = Depends(),
     current_user = Depends(get_current_user)
 ):
     # Allow user to view their own profile without users:view permission
@@ -51,7 +50,7 @@ def get_user_by_id(
 def get_user_by_login(
     login: str, 
     service: UserService = Depends(), 
-    permission_service: PermissionService = Depends(), # Добавлен PermissionService
+    permission_service: PermissionService = Depends(),
     current_user = Depends(get_current_user)
 ):
     # Allow user to view their own profile by login without users:view permission
@@ -106,11 +105,11 @@ def delete_user(
 @router.get(
     "/{user_id}/permissions_report",
     response_model=UserPermissionsReportSchema,
-    dependencies=[Depends(permission_checker(["users:view"]))] # Разрешение на просмотр пользователей достаточно
+    dependencies=[Depends(permission_checker(["users:view"]))]
 )
 def get_user_permissions_report(
     user_id: int,
-    permission_service: PermissionService = Depends(), # Используем PermissionService
+    permission_service: PermissionService = Depends(), 
     current_user = Depends(get_current_user)
 ):
     return permission_service.get_user_permissions_report(user_id)

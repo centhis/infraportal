@@ -1,6 +1,5 @@
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
-from typing import List
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload # Add joinedload import
 
@@ -24,7 +23,7 @@ class UserService:
         built_in_group_ids = [
             g.group_id for g in self.db.query(user_group_association.c.group_id).filter(
                 user_group_association.c.user_id == user_id,
-                user_group_association.c.built_in == True
+                user_group_association.c.built_in
             ).all()
         ]
 
@@ -93,7 +92,7 @@ class UserService:
             built_in_group_ids = [
                 g.group_id for g in self.db.query(user_group_association.c.group_id).filter(
                     user_group_association.c.user_id == user.id,
-                    user_group_association.c.built_in == True
+                    user_group_association.c.built_in
                 ).all()
             ]
             
@@ -121,7 +120,7 @@ class UserService:
                     if field == 'type' and update_data[field] != 'built_in':
                          raise HTTPException(
                             status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"Cannot change type of a built-in user"
+                            detail="Cannot change type of a built-in user"
                         )
                     elif field != 'type':
                         raise HTTPException(
@@ -132,7 +131,7 @@ class UserService:
         # Get current built-in group associations BEFORE updating
         current_built_in_group_ids = {g.group_id for g in self.db.query(user_group_association.c.group_id).filter(
             user_group_association.c.user_id == user_id,
-            user_group_association.c.built_in == True
+            user_group_association.c.built_in
         ).all()}
 
         if 'group_ids' in update_data:

@@ -1,6 +1,5 @@
-from typing import List, Set, Dict # Добавлен Set и Dict
-from sqlalchemy.orm import Session, joinedload # Добавлен joinedload
-from sqlalchemy import distinct # Добавлен distinct
+from typing import List, Dict # Добавлен Set и Dict
+from sqlalchemy.orm import joinedload # Добавлен joinedload
 from fastapi import HTTPException, status # Добавлены для обработки ошибок
 
 from app.db.database import db_dependency

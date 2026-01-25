@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from ldap3 import ALL, Server, Connection, SIMPLE
+from ldap3 import Server, Connection
 from sqlalchemy.orm import Session
 
 from app.settings.ldap.models import LdapSetting
@@ -185,7 +185,7 @@ def test_authenticate_ldap_user_success(db_session, ldap_settings):
         assert server_type == "ad"
         info = get_ldap_user_info(entry, server_type)
         assert info["ldap_id"] == TEST_UUID_AD
-        assert info["username"] == "ldapuser"
+        assert info["login"] == "ldapuser"
 
 def test_authenticate_ldap_user_fail_bind(db_session, ldap_settings):
     """

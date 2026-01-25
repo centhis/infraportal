@@ -7,6 +7,7 @@ from alembic import context
 
 from app.core.config import settings
 from app.db.orm_base import Base, load_all_models
+from celery_sqlalchemy_scheduler.session import ModelBase
 
 
 # this is the Alembic Config object, which provides
@@ -22,8 +23,9 @@ config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
+# for 'autogenerate' support
 load_all_models()
-target_metadata = Base.metadata
+target_metadata = [Base.metadata, ModelBase.metadata]
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

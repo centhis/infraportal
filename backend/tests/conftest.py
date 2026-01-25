@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 import subprocess
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from main import app
 from app.db.database import get_db
@@ -12,6 +12,10 @@ from app.core.security import create_token, REFRESH_TOKEN_EXPIRE, ACCESS_TOKEN_E
 from app.users.local.services import UserService
 from app.users.local.schemas import CreateUserSchema
 from app.users.models import Group, User, Role, Permission
+from app.core.scheduler_patch import apply_patches
+
+# Apply patches for celery-sqlalchemy-scheduler compatibility with SA 2.0
+apply_patches()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -55,8 +59,10 @@ def db_session(db_engine):
     session = sessionmaker(autocommit=False, autoflush=False, bind=connection)()
     yield session
     session.close()
-    transaction.rollback()
+    if transaction.is_active:
+        transaction.rollback()
     connection.close()
+
 
 
 @pytest.fixture(scope="function")
@@ -105,7 +111,7 @@ def non_admin_client(test_app_client_factory, user_factory): # Use the factory
     Pytest fixture to provide an authenticated TestClient for a non-admin user.
     """
     client = test_app_client_factory() # Get a fresh client
-    user = user_factory("regular_user_rbac", "password_rbac")
+    user_factory("regular_user_rbac", "password_rbac")
     login_response = client.post("/api/v1/auth/login", json={"login": "regular_user_rbac", "password": "password_rbac"})
     access_token = login_response.json()["access_token"]
     client.headers["Authorization"] = f"Bearer {access_token}"

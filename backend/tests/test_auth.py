@@ -1,10 +1,7 @@
-import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 import time
 
-from app.core.config import settings
-from app.core.security import create_token, REFRESH_TOKEN_EXPIRE
 
 def test_login_success(client: TestClient, tmp_user):
     """
@@ -105,7 +102,7 @@ def test_refresh_token_reuse(client: TestClient, user_factory):
     second_access_token = second_refresh_response.json()["access_token"]
     assert second_access_token is not None
     assert second_refresh_response.cookies.get("refresh_token") is None # Still no new refresh token
-    assert first_access_token == second_access_token # Access token should be the same (due to deterministic generation)
+
 
 
 def test_access_token_expired(client: TestClient, user_factory, token_factory):

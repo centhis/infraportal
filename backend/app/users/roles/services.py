@@ -1,12 +1,12 @@
-from typing import List, Dict, Any
+from typing import Dict, Any
 
-from fastapi import HTTPException, status, Depends
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select, insert, delete
+from fastapi import HTTPException, status
+from sqlalchemy.orm import joinedload
+from sqlalchemy import insert, delete
 from sqlalchemy.exc import IntegrityError
 
 from app.db.database import db_dependency
-from app.users.models import Role, Permission, role_permission_association
+from app.users.models import Role, role_permission_association
 from app.users.roles.schemas import CreateRoleSchema, UpdateRoleSchema, RoleResponseSchema
 
 
@@ -25,7 +25,7 @@ class RoleService:
         built_in_permission_ids = [
             p.permission_id for p in self.db.query(role_permission_association.c.permission_id).filter(
                 role_permission_association.c.role_id == role_id,
-                role_permission_association.c.built_in == True
+                role_permission_association.c.built_in
             ).all()
         ]
 
@@ -77,7 +77,7 @@ class RoleService:
             built_in_permission_ids = [
                 p.permission_id for p in self.db.query(role_permission_association.c.permission_id).filter(
                     role_permission_association.c.role_id == role.id,
-                    role_permission_association.c.built_in == True
+                    role_permission_association.c.built_in
                 ).all()
             ]
             
@@ -104,7 +104,7 @@ class RoleService:
         # Get current built-in permissions BEFORE updating
         current_built_in_permission_ids = {p.permission_id for p in self.db.query(role_permission_association.c.permission_id).filter(
             role_permission_association.c.role_id == role_id,
-            role_permission_association.c.built_in == True
+            role_permission_association.c.built_in
         ).all()}
 
         # Handle permission updates
