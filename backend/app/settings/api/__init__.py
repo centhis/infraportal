@@ -1,7 +1,8 @@
 from fastapi import APIRouter
+
 from .core import router as core_router
-from .ldap import router as ldap_router
 from .internal import router as internal_secrets_router
+from .ldap import router as ldap_router
 
 router = APIRouter()
 router.include_router(core_router)

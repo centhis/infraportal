@@ -10,16 +10,18 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task(name="tasks.dispatch")
 def dispatch_task(
-    task_type: str,
     schedule_id: Optional[str] = None,
     execution_id: Optional[str] = None,
     **kwargs
 ) -> Any:
     """
     Диспетчер задач.
-    Принимает тип задачи (task_type), получает необходимые для выполнения секреты
+    Принимает тип задачи (task_type в kwargs), получает необходимые для выполнения секреты
     из центрального бэкенда и маршрутизирует выполнение на соответствующую бизнес-логику.
     """
+    # Извлекаем task_type из kwargs
+    task_type = kwargs.pop("task_type", None)
+    
     current_task_type = task_type
     current_execution_id = execution_id
     current_kwargs = kwargs
@@ -85,9 +87,35 @@ def dispatch_task(
     except Exception as e:
          logger.error(f"Error fetching secrets: {e}. Proceeding without secrets.")
 
+    # Helper to update status
+    def update_execution_status(status: str, result: Any = None):
+        try:
+            headers = {"X-API-Key": settings.CELERY_WORKER_API_KEY}
+            payload = {"status": status}
+            if result:
+                # Convert result to dict if possible or stringify
+                # Backend expects result to be a dict if it's JSON field? 
+                # Or execution.result is JSONB.
+                # If result is not dict, wrap it?
+                if isinstance(result, dict):
+                    payload["result"] = result
+                else:
+                    payload["result"] = {"output": str(result)}
+            
+            httpx.patch(
+                f"{settings.BACKEND_INTERNAL_API_URL}/tasks/{current_execution_id}",
+                json=payload,
+                headers=headers,
+                timeout=5.0
+            )
+        except Exception as update_err:
+             logger.error(f"Failed to update status to {status} for execution {current_execution_id}: {update_err}")
+
     # 3. Выполняем саму бизнес-логику
     logger.info(f"Dispatching task_type='{current_task_type}' (execution_id='{current_execution_id}') with parameters: {current_kwargs}")
     
+    update_execution_status("IN_PROGRESS")
+
     handler = get_task_handler(current_task_type)
     if handler:
         try:
@@ -95,10 +123,16 @@ def dispatch_task(
             # We pass `secrets` as a named argument.
             result = handler(execution_id=current_execution_id, secrets=secrets, **current_kwargs)
             logger.info(f"Task task_type='{current_task_type}' (execution_id='{current_execution_id}') completed successfully.")
+            
+            update_execution_status("SUCCESS", result)
             return result
         except Exception as e:
             logger.error(f"Error executing task task_type='{current_task_type}' (execution_id='{current_execution_id}'): {e}", exc_info=True)
+            # Send error details
+            error_data = {"error": str(e)}
+            update_execution_status("FAILURE", error_data)
             raise e
     else:
         logger.error(f"Handler for task_type '{current_task_type}' not found (execution_id='{current_execution_id}').")
+        update_execution_status("FAILURE", {"error": f"Handler for task_type '{current_task_type}' not found."})
         raise ValueError(f"Handler for task_type '{current_task_type}' not found.")

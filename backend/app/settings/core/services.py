@@ -1,9 +1,10 @@
-from typing import Any, List, Optional
 import json
+from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.settings.core.models import CoreSetting
+
 
 def _convert_value_to_type(value: str, type_str: str) -> Any:
     """
@@ -19,17 +20,20 @@ def _convert_value_to_type(value: str, type_str: str) -> Any:
         return json.loads(value)
     return value
 
-def get_core_setting_by_key(db: Session, key: str) -> Optional[CoreSetting]:
+
+def get_core_setting_by_key(db: Session, key: str) -> CoreSetting | None:
     """
     Получает объект Core Setting из БД по ее уникальному ключу.
     """
     return db.query(CoreSetting).filter(CoreSetting.key == key).first()
 
-def get_all_core_settings(db: Session) -> List[CoreSetting]:
+
+def get_all_core_settings(db: Session) -> list[CoreSetting]:
     """
     Получает список всех Core Settings из БД.
     """
     return db.query(CoreSetting).all()
+
 
 def update_core_setting(db: Session, key: str, value: Any) -> CoreSetting:
     """
@@ -39,8 +43,8 @@ def update_core_setting(db: Session, key: str, value: Any) -> CoreSetting:
     if not db_setting:
         # TODO: Implement error handling or raise an exception
         return None
-    
-    # Convert value to string for storage
+
+    # Преобразовать значение в строку для хранения
     if isinstance(value, (dict, list)):
         db_setting.value = json.dumps(value)
     else:
@@ -50,6 +54,7 @@ def update_core_setting(db: Session, key: str, value: Any) -> CoreSetting:
     db.commit()
     db.refresh(db_setting)
     return db_setting
+
 
 def get_core_setting_value(db: Session, key: str) -> Any:
     """

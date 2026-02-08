@@ -1,72 +1,269 @@
-# Документация по Компонентам и Макету
+# Компоненты и Layout
 
-Этот документ описывает организацию React-компонентов в проекте, разделяя их на глобальные (переиспользуемые) и те, что относятся к конкретным "фичам".
+## Структура UI-компонентов
 
-## Философия компонентов
+### Уровни компонентов
 
-Проект придерживается принципа разделения компонентов на две основные категории:
-
-1.  **Глобальные (общие) компоненты**: Находятся в `src/components/`. Это строительные блоки, которые не привязаны к бизнес-логике и могут быть использованы в любой части приложения. Примеры: кастомизированные элементы форм, общие модальные окна, элементы макета.
-2.  **Компоненты "фич"**: Находятся внутри директорий `src/features/*/components/`. Эти компоненты решают специфические задачи конкретного модуля (например, таблица пользователей или форма создания роли) и тесно связаны с его данными и логикой.
-
----
-
-## Глобальные компоненты (`src/components`)
-
-### `forms/IpAlert.jsx`
-
-`IpAlert` — это обертка над компонентом `Alert` из Material-UI. Он используется для отображения стандартизированных уведомлений об успехе, ошибке, предупреждении или информации. Его следует использовать во всех случаях, когда нужно показать пользователю обратную связь в виде всплывающего сообщения.
-
-### `forms/TransferList.jsx`
-
-`TransferList` — это кастомный компонент для управления связями "многие-ко-многим". Он представляет собой два списка, расположенные по горизонтали: "Доступные" (Available) и "Назначенные" (Assigned).
-
-*   **Интерфейс**: Элементы в списках представлены в виде `Chip`-компонентов. Перенос элемента из одного списка в другой осуществляется прямым кликом по нему. Компоненты `Chip` могут быть стилизованы (например, `primary` цвет, `outlined` вариант) и деактивированы (`disabled`) для "встроенных" (built-in) элементов, которые нельзя отвязать.
-*   **Свойства (Props)**:
-    *   `allItems`: Полный список доступных элементов.
-    *   `selectedIds`: Массив ID выбранных элементов.
-    *   `onChange`: Callback-функция, вызываемая при изменении выбранных элементов.
-    *   `disabled`: Глобально отключает взаимодействие с компонентом.
-    *   `itemType`: Строка, указывающая тип элементов (например, `'permission'`, `'role'`), используется для специфической логики.
-    *   `disabledItemsIds`: Массив ID элементов, которые должны быть деактивированы (например, built-in).
-*   **Функциональность**: Каждый список имеет собственное поле для фильтрации, что упрощает работу с большим количеством элементов. При наведении на элемент появляется всплывающая подсказка с его полным описанием.
-*   **Специальная логика для разрешений (`itemType="permission"`)**:
-    *   **Автоматическое добавление `users:view`**: При назначении любого разрешения, начинающегося с `users:` (кроме `users:view`), разрешение `users:view` автоматически добавляется в список выбранных, если его там еще нет.
-    *   **Защита от отзыва `users:view`**: Разрешение `users:view` нельзя отозвать, если в списке выбранных остаются другие разрешения, начинающиеся с `users:`. Это обеспечивает целостность базового доступа к управлению пользователями.
-*   **Применение**: В проекте используется в форме создания/редактирования роли для назначения разрешений, а также в форме группы для назначения ролей.
+| Уровень | Расположение | Описание |
+|---------|--------------|----------|
+| **Shared** | `src/shared/ui/` | Базовые UI-примитивы без бизнес-логики |
+| **Core Layout** | `src/core/layout/` | Глобальный layout (Navbar, Sidebar) |
+| **Module Components** | `src/modules/*/ui/components/` | Доменные компоненты |
+| **Module Pages** | `src/modules/*/ui/pages/` | Точки входа для роутера |
+| **Module Containers** | `src/modules/*/ui/containers/` | Компоненты с подключением к данным |
 
 ---
 
-## Макет (`src/components/layout`)
+## Shared UI (`src/shared/ui/`)
 
-Компоненты в этой директории формируют основной каркас приложения.
+Базовые компоненты без бизнес-логики. Построены на Material-UI.
 
-### `Navbar/`
+```
+src/shared/ui/
+├── Button/
+│   └── Button.tsx
+├── TextField/
+│   └── TextField.tsx
+├── Dialog/
+│   ├── ConfirmDialog.tsx
+│   └── FormDialog.tsx
+├── Table/
+│   └── DataTable.tsx
+└── index.ts              # Реэкспорт
+```
 
-Директория содержит все, что связано с основной навигационной панелью приложения.
+### Пример: ConfirmDialog
 
-*   **`Navbar.jsx`**: Основной компонент, который отображает заголовок приложения и меню пользователя.
-*   **`UserAvatar.jsx`**: Отображает аватар пользователя (или иконку по умолчанию).
-*   **`UserMenu.jsx`**: Выпадающее меню, которое появляется при клике на аватар. Оно отображает имя пользователя и предоставляет опции, такие как "Выход" (`logout`).
+```tsx
+// src/shared/ui/Dialog/ConfirmDialog.tsx
+interface ConfirmDialogProps {
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    loading?: boolean;
+}
 
-### `ConfirmDialog/`
-
-*   **`ConfirmDialog.jsx`**: Важный переиспользуемый компонент для получения подтверждения от пользователя перед выполнением критического действия (например, удаление пользователя или группы). Он предоставляет стандартизированное модальное окно с настраиваемым заголовком, текстом и кнопками "Подтвердить" / "Отмена".
+export function ConfirmDialog({ 
+    open, title, message, onConfirm, onCancel, 
+    confirmText = 'Confirm', cancelText = 'Cancel',
+    loading 
+}: ConfirmDialogProps) {
+    return (
+        <Dialog open={open} onClose={onCancel}>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogContent>{message}</DialogContent>
+            <DialogActions>
+                <Button onClick={onCancel}>{cancelText}</Button>
+                <Button onClick={onConfirm} loading={loading} variant="contained">
+                    {confirmText}
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
+```
 
 ---
 
-## Компоненты фич (`src/features`)
+## Core Layout (`src/core/layout/`)
 
-Большинство компонентов приложения находятся внутри своих "фич". Они спроектированы для решения конкретных задач и часто работают в связке с кастомными хуками этой же "фичи".
+### Navbar
 
-Возьмем для примера `features/userManagement/components/`:
+```tsx
+// src/core/layout/Navbar/Navbar.tsx
+import { useAuth } from '@core/providers/AuthProvider';
+import { Can } from '@core/auth';
 
-*   **`UserManagementTabs.jsx`**: Компонент, организующий навигацию между вкладками "Пользователи", "Группы" и "Роли".
-*   **`user/UserTable.jsx`**: Таблица для отображения списка пользователей с использованием `DataGrid` из MUI. Включает пагинацию, сортировку и кнопки для действий. Столбец "Тип" использует цветные `Chip`-компоненты для наглядного отображения типа пользователя (`local`, `built_in`, `ldap` и т.д.).
-*   **`user/UserForm.jsx`**: Форма для создания и редактирования пользователя. Использует `react-hook-form` для управления состоянием полей и валидации. При редактировании встроенного пользователя (`type='built_in'`), поля `login`, `name` и `is_active` блокируются для сохранения целостности системы.
-*   **`role/RoleTable.jsx`**: Таблица для отображения ролей. Включает информацию о количестве связанных разрешений и типе роли (`built_in` или `custom`).
-*   **`group/GroupTable.jsx`**: Таблица для отображения групп. Включает информацию о количестве связанных пользователей и ролей, а также типе группы.
-*   **`role/RoleForm.jsx`**: Форма для создания/редактирования ролей. Использует `TransferList` для управления списком разрешений, привязанных к роли.
-*   **`group/GroupForm.jsx`**: Форма для создания/редактирования групп. Использует `TransferList` для управления списком ролей, привязанных к группе.
+export function Navbar() {
+    const { user, logout } = useAuth();
+    
+    return (
+        <AppBar>
+            <Toolbar>
+                <Logo />
+                
+                <NavLinks>
+                    <NavLink to="/">Главная</NavLink>
+                    <Can permission="users:view">
+                        <NavLink to="/users">Пользователи</NavLink>
+                    </Can>
+                    <Can permission="settings:view">
+                        <NavLink to="/settings">Настройки</NavLink>
+                    </Can>
+                </NavLinks>
+                
+                <UserMenu user={user} onLogout={logout} />
+            </Toolbar>
+        </AppBar>
+    );
+}
+```
 
-Этот подход позволяет сохранять сильную инкапсуляцию логики внутри каждой "фичи", делая код более модульным и легким для понимания.
+### MainLayout
+
+```tsx
+// src/core/layout/MainLayout.tsx
+import { Outlet } from 'react-router-dom';
+
+export function MainLayout() {
+    return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Navbar />
+            <Container component="main" sx={{ flex: 1, py: 3 }}>
+                <Outlet />  {/* Рендерит страницу */}
+            </Container>
+            <Footer />
+        </Box>
+    );
+}
+```
+
+---
+
+## Module Components
+
+### Структура
+
+```
+src/modules/users/ui/
+├── pages/
+│   └── UserManagementPage.tsx    # Точка входа
+├── containers/
+│   ├── UserListContainer.tsx     # Подключён к useUsers()
+│   └── UserFormContainer.tsx     # Подключён к useCreateUser()
+└── components/
+    ├── UserTable.tsx             # Только пропсы
+    ├── UserForm.tsx              # Только пропсы
+    └── UserCard.tsx              # Только пропсы
+```
+
+### Container (умный компонент)
+
+```tsx
+// src/modules/users/ui/containers/UserListContainer.tsx
+import { useUsers, useDeleteUser } from '../hooks/useUsers';
+import { UserTable } from '../components/UserTable';
+
+export function UserListContainer() {
+    const { data, isLoading, error } = useUsers();
+    const deleteMutation = useDeleteUser();
+    
+    if (isLoading) return <CircularProgress />;
+    if (error) return <Alert severity="error">{error.message}</Alert>;
+    
+    return (
+        <UserTable 
+            users={data.items}
+            onDelete={(id) => deleteMutation.mutate(id)}
+            loading={deleteMutation.isPending}
+        />
+    );
+}
+```
+
+### Component (презентационный)
+
+```tsx
+// src/modules/users/ui/components/UserTable.tsx
+interface UserTableProps {
+    users: User[];
+    onDelete: (id: number) => void;
+    loading?: boolean;
+}
+
+export function UserTable({ users, onDelete, loading }: UserTableProps) {
+    return (
+        <Table>
+            <TableHead>
+                <TableRow>
+                    <TableCell>Login</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Actions</TableCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {users.map(user => (
+                    <TableRow key={user.id}>
+                        <TableCell>{user.login}</TableCell>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell>
+                            <IconButton onClick={() => onDelete(user.id)} disabled={loading}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    );
+}
+```
+
+### Page (точка входа)
+
+```tsx
+// src/modules/users/ui/pages/UserManagementPage.tsx
+import { Tabs, Tab } from '@mui/material';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+
+export function UserManagementPage() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    
+    const currentTab = location.pathname.includes('roles') ? 'roles' : 'users';
+    
+    return (
+        <Box>
+            <Typography variant="h4">Управление пользователями</Typography>
+            
+            <Tabs value={currentTab} onChange={(_, v) => navigate(v)}>
+                <Tab label="Пользователи" value="users" />
+                <Tab label="Роли" value="roles" />
+            </Tabs>
+            
+            <Outlet />
+        </Box>
+    );
+}
+```
+
+---
+
+## Паттерны
+
+### Композиция vs Наследование
+
+```tsx
+// ✅ Правильно — композиция
+function UserFormDialog({ user, onClose }: Props) {
+    return (
+        <FormDialog title="Edit User" onClose={onClose}>
+            <UserForm user={user} />
+        </FormDialog>
+    );
+}
+
+// ❌ Неправильно — дублирование
+function UserFormDialog({ user, onClose }: Props) {
+    return (
+        <Dialog onClose={onClose}>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogContent>
+                <UserForm user={user} />
+            </DialogContent>
+        </Dialog>
+    );
+}
+```
+
+### Render Props
+
+```tsx
+<Can permission="users:delete" fallback={<DisabledButton />}>
+    {() => <DeleteButton onClick={handleDelete} />}
+</Can>
+```

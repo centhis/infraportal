@@ -1,2 +1,3 @@
-// src/mocks/styleMock.js
+// Мок для стилей
+// экспорт объекта
 export default {};

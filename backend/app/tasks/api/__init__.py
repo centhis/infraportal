@@ -1,6 +1,7 @@
 from fastapi import APIRouter
-from .tasks import router as tasks_router
+
 from .internal import router as internal_routes
+from .tasks import router as tasks_router
 
 router = APIRouter()
 router.include_router(tasks_router)

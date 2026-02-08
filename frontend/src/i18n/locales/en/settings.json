@@ -6,7 +6,10 @@
     "core": {
         "title": "System Settings",
         "subtitle": "Manage fundamental portal operating parameters",
-        "no_settings": "No settings found"
+        "no_settings": "No settings found",
+        "table": {
+            "empty": "Not set"
+        }
     },
     "keys": {
         "SITE_NAME": {
@@ -24,6 +27,10 @@
         "LDAP_URI": {
             "label": "LDAP URI",
             "description": "Server address (e.g., ldap://127.0.0.1:389 or ldaps://ldap.example.com)"
+        },
+        "LDAP_TLS_VERIFY": {
+            "label": "Verify TLS Certificate",
+            "description": "Verify server SSL/TLS certificate validity. Disable for self-signed certificates."
         },
         "LDAP_BASE_DN": {
             "label": "Base DN",
@@ -45,20 +52,44 @@
             "label": "Synchronization Schedule",
             "description": "Cron format (e.g., `0 0 * * *` for midnight)",
             "error_invalid": "Invalid Cron format (min hour day month day_of_week)"
+        },
+        "LDAP_USER_ATTR_EMAIL": {
+            "label": "Email Attribute",
+            "description": "LDAP attribute containing user email (e.g., mail, userPrincipalName)"
+        },
+        "LDAP_USER_ATTR_NAME": {
+            "label": "Full Name Attribute",
+            "description": "LDAP attribute containing user full name (e.g., cn, displayName)"
+        },
+        "LDAP_USER_ATTR_USERNAME": {
+            "label": "Username Attribute",
+            "description": "LDAP attribute containing username (e.g., sAMAccountName, uid)"
         }
     },
     "ldap": {
-        "title": "LDAP/AD Integration",
+        "title": "LDAP Settings",
         "subtitle": "Configure user authentication via corporate directory",
-        "no_settings": "LDAP settings not initialized",
-        "test_connection": "Test Connection",
+        "no_settings": "No LDAP settings available",
+        "enabled": "LDAP Enabled",
+        "disabled": "LDAP Disabled",
+        "connection_title": "Connection Parameters",
+        "connection_desc": "Settings will be tested before saving.",
+        "schedule_title": "Sync Schedule",
+        "mapping_title": "User Attributes Mapping",
+        "mapping_desc": "Map LDAP attributes to user profile fields.",
+        "other_title": "Additional Settings",
+        "test_connection": "Save",
         "test_success": "Connection established successfully",
         "test_failed": "Connection test failed",
+        "test_error": "Error occurred during connection test",
+        "settings_saved": "Settings saved successfully",
         "groups": {
             "general": "General Settings",
             "connection": "Connection Parameters",
             "users": "User Filtering",
             "sync": "Synchronization"
-        }
+        },
+        "cron_required": "Schedule is required",
+        "invalid_cron": "Invalid CRON expression (e.g. \"0 0 * * *\")"
     }
 }

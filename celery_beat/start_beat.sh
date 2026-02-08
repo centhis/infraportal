@@ -10,4 +10,4 @@ rm -f /tmp/celerybeat.pid
 
 echo "Запуск Celery Beat..."
 # Запускаем celery beat. Имя приложения теперь 'celery_app', так как импорты были исправлены.
-exec celery -A celery_app beat --loglevel=info --pidfile=/tmp/celerybeat.pid
+exec celery -A celery_app beat -S celery_sqlalchemy_scheduler.schedulers:DatabaseScheduler --loglevel=info --pidfile=/tmp/celerybeat.pid

@@ -32,8 +32,30 @@
 ### Утилиты Безопасности (`security.py`)
 
 -   **Хеширование паролей**: Используется **`argon2-cffi`** (класс `PasswordHasher`) для надежного хеширования. Библиотека `passlib` полностью удалена.
--   **Функции**: `get_password_hash(password)` и `verify_password(plain_password, hashed_password)`.
+-   **Функции хеширования**: `hash_password(password)` и `verify_password(plain_password, hashed_password)`.
 -   **OAuth2**: `oauth2_scheme` интегрирует FastAPI с OAuth2 для извлечения токенов.
+
+### Шифрование Секретов (Fernet)
+
+Для хранения чувствительных данных (например, `LDAP_BIND_PASSWORD`) используется **обратимое шифрование** на базе `cryptography.fernet`:
+
+-   **Ключ шифрования**: Генерируется из `SECRET_KEY` приложения с помощью PBKDF2HMAC.
+-   **Функции**:
+    -   `encrypt_value(value: str) -> str` — шифрует строку для безопасного хранения в БД.
+    -   `decrypt_value(encrypted_value: str) -> str` — расшифровывает значение при использовании.
+
+```python
+from app.core.security import encrypt_value, decrypt_value
+
+# Шифрование перед сохранением в БД
+encrypted = encrypt_value("my_ldap_password")
+
+# Расшифровка при использовании
+plain = decrypt_value(encrypted)
+```
+
+> [!IMPORTANT]
+> Fernet обеспечивает симметричное шифрование. Если `SECRET_KEY` изменится, все зашифрованные данные станут недоступны.
 
 ## 3. Первоначальная Загрузка Данных (`initial_data_loader.py`)
 

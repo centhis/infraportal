@@ -1,0 +1,19 @@
+{
+    "status": {
+        "ok": "OK",
+        "no_workers": "No active workers",
+        "unavailable": "Monitoring Unavailable",
+        "checking": "Checking worker status...",
+        "unavailable_full": "Worker monitoring unavailable"
+    },
+    "system_name": "Tasks System",
+    "nodes": "nodes",
+    "summary": {
+        "active": "Active",
+        "queued": "Queued"
+    },
+    "worker": {
+        "load": "Load",
+        "memory": "Memory Usage (RSS)"
+    }
+}

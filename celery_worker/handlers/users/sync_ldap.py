@@ -7,55 +7,52 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
+
 def sync_ldap_users_handler(execution_id: str, secrets: dict, **kwargs):
     """
-    Handler for 'users:sync_ldap' task.
+    Обработчик для задачи 'users:sync_ldap'.
+    Все LDAP-настройки берутся из secrets (бэкенд выдаёт их из БД).
     """
     logger.info(f"Starting LDAP Sync (Execution ID: {execution_id})")
 
-    # 1. Extract Settings
-    ldap_uri = kwargs.get("ldap_uri")
-    bind_dn = kwargs.get("bind_dn")
-    user_filter = kwargs.get("user_filter")
-    base_dn = kwargs.get("base_dn")
-    attributes_mapping = kwargs.get("attributes_mapping", {}) 
-
-    # 2. Extract Password
-    # The API returns {"secrets": {"LDAP_BIND_PASSWORD": "..."}} (Step 1173)
-    # But TaskSecretMapping key (Step 1158) is "LdapSetting:LDAP_BIND_PASSWORD".
-    # And Internal API (Step 1173) returns: `resolved_secrets[key_name] = val`.
-    # where key_name is the part AFTER split(":", 1).
-    # So key_name is "LDAP_BIND_PASSWORD".
+    # --- Извлечение настроек из secrets ---
+    ldap_uri = secrets.get("LDAP_URI")
+    bind_dn = secrets.get("LDAP_BIND_DN")
     bind_password = secrets.get("LDAP_BIND_PASSWORD")
+    base_dn = secrets.get("LDAP_BASE_DN")
+    user_filter = secrets.get("LDAP_USER_FILTER")
     
-    if not bind_password:
-        msg = "LDAP_BIND_PASSWORD not found in provided secrets."
-        logger.error(msg)
-        raise ValueError(msg)
-
+    # TLS Verify: по умолчанию False, если не задано
+    tls_verify = secrets.get("LDAP_TLS_VERIFY", False)
+    
+    # --- Валидация ---
     if not ldap_uri or not bind_dn or not base_dn:
         msg = "Missing required LDAP settings (URI, BIND_DN, or BASE_DN)."
         logger.error(msg)
         raise ValueError(msg)
 
-    # 3. Connect to LDAP
-    logger.info(f"Connecting to LDAP: {ldap_uri}")
-    conn = connect_to_ldap(ldap_uri, bind_dn, bind_password)
+    if not bind_password:
+        msg = "LDAP_BIND_PASSWORD not found in provided secrets."
+        logger.error(msg)
+        raise ValueError(msg)
+
+    # --- Подключение к LDAP ---
+    logger.info(f"Connecting to LDAP: {ldap_uri} (tls_verify={tls_verify})")
+    conn = connect_to_ldap(ldap_uri, bind_dn, bind_password, tls_verify=tls_verify)
     
     if not conn:
         raise ConnectionError("Failed to connect/bind to LDAP server.")
     
     try:
-        # 4. Fetch Users
+        # --- Получение пользователей ---
         logger.info(f"Fetching users from BaseDN: {base_dn}")
-        users = fetch_users(conn, base_dn, user_filter, attributes_mapping)
+        users = fetch_users(conn, base_dn, user_filter)
         logger.info(f"Fetched {len(users)} users from LDAP.")
 
         if not users:
             logger.warning("No users found in LDAP. Proceeding to send empty list.")
         
-        # 5. Send to Backend
-        # Endpoint: /api/internal/users/sync_ldap
+        # --- Отправка в Бэкенд ---
         url = f"{settings.BACKEND_INTERNAL_API_URL}/users/sync_ldap"
         logger.info(f"Sending batch to Backend: {url}")
         
@@ -75,10 +72,11 @@ def sync_ldap_users_handler(execution_id: str, secrets: dict, **kwargs):
 
     except Exception as e:
         logger.error(f"Error during User Sync logic: {e}", exc_info=True)
-        raise e
+        raise
     finally:
         if conn:
             conn.unbind()
 
-# Register the handler
+
+# Регистрация обработчика
 register_task_handler("users:sync_ldap", sync_ldap_users_handler)

@@ -1,67 +1,206 @@
-# Документация по Маршрутизации
+# Маршрутизация
 
-Маршрутизация в проекте реализована с помощью библиотеки `react-router-dom` и позволяет организовать навигацию в одностраничном приложении (SPA).
+## Структура роутера
+
+Маршрутизация реализована на React Router 6 с централизованной конфигурацией.
+
+```
+src/core/router/
+├── RouterProvider.tsx    # Провайдер с маршрутами
+├── ProtectedRoute.tsx    # Защита аутентификацией
+└── routes.ts             # Конфигурация маршрутов
+```
+
+---
 
 ## Конфигурация маршрутов
 
-Центральным файлом конфигурации является `frontend/src/app/routes/AppRoutes.jsx`. В нем определены все пути приложения.
+```typescript
+// src/core/router/RouterProvider.tsx
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-**Структура `AppRoutes.jsx`:**
+const router = createBrowserRouter([
+    // Публичные
+    { path: '/login', element: <LoginPage /> },
+    
+    // Защищённые
+    {
+        path: '/',
+        element: <ProtectedRoute><MainLayout /></ProtectedRoute>,
+        children: [
+            { index: true, element: <HomePage /> },
+            { path: 'users/*', element: <UserManagementPage /> },
+            { path: 'settings/*', element: <SettingsPage /> },
+            { path: 'about', element: <AboutPage /> },
+        ],
+    },
+    
+    // 404
+    { path: '*', element: <NotFoundPage /> },
+]);
 
--   Используется компонент `<Routes>` для определения коллекции маршрутов.
--   Каждый отдельный путь определяется компонентом `<Route>`.
-
-Маршруты разделены на две категории:
-
-1.  **Публичные**: Доступны всем пользователям. В нашем случае это только страница входа.
-    ```jsx
-    <Route path={ROUTES.LOGIN} element={user ? <Navigate to={ROUTES.HOME} /> : <Login />} />
-    ```
-    Если пользователь уже аутентифицирован, он будет автоматически перенаправлен на домашнюю страницу.
-
-2.  **Приватные (защищенные)**: Доступны только аутентифицированным пользователям. Все такие маршруты сгруппированы внутри родительского `<Route>`, который в качестве элемента использует компонент `ProtectedRoute`.
-
-    ```jsx
-    <Route element={<ProtectedRoute />}>
-        {/* Вложенные приватные маршруты */}
-        <Route path={ROUTES.HOME} element={<Home />} />
-        <Route path={ROUTES.USER_MANAGEMENT} element={<UserManagementPage />} />
-        ...
-    </Route>
-    ```
-
-## Защищенные маршруты (`ProtectedRoute.jsx`)
-
-Компонент `frontend/src/app/routes/ProtectedRoute.jsx` — это ключевой элемент системы безопасности фронтенда. Его задача — не допустить неаутентифицированных пользователей на закрытые страницы.
-
-**Логика работы:**
-1.  С помощью хука `useAuthContext()` компонент получает доступ к глобальному состоянию аутентификации (объект `user` и флаг `loading`).
-2.  Если идет первоначальная проверка токена (`loading === true`), компонент ничего не рендерит, чтобы избежать моргания интерфейса.
-3.  Если проверка завершена и `user` отсутствует (`!user`), компонент рендерит `<Navigate to={ROUTES.LOGIN} replace />`, что выполняет принудительный редирект на страницу входа.
-4.  Если проверка завершена и `user` существует, компонент рендерит `<Outlet />`. Компонент `<Outlet />` — это специальный компонент из `react-router-dom`, который отображает дочерний маршрут, соответствующий текущему URL.
-
-## Общий макет для приватных маршрутов
-
-В `AppRoutes.jsx` можно заметить еще один уровень вложенности:
-```jsx
-<Route element={<ProtectedRoute />}>
-    <Route element={<Navbar />}> 
-        {/* Маршруты, у которых будет Navbar */}
-    </Route>
-</Route>
+export function AppRouterProvider() {
+    return <RouterProvider router={router} />;
+}
 ```
-Это элегантный способ применить общий компонент макета (`Navbar`) ко всем страницам, которые находятся внутри этой группы. `Navbar` будет отрендерен, а внутри него (через `<Outlet />` в самом `Navbar`) — компонент страницы (`Home`, `About` и т.д.).
+
+---
+
+## Модульные маршруты
+
+Каждый модуль экспортирует свои маршруты:
+
+```typescript
+// src/modules/users/routes.ts
+import { RouteObject } from 'react-router-dom';
+import { UserManagementPage } from './ui/pages/UserManagementPage';
+
+export const usersRoutes: RouteObject[] = [
+    { path: 'users', element: <UserManagementPage /> },
+    { path: 'users/:id', element: <UserDetailPage /> },
+];
+```
+
+---
+
+## Защищённые маршруты
+
+### ProtectedRoute
+
+```tsx
+// src/core/router/ProtectedRoute.tsx
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@core/providers/AuthProvider';
+
+interface ProtectedRouteProps {
+    children: ReactNode;
+    requiredPermission?: string;
+}
+
+export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteProps) {
+    const { isAuthenticated } = useAuth();
+    const { hasPermission } = usePermissionsStore();
+    const location = useLocation();
+    
+    if (!isAuthenticated) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+    
+    if (requiredPermission && !hasPermission(requiredPermission)) {
+        return <Navigate to="/403" replace />;
+    }
+    
+    return <>{children}</>;
+}
+```
+
+### Использование
+
+```tsx
+// Только аутентификация
+<ProtectedRoute>
+    <HomePage />
+</ProtectedRoute>
+
+// С проверкой прав
+<ProtectedRoute requiredPermission="users:manage">
+    <UserManagementPage />
+</ProtectedRoute>
+```
+
+---
 
 ## Константы маршрутов
 
-Все пути в приложении хранятся в виде констант в объекте `ROUTES` в файле `frontend/src/shared/constants/routes.js`. Это лучшая практика, которая позволяет избежать "магических строк" и упрощает рефакторинг путей в будущем.
-
-**Пример (`routes.js`):**
-```javascript
+```typescript
+// src/shared/constants/routes.ts
 export const ROUTES = {
-    HOME: "/",
-    LOGIN: "/login",
-    USER_MANAGEMENT: "/user-management",
-    // ...
+    HOME: '/',
+    LOGIN: '/login',
+    USERS: '/users',
+    SETTINGS: '/settings',
+    SETTINGS_CORE: '/settings/core',
+    SETTINGS_LDAP: '/settings/ldap',
+    ABOUT: '/about',
+};
+```
+
+---
+
+## Навигация
+
+### Программная навигация
+
+```tsx
+import { useNavigate } from 'react-router-dom';
+
+function LoginForm() {
+    const navigate = useNavigate();
+    
+    const onSuccess = () => {
+        navigate(ROUTES.HOME);
+    };
+}
+```
+
+### Ссылки
+
+```tsx
+import { Link, NavLink } from 'react-router-dom';
+
+<Link to={ROUTES.USERS}>Пользователи</Link>
+
+// NavLink для активного состояния
+<NavLink 
+    to={ROUTES.USERS}
+    className={({ isActive }) => isActive ? 'active' : ''}
+>
+    Пользователи
+</NavLink>
+```
+
+---
+
+## Параметры маршрута
+
+```tsx
+// Определение
+{ path: 'users/:userId', element: <UserDetailPage /> }
+
+// Использование
+import { useParams } from 'react-router-dom';
+
+function UserDetailPage() {
+    const { userId } = useParams<{ userId: string }>();
+    const { data } = useUser(Number(userId));
+}
+```
+
+---
+
+## Вложенные маршруты
+
+```tsx
+// Родитель с Outlet
+function UserManagementPage() {
+    return (
+        <div>
+            <Tabs>
+                <Tab label="Пользователи" to="users" />
+                <Tab label="Роли" to="roles" />
+            </Tabs>
+            <Outlet />  {/* Рендерит дочерний маршрут */}
+        </div>
+    );
+}
+
+// Конфигурация
+{
+    path: 'management',
+    element: <UserManagementPage />,
+    children: [
+        { path: 'users', element: <UsersTab /> },
+        { path: 'roles', element: <RolesTab /> },
+    ],
 }
 ```

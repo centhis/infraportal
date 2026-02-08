@@ -1,3 +1,3 @@
 module_permissions = [
-    {'name': 'tasks:read', 'description': 'View background tasks list'},
+    {"name": "tasks:read", "description": "View background tasks list"},
 ]

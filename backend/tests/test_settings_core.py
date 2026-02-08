@@ -1,11 +1,12 @@
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from app.settings.core.models import CoreSetting
+
 from app.settings.core import services
+from app.settings.core.models import CoreSetting
 
 # --- Fixtures ---
+
 
 @pytest.fixture
 def core_settings_data(db_session: Session):
@@ -25,7 +26,9 @@ def core_settings_data(db_session: Session):
         db_session.refresh(s)
     return settings_list
 
+
 # --- API Tests ---
+
 
 def test_get_all_core_settings(authenticated_client: TestClient, core_settings_data):
     """
@@ -35,14 +38,17 @@ def test_get_all_core_settings(authenticated_client: TestClient, core_settings_d
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= len(core_settings_data)
-    
+
     # Check simple value
     test_string = next(s for s in data if s["key"] == "TEST_STRING")
     assert test_string["value"] == "test_value"
-    
+
     # Check sensitive masking
     test_sensitive = next(s for s in data if s["key"] == "TEST_SENSITIVE")
-    assert test_sensitive["value"] == "***" # Assuming masking logic returns *** or similar, or checking specific sensitive logic
+    assert (
+        test_sensitive["value"] == "***"
+    )  # Assuming masking logic returns *** or similar, or checking specific sensitive logic
+
 
 def test_get_core_setting_by_key(authenticated_client: TestClient, core_settings_data):
     """
@@ -54,12 +60,14 @@ def test_get_core_setting_by_key(authenticated_client: TestClient, core_settings
     assert data["key"] == "TEST_STRING"
     assert data["value"] == "test_value"
 
+
 def test_get_core_setting_not_found(authenticated_client: TestClient):
     """
     Test retrieval of a non-existent setting.
     """
     response = authenticated_client.get("/api/v1/settings/core/NON_EXISTENT")
     assert response.status_code == 404
+
 
 def test_update_core_setting(authenticated_client: TestClient, core_settings_data):
     """
@@ -75,6 +83,7 @@ def test_update_core_setting(authenticated_client: TestClient, core_settings_dat
     response = authenticated_client.get("/api/v1/settings/core/TEST_STRING")
     assert response.json()["value"] == "new_value"
 
+
 def test_update_core_setting_not_found(authenticated_client: TestClient):
     """
     Test update of a non-existent setting.
@@ -83,7 +92,9 @@ def test_update_core_setting_not_found(authenticated_client: TestClient):
     response = authenticated_client.put("/api/v1/settings/core/NON_EXISTENT", json=update_data)
     assert response.status_code == 404
 
+
 # --- RBAC Tests ---
+
 
 def test_permissions_view_settings(client: TestClient, user_factory, core_settings_data):
     """
@@ -91,32 +102,47 @@ def test_permissions_view_settings(client: TestClient, user_factory, core_settin
     """
     # User without permissions
     user_factory(login="no_perm_user", password="password")
-    token_no_perm = client.post("/api/v1/auth/login", json={"login": "no_perm_user", "password": "password"}).json()["access_token"]
-    
+    token_no_perm = client.post(
+        "/api/v1/auth/login", json={"login": "no_perm_user", "password": "password"}
+    ).json()["access_token"]
+
     client_no_perm = TestClient(client.app)
     client_no_perm.headers["Authorization"] = f"Bearer {token_no_perm}"
-    
+
     response = client_no_perm.get("/api/v1/settings/core")
     assert response.status_code == 403
 
     # User with view permission
-    user_factory(login="view_user", password="password", roles=[{"name": "viewer", "permissions": ["settings:view"]}])
-    token_view = client.post("/api/v1/auth/login", json={"login": "view_user", "password": "password"}).json()["access_token"]
-    
+    user_factory(
+        login="view_user",
+        password="password",
+        roles=[{"name": "viewer", "permissions": ["settings:view"]}],
+    )
+    token_view = client.post(
+        "/api/v1/auth/login", json={"login": "view_user", "password": "password"}
+    ).json()["access_token"]
+
     client_view = TestClient(client.app)
     client_view.headers["Authorization"] = f"Bearer {token_view}"
-    
+
     response = client_view.get("/api/v1/settings/core")
     assert response.status_code == 200
+
 
 def test_permissions_update_settings(client: TestClient, user_factory, core_settings_data):
     """
     Test 1.11.5: Permissions for updating settings.
     """
     # User with view permission only (cannot update)
-    user_factory(login="viewer_comp", password="password", roles=[{"name": "viewer_c", "permissions": ["settings:view"]}])
-    token_view = client.post("/api/v1/auth/login", json={"login": "viewer_comp", "password": "password"}).json()["access_token"]
-    
+    user_factory(
+        login="viewer_comp",
+        password="password",
+        roles=[{"name": "viewer_c", "permissions": ["settings:view"]}],
+    )
+    token_view = client.post(
+        "/api/v1/auth/login", json={"login": "viewer_comp", "password": "password"}
+    ).json()["access_token"]
+
     client_view = TestClient(client.app)
     client_view.headers["Authorization"] = f"Bearer {token_view}"
 
@@ -124,16 +150,26 @@ def test_permissions_update_settings(client: TestClient, user_factory, core_sett
     assert response.status_code == 403
 
     # User with update permission
-    user_factory(login="updater", password="password", roles=[{"name": "updater", "permissions": ["settings:update"]}])
-    token_update = client.post("/api/v1/auth/login", json={"login": "updater", "password": "password"}).json()["access_token"]
-    
+    user_factory(
+        login="updater",
+        password="password",
+        roles=[{"name": "updater", "permissions": ["settings:update"]}],
+    )
+    token_update = client.post(
+        "/api/v1/auth/login", json={"login": "updater", "password": "password"}
+    ).json()["access_token"]
+
     client_update = TestClient(client.app)
     client_update.headers["Authorization"] = f"Bearer {token_update}"
-    
-    response = client_update.put("/api/v1/settings/core/TEST_STRING", json={"value": "legit_update"})
+
+    response = client_update.put(
+        "/api/v1/settings/core/TEST_STRING", json={"value": "legit_update"}
+    )
     assert response.status_code == 200
 
+
 # --- Service Tests ---
+
 
 def test_service_get_core_setting_value(db_session: Session, core_settings_data):
     """
@@ -159,7 +195,9 @@ def test_service_get_core_setting_value(db_session: Session, core_settings_data)
     assert val_json == {"foo": "bar"}
     assert isinstance(val_json, dict)
 
+
 # --- Model Tests ---
+
 
 def test_model_create(db_session: Session):
     """
@@ -170,4 +208,4 @@ def test_model_create(db_session: Session):
     db_session.commit()
     db_session.refresh(setting)
     assert setting.id is not None
-    assert setting.is_sensitive is False # Default
+    assert setting.is_sensitive is False  # Default

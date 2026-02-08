@@ -1,6 +1,7 @@
+from sqlalchemy import Column, Integer, String, UniqueConstraint
 
-from sqlalchemy import Column, String, Integer, UniqueConstraint
 from app.db.database import Base
+
 
 class TaskSecretMapping(Base):
     __tablename__ = "task_secret_mappings"
@@ -10,5 +11,5 @@ class TaskSecretMapping(Base):
     setting_key = Column(String, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint('task_type', 'setting_key', name='unique_task_setting_mapping'),
+        UniqueConstraint("task_type", "setting_key", name="unique_task_setting_mapping"),
     )

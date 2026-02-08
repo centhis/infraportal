@@ -1,0 +1,75 @@
+{
+  "compilerOptions": {
+    /* Language & Environment */
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "node",
+      "vitest/globals"
+    ],
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+    /* Modules */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    /* Strict Type-Checking (согласно плану) */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    /* Additional Checks */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "exactOptionalPropertyTypes": true,
+    "noPropertyAccessFromIndexSignature": true,
+    /* Interop */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    /* Path Aliases (подготовка к задаче 0.2) */
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": [
+        "src/app/*"
+      ],
+      "@core/*": [
+        "src/core/*"
+      ],
+      "@shared/*": [
+        "src/shared/*"
+      ],
+      "@modules/*": [
+        "src/modules/*"
+      ],
+      "@types/*": [
+        "src/types/*"
+      ],
+      "@mocks/*": [
+        "src/mocks/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

@@ -15,11 +15,7 @@ class BeatSettings(BaseSettings):
     CELERY_BEAT_DB_URL: Optional[str] = None
 
     CELERY_TIMEZONE: str = "Europe/Moscow"  # Часовой пояс для beat
-    CELERY_BEAT_SCHEDULER_URL: str = ""
-
-    @property
-    def CELERY_BEAT_SCHEDULER_URL(self) -> str:
-        return self.CELERY_BEAT_DB_URL
+    CELERY_BEAT_SCHEDULER_URL: Optional[str] = None
 
     @model_validator(mode="after")
     def assemble_db_connection(self) -> "BeatSettings":
@@ -28,6 +24,7 @@ class BeatSettings(BaseSettings):
                 f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
             )
+        self.CELERY_BEAT_SCHEDULER_URL = self.CELERY_BEAT_DB_URL
         return self
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

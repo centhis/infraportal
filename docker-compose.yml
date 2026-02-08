@@ -153,6 +153,9 @@ services:
     environment:
       # Flower needs to know which broker to monitor
       CELERY_BROKER_URL: ${REDIS_URL_FLOWER}
+      FLOWER_UNAUTHENTICATED_API: "true"
+      CELERY_TIMEZONE: ${CELERY_TIMEZONE}
+      CELERY_ENABLE_UTC: ${CELERY_ENABLE_UTC}
     expose:
       - "5555"
     networks:

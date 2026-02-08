@@ -1,12 +1,15 @@
+from unittest.mock import MagicMock, patch
 
 import pytest
-from app.tasks.registry import TASK_REGISTRY, autodiscover_tasks, TaskDefinition
 from pydantic import BaseModel
-from unittest.mock import patch, MagicMock
+
 from app.tasks import registry
+from app.tasks.registry import TASK_REGISTRY, TaskDefinition, autodiscover_tasks
+
 
 class MockSchema(BaseModel):
     param1: str
+
 
 def test_autodiscover_tasks_registers_tasks():
     """
@@ -16,29 +19,23 @@ def test_autodiscover_tasks_registers_tasks():
     # Clean registry before test
     TASK_REGISTRY.clear()
 
-
-
     # Setup mocks
     mock_module_name = "app.mock_module.tasks"
-    
+
     # Mock the module that contains the task definitions
     # It must be a MagicMock that acts like a module
     mock_module = MagicMock()
     # It must have the TASK_DEFINITIONS attribute as a list
-    mock_module.TASK_DEFINITIONS = [
-        ("mock_task", MockSchema, "mock:permission")
-    ] 
-    
+    mock_module.TASK_DEFINITIONS = [("mock_task", MockSchema, "mock:permission")]
+
     import pkgutil
+
     with patch("app.tasks.registry.importlib.import_module") as mock_import:
         with patch.object(pkgutil, "walk_packages") as mock_walk:
-            
             # Setup walk_packages return values
             # The list contains tuples of (importer, module_name, is_pkg)
-            mock_walk.return_value = [
-                (None, mock_module_name, False)
-            ]
-            
+            mock_walk.return_value = [(None, mock_module_name, False)]
+
             # Setup import_module side effect to return our specific mock module
             def import_side_effect(name):
                 if name == mock_module_name:
@@ -70,6 +67,6 @@ def test_manual_registration_duplicate_error():
     """
     TASK_REGISTRY.clear()
     TASK_REGISTRY["duplicate"] = TaskDefinition("duplicate", MockSchema, None)
-    
-    with pytest.raises(ValueError, match="Задача с именем 'duplicate' уже зарегистрирована"):
+
+    with pytest.raises(ValueError, match="Task with name 'duplicate' is already registered"):
         registry.register_task("duplicate", MockSchema, None)

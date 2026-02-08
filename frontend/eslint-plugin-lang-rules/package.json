@@ -1,0 +1,7 @@
+{
+  "name": "eslint-plugin-lang-rules",
+  "version": "1.0.0",
+  "description": "ESLint plugin для проверки языковых требований: комментарии на русском, логи и ошибки на английском",
+  "main": "index.js",
+  "type": "module"
+}

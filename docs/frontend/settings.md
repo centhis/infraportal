@@ -1,87 +1,234 @@
-# Модуль «Настройки» (Settings)
+# Модуль Settings
 
-## 1. Обзор
+## Обзор
 
-Модуль «Настройки» предоставляет централизованный интерфейс для управления различными параметрами системы. Он спроектирован с учетом расширяемости, что позволяет легко добавлять новые группы настроек и отдельные параметры.
+Модуль `settings` управляет системными настройками приложения:
+- **Core Settings** — основные настройки (часовой пояс, язык)
+- **LDAP Settings** — настройки интеграции с LDAP
 
-Текущая реализация включает две основные вкладки:
-- **Core Settings (Базовые настройки):** Управление общими параметрами приложения.
-- **LDAP Integration (Интеграция с LDAP):** Настройка параметров для синхронизации с каталогом LDAP.
-
-## 2. Структура модуля
-
-Основная логика модуля находится в директории `src/features/settings`.
+## Структура модуля
 
 ```
-src/features/settings/
-├───api/
-│   └───settingsApi.js      # Функции для взаимодействия с API бэкенда
-├───components/
-│   ├───SettingInputField.jsx # Универсальный компонент для полей ввода
-│   └───SettingsTabs.jsx      # Компонент для навигации по вкладкам
-├───hooks/
-│   ├───useCoreSettings.js  # Хук для управления состоянием базовых настроек
-│   └───useLdapSettings.js  # Хук для управления состоянием настроек LDAP
-└───pages/
-    ├───CoreSettingsItemsPage.jsx # Страница с базовыми настройками
-    ├───LdapSettingsItemsPage.jsx # Страница с настройками LDAP
-    └───SettingsPage.jsx          # Главная страница-контейнер раздела
+src/modules/settings/
+├── api/
+│   ├── settings.api.ts       # coreSettingsApi, ldapSettingsApi
+│   └── settings.dto.ts       # CoreSettings, LdapSettings
+│
+├── ui/
+│   ├── pages/
+│   │   ├── SettingsPage.tsx         # Главная страница с табами
+│   │   ├── CoreSettingsPage.tsx     # Основные настройки
+│   │   └── LdapSettingsPage.tsx     # LDAP настройки
+│   │
+│   ├── components/
+│   │   ├── CoreSettingsForm.tsx
+│   │   ├── LdapSettingsForm.tsx
+│   │   └── LdapConnectionTest.tsx   # Тест подключения
+│   │
+│   └── hooks/
+│       ├── useCoreSettings.ts       # useQuery/useMutation
+│       └── useLdapSettings.ts
+│
+├── routes.ts
+└── index.ts
 ```
 
-## 3. Навигация и маршрутизация
+---
 
-- **Константа маршрута:** Путь `/settings` зарегистрирован в `src/shared/constants/routes.js`.
-- **Маршрут приложения:** Компонент `SettingsPage` обернут в `ProtectedRoute` и добавлен в `src/app/routes/AppRoutes.jsx`. Это означает, что доступ к разделу имеют только авторизованные пользователи с определенными правами.
-- **Боковое меню:** Ссылка на раздел отображается в боковом меню (`src/components/layout/Navbar/Navbar.jsx`) и ее видимость контролируется с помощью компонента `Can`, который проверяет наличие у пользователя пермишена `settings:view`.
+## API
 
-## 4. Управление состоянием (State Management)
+### settings.api.ts
 
-Для управления данными используются кастомные React хуки, разделенные по логическим доменам:
+```typescript
+// src/modules/settings/api/settings.api.ts
+import { apiClient } from '@shared/api/api-client';
+import { API_ENDPOINTS } from '@shared/constants/apiEndpoints';
+import type { CoreSettings, LdapSettings } from './settings.dto';
 
-- `useCoreSettings`:
-  - Отвечает за загрузку, отображение и обновление базовых настроек.
-  - Предоставляет независимые состояния `loading` и `error`.
+export const coreSettingsApi = {
+    get: async () => {
+        const { data } = await apiClient.get<CoreSettings>(
+            API_ENDPOINTS.SETTINGS.CORE
+        );
+        return data;
+    },
+    
+    update: async (settings: Partial<CoreSettings>) => {
+        const { data } = await apiClient.put<CoreSettings>(
+            API_ENDPOINTS.SETTINGS.CORE,
+            settings
+        );
+        return data;
+    },
+};
 
-- `useLdapSettings`:
-  - Управляет состоянием настроек LDAP.
-  - Содержит дополнительную логику для проверки статуса LDAP (`isLdapEnabled`) и тестирования соединения.
+export const ldapSettingsApi = {
+    get: async () => {
+        const { data } = await apiClient.get<LdapSettings>(
+            API_ENDPOINTS.SETTINGS.LDAP
+        );
+        return data;
+    },
+    
+    update: async (settings: Partial<LdapSettings>) => {
+        const { data } = await apiClient.put<LdapSettings>(
+            API_ENDPOINTS.SETTINGS.LDAP,
+            settings
+        );
+        return data;
+    },
+    
+    testConnection: async () => {
+        const { data } = await apiClient.post<{ success: boolean; message: string }>(
+            `${API_ENDPOINTS.SETTINGS.LDAP}/test`
+        );
+        return data;
+    },
+};
+```
 
-Такое разделение предотвращает избыточные запросы и упрощает логику компонентов.
+### settings.dto.ts
 
-## 5. Взаимодействие с API
+```typescript
+// src/modules/settings/api/settings.dto.ts
+export interface CoreSettings {
+    timezone: string;
+    language: string;
+    date_format: string;
+}
 
-Все запросы к бэкенду инкапсулированы в файле `src/features/settings/api/settingsApi.js`. Этот сервис использует настроенный экземпляр `axios` и предоставляет асинхронные функции для:
-- Получения настроек (`getCoreSettings`, `getLdapSettings`).
-- Обновления настроек (`updateCoreSetting`, `updateLdapSetting`).
-- Тестирования LDAP-соединения (`testLdapConnection`).
+export interface LdapSettings {
+    enabled: boolean;
+    uri: string;
+    base_dn: string;
+    bind_dn: string;
+    bind_password?: string;
+    user_filter: string;
+    sync_schedule: string;
+}
+```
 
-## 6. Компоненты интерфейса (UI)
+---
 
-- **`SettingsPage.jsx`**: Основной контейнер, который отображает заголовок и компонент с вкладками `SettingsTabs`.
-- **`SettingsTabs.jsx`**: Обеспечивает навигацию между страницами `CoreSettingsItemsPage` и `LdapSettingsItemsPage`.
-- **`CoreSettingsItemsPage.jsx`**: Отображает список базовых настроек. Каждая настройка может быть изменена и сохранена индивидуально.
-- **`LdapSettingsItemsPage.jsx`**: Представляет настройки LDAP, сгруппированные по секциям (Connection, Users, Sync). Реализован "черновой режим": критичные для соединения параметры можно сохранить только после успешного теста.
-- **`SettingInputField.jsx`**: Универсальный компонент, который рендерит поле ввода (`text`, `password`, `checkbox`) в зависимости от типа настройки, полученного от API. Он также обрабатывает маскирование для чувствительных данных.
+## Хуки
 
-## 7. Валидация
+### useLdapSettings.ts
 
-Клиентская валидация реализована с помощью библиотеки `zod`. Схемы валидации определены для форм, чтобы гарантировать корректность вводимых данных (например, формат Cron-выражения в настройках LDAP).
+```typescript
+// src/modules/settings/ui/hooks/useLdapSettings.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ldapSettingsApi } from '../../api/settings.api';
 
-## 8. Локализация (i18n)
+export function useLdapSettings() {
+    return useQuery({
+        queryKey: ['settings', 'ldap'],
+        queryFn: ldapSettingsApi.get,
+    });
+}
 
-Все текстовые строки, используемые в модуле, вынесены в `src/i18n/locales/ru/settings.json`. Для добавления нового перевода достаточно обновить этот файл и его аналоги для других языков.
+export function useUpdateLdapSettings() {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: ldapSettingsApi.update,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['settings', 'ldap'] });
+        },
+    });
+}
 
-## 9. Расширение модуля
+export function useTestLdapConnection() {
+    return useMutation({
+        mutationFn: ldapSettingsApi.testConnection,
+    });
+}
+```
 
-### Как добавить новую настройку (в существующую группу)
+---
 
-1.  **Бэкенд:** Убедитесь, что API возвращает новую настройку в списке (например, в `/api/v1/settings/core`).
-2.  **Фронтенд:** Никаких изменений не требуется! Компонент `CoreSettingsItemsPage` или `LdapSettingsItemsPage` динамически отобразит все настройки, полученные от API.
+## Страницы
 
-### Как добавить новую группу настроек (новую вкладку)
+### LdapSettingsPage
 
-1.  **Бэкенд:** Создайте новые эндпоинты для получения и обновления настроек новой группы.
-2.  **API сервис:** Добавьте новые функции в `src/features/settings/api/settingsApi.js` для работы с новыми эндпоинтами.
-3.  **Хук состояния:** Создайте новый хук (например, `useNewGroupSettings.js`) в `src/features/settings/hooks/` для управления состоянием новой группы.
-4.  **Страница:** Создайте компонент страницы (например, `NewGroupSettingsPage.jsx`) в `src/features/settings/pages/` для отображения и редактирования настроек.
-5.  **Вкладки:** Добавьте новую вкладку в `src/features/settings/components/SettingsTabs.jsx`.
+```tsx
+// src/modules/settings/ui/pages/LdapSettingsPage.tsx
+import { useLdapSettings, useUpdateLdapSettings, useTestLdapConnection } from '../hooks/useLdapSettings';
+import { LdapSettingsForm } from '../components/LdapSettingsForm';
+
+export function LdapSettingsPage() {
+    const { data: settings, isLoading } = useLdapSettings();
+    const updateMutation = useUpdateLdapSettings();
+    const testMutation = useTestLdapConnection();
+    
+    if (isLoading) return <CircularProgress />;
+    
+    const handleSave = (values: LdapSettings) => {
+        updateMutation.mutate(values);
+    };
+    
+    const handleTest = () => {
+        testMutation.mutate(undefined, {
+            onSuccess: (result) => {
+                if (result.success) {
+                    toast.success('Подключение успешно!');
+                } else {
+                    toast.error(result.message);
+                }
+            },
+        });
+    };
+    
+    return (
+        <Box>
+            <Typography variant="h5">Настройки LDAP</Typography>
+            
+            <LdapSettingsForm 
+                defaultValues={settings}
+                onSubmit={handleSave}
+                loading={updateMutation.isPending}
+            />
+            
+            <Button 
+                onClick={handleTest}
+                loading={testMutation.isPending}
+            >
+                Тест подключения
+            </Button>
+        </Box>
+    );
+}
+```
+
+---
+
+## Маршруты
+
+```typescript
+// src/modules/settings/routes.ts
+import { RouteObject } from 'react-router-dom';
+
+export const settingsRoutes: RouteObject[] = [
+    {
+        path: 'settings',
+        element: <SettingsPage />,
+        children: [
+            { index: true, element: <Navigate to="core" /> },
+            { path: 'core', element: <CoreSettingsPage /> },
+            { path: 'ldap', element: <LdapSettingsPage /> },
+        ],
+    },
+];
+```
+
+---
+
+## Права доступа
+
+```typescript
+// src/modules/settings/permissions.ts
+export const SETTINGS_PERMISSIONS = {
+    VIEW: 'settings:view',
+    EDIT: 'settings:edit',
+    LDAP_TEST: 'settings:ldap:test',
+};
+```

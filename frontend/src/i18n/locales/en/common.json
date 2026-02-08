@@ -17,5 +17,25 @@
     "cancel": "Cancel",
     "enabled": "Enabled",
     "disabled": "Disabled",
-    "sensitive_value_masked": "Sensitive value is masked"
+    "sensitive_value_masked": "Sensitive value is masked",
+    "error": "Error",
+    "no_permission": "Permission denied",
+    "table": {
+        "rows_per_page": "Rows per page:",
+        "of": "of"
+    },
+    "all": "All",
+    "filter": "Filter...",
+    "all_time": "All time",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "last_7_days": "Last 7 days",
+    "last_30_days": "Last 30 days",
+    "custom_range": "Custom range...",
+    "from": "From",
+    "to": "To",
+    "back": "Back",
+    "apply": "Apply",
+    "columns_visibility": "Columns visibility",
+    "show_hide_columns": "Show / Hide Columns"
 }

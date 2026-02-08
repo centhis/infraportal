@@ -9,9 +9,13 @@ from ldap3.core.exceptions import LDAPException
 
 logger = logging.getLogger(__name__)
 
-# --- Default Attribute Mappings ---
+# OID для Active Directory Root DSE
+AD_OID = "1.2.840.113556.1.4.800"
+
+
+# --- Стандартные маппинги атрибутов ---
 DEFAULT_AD_MAPPING = {
-    # Core Identity
+    # Основные данные (Core Identity)
     "login": "sAMAccountName",
     "email": "mail",
     "full_name": "displayName",
@@ -22,7 +26,7 @@ DEFAULT_AD_MAPPING = {
     "upn": "userPrincipalName",
     "sid": "objectSid",
     
-    # Organization & Job
+    # Организация и должность (Organization & Job)
     "title": "title",
     "department": "department",
     "company": "company",
@@ -30,7 +34,7 @@ DEFAULT_AD_MAPPING = {
     "employee_id": "employeeID",
     "office": "physicalDeliveryOfficeName",
     
-    # Contact
+    # Контакты (Contact)
     "telephone": "telephoneNumber",
     "mobile": "mobile",
     "street": "streetAddress",
@@ -39,7 +43,7 @@ DEFAULT_AD_MAPPING = {
     "zip": "postalCode",
     "country": "co",
     
-    # Account Status
+    # Статус аккаунта (Account Status)
     "is_active": "userAccountControl",
     "account_expires": "accountExpires",
     "pwd_last_set": "pwdLastSet",
@@ -48,7 +52,7 @@ DEFAULT_AD_MAPPING = {
 }
 
 DEFAULT_OPENLDAP_MAPPING = {
-    # Core Identity
+    # Основные данные (Core Identity)
     "login": "uid",
     "email": "mail",
     "full_name": "cn",
@@ -57,15 +61,15 @@ DEFAULT_OPENLDAP_MAPPING = {
     "ldap_id": "entryUUID",
     "dn": "entryDN",
     
-    # Organization & Job
+    # Организация и должность (Organization & Job)
     "title": "title",
-    "department": "ou", # Often used for dept
+    "department": "ou", # Часто используется для отдела
     "organization": "o",
     "employee_number": "employeeNumber",
     "employee_type": "employeeType",
     "description": "description",
     
-    # Contact
+    # Контакты (Contact)
     "telephone": "telephoneNumber",
     "mobile": "mobile",
     "street": "street",
@@ -73,20 +77,22 @@ DEFAULT_OPENLDAP_MAPPING = {
     "state": "st",
     "zip": "postalCode",
     
-    # Status (Standard OpenLDAP schemas often lack standardized 'account control', 
-    # but we include common operational attributes)
+    # Статус (Стандартные схемы OpenLDAP часто не имеют единого поля статуса, 
+    # но мы включаем общие операционные атрибуты)
     "created_at": "createTimestamp",
     "updated_at": "modifyTimestamp"
 }
 
 def normalize_object_guid(value) -> str:
-    """Helper to convert binary AD GUID to string."""
+    """Вспомогательная функция для конвертации бинарного AD GUID в строку."""
     try:
         if isinstance(value, bytes):
             return str(uuid.UUID(bytes_le=value))
         if isinstance(value, str):
-            # Handle cases where it might already be stringified
+            # Обработка случаев, когда значение уже приведено к строке
             return str(uuid.UUID(value.strip('{}')))
+        return str(value)
+    except Exception:
         return str(value)
     except Exception:
         return str(value)
@@ -95,9 +101,10 @@ def connect_to_ldap(
     ldap_uri: str, 
     bind_dn: str, 
     bind_password: str,
-    use_tls_if_available: bool = True
+    use_tls_if_available: bool = True,
+    tls_verify: bool = True
 ) -> Optional[Connection]:
-    """Establishes connection to LDAP server."""
+    """Устанавливает соединение с LDAP сервером."""
     if not ldap_uri:
         logger.error("LDAP URI is missing.")
         return None
@@ -106,7 +113,9 @@ def connect_to_ldap(
     
     tls_config = None
     if use_ssl or use_tls_if_available:
-         tls_config = Tls(validate=ssl.CERT_NONE, version=ssl.PROTOCOL_TLSv1_2)
+        # Соответствие логике бэкенда: PROTOCOL_TLS и настройка проверки
+        validate = ssl.CERT_REQUIRED if tls_verify else ssl.CERT_NONE
+        tls_config = Tls(validate=validate, version=ssl.PROTOCOL_TLS)
 
     try:
         server = Server(ldap_uri, use_ssl=use_ssl, tls=tls_config, get_info=ALL)
@@ -123,14 +132,59 @@ def connect_to_ldap(
         logger.error(f"Failed to connect to LDAP: {e}")
         return None
 
-def detect_server_type(server_info) -> str:
-    """Detects if server is AD or OpenLDAP."""
-    if server_info and hasattr(server_info, 'other') and server_info.other:
-        other_info = server_info.other
-        if 'forestFunctionality' in other_info:
+def detect_server_type(server: Server, connection: Connection | None = None) -> str:
+    """
+    Определяет тип сервера (Active Directory или OpenLDAP).
+    Выполняет оптимизированный запрос Root DSE для получения необходимых атрибутов.
+    """
+    # 1. Если есть соединение, делаем точный запрос Root DSE
+    if connection and connection.bound:
+        try:
+            if connection.search(
+                search_base="",
+                search_filter="(objectClass=*)",
+                search_scope="BASE",
+                attributes=["*", "+"],  # Все атрибуты + операционные
+            ):
+                if connection.entries:
+                    dse = connection.entries[0]
+
+                    # Проверка по OID
+                    if "supportedCapabilities" in dse and AD_OID in dse["supportedCapabilities"].values:
+                        logger.info(f"LDAP Server detected as: Active Directory (via OID {AD_OID})")
+                        return "ad"
+
+                    # Проверка по forestFunctionality
+                    if "forestFunctionality" in dse:
+                        logger.info("LDAP Server detected as: Active Directory (via forestFunctionality)")
+                        return "ad"
+
+                    # Проверка по vendorName
+                    if "vendorName" in dse:
+                        vendor = str(dse["vendorName"].value).lower()
+                        if "microsoft" in vendor:
+                            logger.info(f"LDAP Server detected as: Active Directory (via vendorName '{vendor}')")
+                            return "ad"
+        except Exception as e:
+            logger.warning(f"Error during manual server detection: {e}")
+
+    # 2. Fallback на server.info
+    if server.info:
+        logger.info("Falling back to server.info for detection")
+        if (
+            hasattr(server.info, "supportedCapabilities")
+            and AD_OID in server.info.supportedCapabilities
+        ):
             return "ad"
-        elif 'vendorName' in other_info and 'microsoft' in other_info['vendorName'][0].lower():
-            return "ad"
+
+        if hasattr(server.info, "other") and server.info.other:
+            other = server.info.other
+            if "forestFunctionality" in other:
+                return "ad"
+            if "vendorName" in other and "microsoft" in other["vendorName"][0].lower():
+                return "ad"
+
+    logger.info("LDAP Server detected as: OpenLDAP (default)")
     return "openldap"
 
 def fetch_users(
@@ -139,14 +193,14 @@ def fetch_users(
     user_filter: str, 
     attributes_mapping: Optional[Dict[str, str]] = None
 ) -> List[Dict[str, Any]]:
-    """Fetches users and maps attributes to unified keys."""
+    """Получает пользователей и маппит атрибуты в унифицированные ключи."""
     if not base_dn:
         logger.error("LDAP Base DN is missing.")
         return []
 
-    # 1. Determine Mapping
+    # 1. Определяем маппинг
     if not attributes_mapping:
-        server_type = detect_server_type(conn.server.info)
+        server_type = detect_server_type(conn.server, conn)
         logger.info(f"Auto-detected LDAP server type: {server_type}")
         if server_type == "ad":
             attributes_mapping = DEFAULT_AD_MAPPING
@@ -155,10 +209,10 @@ def fetch_users(
     else:
         logger.info("Using provided custom attributes mapping.")
 
-    # 2. Determine Attributes to Fetch
+    # 2. Список атрибутов для получения
     ldap_attrs = list(attributes_mapping.values())
     
-    # 3. Search
+    # 3. Поиск
     try:
         conn.search(
             search_base=base_dn,
@@ -172,7 +226,7 @@ def fetch_users(
 
     results = []
     
-    # 4. Process & Map Results
+    # 4. Обработка и маппинг результатов
     for entry in conn.entries:
         user_data = {}
         
@@ -186,7 +240,7 @@ def fetch_users(
                 
             raw_val = attr_obj.value
             
-            # Special Handling
+            # Специальная обработка
             if unified_key == "ldap_id" and "GUID" in ldap_attr:
                  user_data[unified_key] = normalize_object_guid(attr_obj.raw_values[0])
             elif unified_key == "ldap_id" and "UUID" in ldap_attr:

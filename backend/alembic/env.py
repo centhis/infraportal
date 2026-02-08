@@ -1,14 +1,11 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from celery_sqlalchemy_scheduler.session import ModelBase
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-
 from app.core.config import settings
 from app.db.orm_base import Base, load_all_models
-from celery_sqlalchemy_scheduler.session import ModelBase
-
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -71,9 +68,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

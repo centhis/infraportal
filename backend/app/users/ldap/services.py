@@ -1,18 +1,14 @@
 import logging
-import ssl
 import uuid
-from typing import Optional, Tuple, Any, List
+from typing import Any
 
-from ldap3 import Server, Connection, ALL, Tls, SIMPLE
+from ldap3 import Connection
 from sqlalchemy.orm import Session
 
+from app.core import ldap_config, ldap_service
 from app.users.models import User
-from app.settings.ldap import services as ldap_settings_service
 
 logger = logging.getLogger(__name__)
-
-# OID для Active Directory (в Root DSE)
-AD_OID = "1.2.840.113556.1.4.800"
 
 
 def normalize_object_guid(value) -> str:
@@ -22,102 +18,92 @@ def normalize_object_guid(value) -> str:
     if isinstance(value, bytes):
         return str(uuid.UUID(bytes_le=value))
     if isinstance(value, str):
-        return str(uuid.UUID(value.strip('{}')))
+        return str(uuid.UUID(value.strip("{}")))
     raise ValueError(f"Unsupported objectGUID type: {type(value)}")
 
 
-def connect_to_ldap(db: Session, use_admin: bool = True) -> Tuple[Optional[Connection], Optional[str]]:
+def connect_to_ldap(db: Session, use_admin: bool = True) -> tuple[Connection | None, str | None]:
     """
     Устанавливает соединение с LDAP сервером на основе настроек из БД.
-    
+
     Returns:
         Tuple[Optional[Connection], Optional[str]]: (объект соединения, тип сервера: 'ad' или 'openldap')
     """
     # 1. Получаем настройки
-    ldap_uri = ldap_settings_service.get_ldap_setting_value(db, "LDAP_URI")
-    
+    ldap_uri = ldap_config.get_ldap_setting_value(db, "LDAP_URI")
+
     if not ldap_uri:
         logger.error("LDAP_URI is not configured.")
         return None, None
 
-    # Определение использования TLS по протоколу в URI
-    use_tls = ldap_uri.lower().startswith("ldaps://")
+    # Получаем настройку проверки TLS (по умолчанию True)
+    tls_verify_setting = ldap_config.get_ldap_setting_value(db, "LDAP_TLS_VERIFY")
+    tls_verify = True
+    if tls_verify_setting is not None:
+         # ldap_config возвращает типизированное значение, если оно bool
+         if isinstance(tls_verify_setting, bool):
+             tls_verify = tls_verify_setting
+         else:
+             tls_verify = str(tls_verify_setting).lower() == "true"
 
     try:
-        # 2. Настройка TLS если нужно
-        tls_config = None
-        if use_tls:
-            # В простейшем случае разрешаем самоподписанные сертификаты для гибкости
-            tls_config = Tls(validate=ssl.CERT_NONE, version=ssl.PROTOCOL_TLSv1_2)
-        
-        server = Server(ldap_uri, use_ssl=use_tls, tls=tls_config, get_info=ALL)
-        
+        # 2. Создаем сервер (используя новую логику из core)
+        # use_tls=None означает определить автоматически по схеме (ldaps://)
+        server = ldap_service.create_ldap_server(ldap_uri, use_tls=None, tls_verify=tls_verify)
+
         # 3. Подключение
+        conn = None
         if use_admin:
-            bind_dn = ldap_settings_service.get_ldap_setting_value(db, "LDAP_BIND_DN")
-            bind_password = ldap_settings_service.get_ldap_setting_value(db, "LDAP_BIND_PASSWORD")
-            
+            bind_dn = ldap_config.get_ldap_setting_value(db, "LDAP_BIND_DN")
+            bind_password = ldap_config.get_ldap_setting_value(db, "LDAP_BIND_PASSWORD")
+
             if not bind_dn or not bind_password:
                 logger.error("LDAP Admin credentials (DN/Password) are not configured.")
                 return None, None
-                
-            conn = Connection(
-                server, 
-                user=bind_dn, 
-                password=bind_password, 
-                authentication=SIMPLE,
-                auto_bind=True
+
+            # Используем фабрику соединений из core
+            conn = ldap_service.create_ldap_connection(
+                server, bind_dn=bind_dn, bind_password=bind_password, auto_bind=True
             )
         else:
             # Анонимное или неавторизованное подключение (только для получения инфо)
-            conn = Connection(server, auto_bind=True)
+            conn = ldap_service.create_ldap_connection(server, auto_bind=True)
 
-        # 4. Автоопределение типа сервера
-        server_type = "openldap" # По умолчанию
-        if server.info and hasattr(server.info, 'other') and server.info.other:
-            other_info = server.info.other
-            if 'forestFunctionality' in other_info:
-                server_type = "ad"
-                logger.info("LDAP Server detected as: Active Directory (via rootDSE forestFunctionality)")
-            elif 'vendorName' in other_info and 'microsoft' in other_info['vendorName'][0].lower():
-                server_type = "ad"
-                logger.info("LDAP Server detected as: Active Directory (via vendor name)")
-            else:
-                logger.info("LDAP Server detected as: OpenLDAP (or compatible)")
-        else:
-            # Fallback for safety, though get_info=ALL should always populate this
-            logger.warning("Could not determine LDAP server type from server.info. Falling back to OpenLDAP.")
+        # 4. Автоопределение типа сервера (используя новую логику с fallback на connection)
+        server_type = ldap_service.detect_server_type(server, connection=conn)
 
         return conn, server_type
 
     except Exception as e:
         logger.error(f"Failed to connect to LDAP: {str(e)}")
+        if "conn" in locals() and conn and conn.bound:
+            conn.unbind()
         return None, None
 
 
-def _get_uuid_from_entry(entry: Any, server_type: str) -> Optional[str]:
+def _get_uuid_from_entry(entry: Any, server_type: str) -> str | None:
     """
     Извлекает UUID из записи LDAP в зависимости от типа сервера.
     """
     try:
         if server_type == "ad":
-            if not hasattr(entry, 'objectGUID'):
+            if not hasattr(entry, "objectGUID"):
                 logger.error("LDAP entry for AD is missing objectGUID attribute.")
                 return None
-            
+
             if not entry.objectGUID.raw_values:
                 logger.error("objectGUID has no raw values.")
                 return None
 
             raw_guid = entry.objectGUID.raw_values[0]
-            
+
             try:
                 return normalize_object_guid(raw_guid)
             except ValueError as e:
                 logger.error(f"Error normalizing objectGUID: {e}, value: {raw_guid}")
                 return None
         else:
-            if not hasattr(entry, 'entryUUID'):
+            if not hasattr(entry, "entryUUID"):
                 logger.error("LDAP entry for OpenLDAP is missing entryUUID attribute.")
                 return None
             return str(entry.entryUUID.value)
@@ -127,15 +113,12 @@ def _get_uuid_from_entry(entry: Any, server_type: str) -> Optional[str]:
 
 
 def authenticate_ldap_user(
-    db: Session, 
-    login: str, 
-    password: str, 
-    ldap_id: Optional[str] = None
-) -> Optional[Tuple[Any, str]]:
+    db: Session, login: str, password: str, ldap_id: str | None = None
+) -> tuple[Any, str] | None:
     """
     Аутентифицирует пользователя в LDAP методом Search and Bind.
     Если передан ldap_id, поиск ведется по нему.
-    
+
     Returns:
         Optional[Tuple[Any, str]]: (данные_пользователя, тип_сервера) или None
     """
@@ -145,9 +128,9 @@ def authenticate_ldap_user(
 
     try:
         # 1. Формируем фильтр поиска
-        search_base = ldap_settings_service.get_ldap_setting_value(db, "LDAP_BASE_DN")
-        user_filter = ldap_settings_service.get_ldap_setting_value(db, "LDAP_USER_FILTER")
-        
+        search_base = ldap_config.get_ldap_setting_value(db, "LDAP_BASE_DN")
+        user_filter = ldap_config.get_ldap_setting_value(db, "LDAP_USER_FILTER")
+
         if not search_base:
             logger.error("LDAP_BASE_DN is not configured.")
             return None
@@ -185,11 +168,7 @@ def authenticate_ldap_user(
             search_filter = core_filter
 
         # 2. Ищем пользователя
-        conn.search(
-            search_base=search_base,
-            search_filter=search_filter,
-            attributes=['*', '+']
-        )
+        conn.search(search_base=search_base, search_filter=search_filter, attributes=["*", "+"])
 
         if not conn.entries:
             logger.warning(f"LDAP user not found: {search_filter}")
@@ -199,16 +178,20 @@ def authenticate_ldap_user(
         user_dn = user_entry.entry_dn
 
         # 3. Пытаемся сделать Bind под пользователем (проверка пароля)
-        user_conn = Connection(
-            conn.server, 
-            user=user_dn, 
-            password=password, 
-            authentication=SIMPLE
+        # Здесь мы создаем новый Connection вручную, так как нам нужна аутентификация конкретного юзера
+        # Но мы можем использовать сервер, созданный ранее
+        user_conn = ldap_service.create_ldap_connection(
+            conn.server, bind_dn=user_dn, bind_password=password, auto_bind=False
         )
-        
+
+        # Ручной bind для проверки
         if not user_conn.bind():
             logger.warning(f"LDAP authentication failed for DN: {user_dn}")
             return None
+
+        # Успешная аутентификация
+        # Важно: user_conn можно закрыть, нам нужны только данные из админского conn
+        user_conn.unbind()
 
         return user_entry, server_type
 
@@ -220,7 +203,7 @@ def authenticate_ldap_user(
             conn.unbind()
 
 
-def get_ldap_user_info(entry: Any, server_type: str) -> Optional[dict]:
+def get_ldap_user_info(entry: Any, server_type: str) -> dict | None:
     """
     Преобразует запись LDAP в словарь атрибутов пользователя.
     """
@@ -234,65 +217,70 @@ def get_ldap_user_info(entry: Any, server_type: str) -> Optional[dict]:
         email = None
 
         if server_type == "ad":
-            if hasattr(entry, 'sAMAccountName'):
+            if hasattr(entry, "sAMAccountName"):
                 username = entry.sAMAccountName.value
-            if hasattr(entry, 'displayName'):
+            if hasattr(entry, "displayName"):
                 full_name = entry.displayName.value
-            if not full_name and hasattr(entry, 'cn'):
+            if not full_name and hasattr(entry, "cn"):
                 full_name = entry.cn.value
-        else: # openldap
-            if hasattr(entry, 'uid'):
+        else:  # openldap (оставляем как есть, это имя типа)
+            if hasattr(entry, "uid"):
                 username = entry.uid.value
-            if hasattr(entry, 'cn'):
+            if hasattr(entry, "cn"):
                 full_name = entry.cn.value
-            if not full_name and hasattr(entry, 'uid'):
+            if not full_name and hasattr(entry, "uid"):
                 full_name = entry.uid.value
-        
-        if hasattr(entry, 'mail') and entry.mail.value:
+
+        if hasattr(entry, "mail") and entry.mail.value:
             email = entry.mail.value
 
         if not username or not full_name:
-            logger.error(f"Could not determine username or full name from LDAP entry. Username: {username}, Full Name: {full_name}")
+            logger.error(
+                f"Could not determine username or full name from LDAP entry. Username: {username}, Full Name: {full_name}"
+            )
             return None
 
         return {
             "ldap_id": ldap_id,
             "ldap_dn": entry.entry_dn,
-            "login": username, # Standardized key
+            "login": username,  # Стандартизированный ключ
             "email": email,
-            "full_name": full_name
+            "full_name": full_name,
         }
     except Exception as e:
         logger.error(f"Error parsing LDAP entry info: {str(e)}")
         return None
 
-def create_or_update_ldap_user(db: Session, user_info: dict) -> Optional[User]:
+
+def create_or_update_ldap_user(db: Session, user_info: dict) -> User | None:
     """
-    Creates or updates a user based on LDAP info.
-    Common logic used by both Batch Sync and Login flows.
+    Создает или обновляет пользователя на основе информации из LDAP.
+    Общая логика для пакетной синхронизации и входа в систему.
     """
     ldap_id = user_info.get("ldap_id")
     login = user_info.get("login")
-    
+
     if not ldap_id and not login:
         logger.warning(f"Skipping user with missing ID and Login: {user_info}")
         return None
 
-    # 1. Try to find existing user by LDAP ID
+    # 1. Попытаться найти существующего пользователя по LDAP ID
     user = None
     if ldap_id:
         user = db.query(User).filter(User.ldap_id == ldap_id).first()
-    
-    # 2. Fallback: Find by login (if not found by ID)
+
+    # 2. Резервный вариант: найти по логину (если не найдено по ID)
     if not user and login:
         user = db.query(User).filter(User.login == login.lower()).first()
 
     if user:
-        # UPDATE
-        # Critical check: Only update if user is already LDAP type.
+        # ОБНОВЛЕНИЕ
+        # Критическая проверка: Обновлять только если пользователь уже типа LDAP.
         if user.type != "ldap":
-             logger.warning(f"Skipping sync/update for user '{login}' matching LDAP user but has type '{user.type}'.")
-             return user # Return existing user but do not update it
+            logger.warning(
+                f"Skipping sync/update for user '{login}' matching LDAP user but has type '{user.type}'."
+            )
+            return user  # Вернуть существующего пользователя, но не обновлять его
 
         if "login" in user_info and user_info["login"]:
             user.login = user_info["login"].lower()
@@ -301,92 +289,108 @@ def create_or_update_ldap_user(db: Session, user_info: dict) -> Optional[User]:
 
         if "dn" in user_info:
             user.ldap_dn = user_info["dn"]
-        # Handle "ldap_dn" key from backend service or "dn" from worker
+        # Обработка ключа "ldap_dn" от бэкенд-сервиса или "dn" от воркера
         elif "ldap_dn" in user_info:
-             user.ldap_dn = user_info["ldap_dn"]
-        
+            user.ldap_dn = user_info["ldap_dn"]
+
         if ldap_id and user.ldap_id != ldap_id:
             user.ldap_id = ldap_id
-        
-        # Active Status Handling
-        # Note: Login flow typically implies active (since they logged in), 
-        # but worker flow might pass status.
+
+        # Обработка статуса активности
         if "is_active" in user_info:
-             raw_status = user_info["is_active"]
-             if isinstance(raw_status, bool):
-                 user.is_active = raw_status
-             elif isinstance(raw_status, int):
-                 is_active = not ((raw_status & 2) == 2)
-                 user.is_active = is_active
-             elif str(raw_status).lower() in ["false", "0", "disabled"]:
-                 user.is_active = False
+            raw_status = user_info["is_active"]
+            if isinstance(raw_status, bool):
+                user.is_active = raw_status
+            elif isinstance(raw_status, int):
+                is_active = not ((raw_status & 2) == 2)
+                user.is_active = is_active
+            elif str(raw_status).lower() in ["false", "0", "disabled"]:
+                user.is_active = False
 
     else:
-        # CREATE
+        # СОЗДАНИЕ
         if not login:
-             return None
-        
+            return None
+
         is_active = True
         if "is_active" in user_info:
-             raw_status = user_info["is_active"]
-             if isinstance(raw_status, bool):
-                 is_active = raw_status
-             elif isinstance(raw_status, int):
-                 is_active = not ((raw_status & 2) == 2)
-             elif str(raw_status).lower() in ["false", "0", "disabled"]:
-                 is_active = False
+            raw_status = user_info["is_active"]
+            if isinstance(raw_status, bool):
+                is_active = raw_status
+            elif isinstance(raw_status, int):
+                is_active = not ((raw_status & 2) == 2)
+                user.is_active = is_active
+            elif str(raw_status).lower() in ["false", "0", "disabled"]:
+                is_active = False
 
         user = User(
             login=login.lower(),
             name=user_info.get("full_name") or login,
-
             ldap_id=ldap_id,
             ldap_dn=user_info.get("dn") or user_info.get("ldap_dn"),
             type="ldap",
-            is_active=is_active
+            is_active=is_active,
         )
         db.add(user)
-    
-    # We do NOT commit here to allow callers to batch commits or rollback
+
+    # Мы НЕ делаем здесь commit, чтобы позволить вызывающим делать пакетные коммиты или откат
     return user
 
 
-def sync_ldap_users_batch(db: Session, users_data: List[dict]) -> dict:
+def sync_ldap_users_batch(db: Session, users_data: list[dict]) -> dict:
     """
-    Synchronizes a batch of LDAP users.
-    Returns stats: {'created': int, 'updated': int, 'errors': int}
+    Синхронизирует пакет пользователей LDAP.
+    Возвращает статистику: {'created': int, 'updated': int, 'unchanged': int, 'errors': int}
     """
-    stats = {"created": 0, "updated": 0, "errors": 0}
-    
+    stats = {"created": 0, "updated": 0, "unchanged": 0, "errors": 0}
+
     for user_info in users_data:
         try:
-            # Check existence before to know if it's create or update for stats
-            # Or simplified: verify if ID exists in a set?
-            # For accurate stats, we can check state of object returned.
-            # But SQLAlchemy object state inspection is complex given we flush/commit later.
-            # Let's simple check:
-            
             ldap_id = user_info.get("ldap_id")
             login = user_info.get("login")
-            exists = False
+
+            # Ищем существующего пользователя
+            existing_user = None
             if ldap_id:
-                 exists = db.query(User).filter(User.ldap_id == ldap_id).count() > 0
-            elif login:
-                 exists = db.query(User).filter(User.login == login.lower()).count() > 0
-            
+                existing_user = db.query(User).filter(User.ldap_id == ldap_id).first()
+            if not existing_user and login:
+                existing_user = db.query(User).filter(User.login == login.lower()).first()
+
+            if existing_user:
+                # Сохраняем предыдущие значения для сравнения
+                old_values = {
+                    "login": existing_user.login,
+                    "name": existing_user.name,
+                    "ldap_dn": existing_user.ldap_dn,
+                    "ldap_id": existing_user.ldap_id,
+                    "is_active": existing_user.is_active,
+                }
+
             user = create_or_update_ldap_user(db, user_info)
-            
+
             if user:
-                if exists:
-                    stats["updated"] += 1
+                if existing_user:
+                    # Проверяем, изменилось ли что-нибудь
+                    new_values = {
+                        "login": user.login,
+                        "name": user.name,
+                        "ldap_dn": user.ldap_dn,
+                        "ldap_id": user.ldap_id,
+                        "is_active": user.is_active,
+                    }
+                    if old_values != new_values:
+                        stats["updated"] += 1
+                    else:
+                        stats["unchanged"] += 1
                 else:
                     stats["created"] += 1
             else:
                 stats["errors"] += 1
-                
+
         except Exception as e:
             logger.error(f"Error syncing user {user_info.get('login')}: {e}")
             stats["errors"] += 1
-            
+
     db.commit()
     return stats
+

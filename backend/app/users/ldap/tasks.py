@@ -1,9 +1,13 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
 
 class SyncLdapParams(BaseModel):
-    group_dn: str = Field(description="DN группы для синхронизации")
+    """Параметры запуска синхронизации LDAP.
+    Все настройки воркер получает через internal API (/api/internal/secrets).
+    """
+    pass
 
-# Просто список кортежей, который будет обнаружен автоматически
-TASK_DEFINITIONS = [
-    ( "users:sync_ldap", SyncLdapParams, "users:tasks:sync" )
-]
+
+# (name, schema, permission, context_loader)
+# context_loader=None — воркер получает настройки через secrets API
+TASK_DEFINITIONS = [("users:sync_ldap", SyncLdapParams, "users:update", None)]

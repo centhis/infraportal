@@ -1,120 +1,218 @@
-# Документация по взаимодействию с API
+# Взаимодействие с API
 
-Этот документ описывает, как фронтенд-приложение взаимодействует с бэкенд API, центральным элементом которого является настроенный экземпляр `Axios`.
+## Централизованный API-клиент
 
-## Централизованный `AxiosInstance`
+Все API-запросы проходят через `src/shared/api/api-client.ts` — настроенный экземпляр Axios.
 
-Вместо того чтобы использовать `axios` напрямую, все API-запросы в проекте должны проходить через преднастроенный экземпляр, который находится в `frontend/src/shared/api/AxiosInstance.jsx`. Этот экземпляр инкапсулирует всю логику, связанную с аутентификацией.
+### Конфигурация
 
-### Ключевые особенности `AxiosInstance`
+```typescript
+// src/shared/api/api-client.ts
+const apiClient = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    timeout: 5000,
+    withCredentials: true,
+    headers: { 'Content-Type': 'application/json' },
+});
+```
 
-#### 1. Базовая конфигурация
+### Request Interceptor
 
--   **`baseURL`**: Адрес API, берется из переменной окружения `VITE_API_URL`.
--   **`timeout`**: Максимальное время ожидания ответа от сервера (5000 мс).
--   **`withCredentials: true`**: Указывает, что `axios` должен отправлять httpOnly-cookie (в нашем случае `refresh_token`) с каждым запросом.
--   **Заголовки**: По умолчанию устанавливаются заголовки `Content-Type: application/json` и `Accept: application/json`.
+Автоматически добавляет `Authorization: Bearer <token>`:
 
-#### 2. Перехватчик запросов (Request Interceptor)
+```typescript
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+```
 
-Перед каждым запросом срабатывает перехватчик, который:
-1.  Считывает `access_token` из `localStorage`.
-2.  Если токен существует, он добавляет его в заголовок `Authorization` в формате `Bearer <token>`.
+### Response Interceptor — Auto-Refresh Token
 
-Это избавляет от необходимости добавлять токен вручную в каждом запросе.
+При получении `401 Unauthorized`:
+1. Запрос "замораживается"
+2. Выполняется `/api/v1/auth/refresh` для обновления токена
+3. Исходный запрос повторяется с новым токеном
+4. При неудаче — редирект на `/login`
 
-#### 3. Перехватчик ответов (Response Interceptor) — Автоматическое обновление токена
-
-Это самая важная часть экземпляра `Axios`. Она реализует логику автоматического обновления `access_token` в случае его истечения.
-
-**Алгоритм работы:**
-11.  Если API возвращает ошибку `401 Unauthorized` (что означает, что `access_token` истек или невалиден).
-12.  Перехватчик "замораживает" исходный запрос и инициирует `GET` запрос на эндпоинт `/api/v1/auth/refresh`. Этот запрос использует `refresh_token` из httpOnly cookie для получения нового `access_token`.
-13.  Пока идет процесс обновления, все остальные API-запросы, которые также завершились с ошибкой `401`, ставятся в очередь ожидания.
-14.  **В случае успеха**:
-    *   Новый `access_token` сохраняется в `localStorage`.
-    *   Исходный (и все запросы из очереди) повторяются с новым токеном.
-    *   Для пользователя все происходит прозрачно, он не выходит из системы.
-15.  **В случае ошибки** (например, `refresh_token` тоже истек):
-    *   Все данные аутентификации из `localStorage` удаляются.
-    *   Пользователя перенаправляет на страницу логина (`/login`).
+---
 
 ## API-модули
 
-Логика взаимодействия с API для каждой "фичи" обычно разделена на два слоя:
-1.  **Слой API (`features/.../api/*.js`)**: Содержит непосредственные вызовы к бэкенду через `AxiosInstance`. Здесь происходит формирование запросов, обработка ответов и предварительная обработка данных.
-2.  **Сервисный слой (`features/.../services/*.js`)**: Обертывает API-слой, предоставляя более высокоуровневый, ориентированный на бизнес-логику интерфейс. Может включать дополнительную логику, агрегацию данных или кеширование.
+Каждый модуль имеет свой API-слой в `modules/[domain]/api/`:
 
-### Пример
+```
+src/modules/users/api/
+├── users.api.ts      # usersApi.list(), create(), update(), delete()
+├── roles.api.ts      # rolesApi.list(), create(), ...
+├── groups.api.ts     # groupsApi.list(), create(), ...
+└── users.dto.ts      # User, Role, Group типы (зеркало Pydantic)
+```
 
-#### 1. Слой API (`features/userManagement/api/usersApi.js`)
-Этот файл содержит функции, которые напрямую взаимодействуют с `AxiosInstance` для выполнения CRUD-операций с пользователями.
+### Пример API-модуля
 
-```javascript
-import AxiosInstance from "../../../shared/api/AxiosInstance";
-import { API_ENDPOINTS } from "../../../shared/constants/apiEndpoints";
+```typescript
+// src/modules/users/api/users.api.ts
+import { apiClient } from '@shared/api/api-client';
+import { API_ENDPOINTS } from '@shared/constants/apiEndpoints';
+import type { User, CreateUserRequest, UpdateUserRequest } from './users.dto';
 
 export const usersApi = {
-    list: async (params) => {
-        const response = await AxiosInstance.get(API_ENDPOINTS.USER_MANAGEMENT.USERS, { params });
-        return response.data;
+    list: async (params?: PaginationParams) => {
+        const { data } = await apiClient.get<PaginatedResponse<User>>(
+            API_ENDPOINTS.USER_MANAGEMENT.USERS,
+            { params }
+        );
+        return data;
     },
-    create: async (userData) => {
-        const response = await AxiosInstance.post(`${API_ENDPOINTS.USER_MANAGEMENT.USERS}/`, userData);
-        return response.data;
+    
+    create: async (userData: CreateUserRequest) => {
+        const { data } = await apiClient.post<User>(
+            API_ENDPOINTS.USER_MANAGEMENT.USERS,
+            userData
+        );
+        return data;
     },
-    update: async (userId, userData) => {
-        const dataToSend = { ...userData };
-        if (dataToSend.groups !== undefined) {
-            dataToSend.group_ids = dataToSend.groups;
-            delete dataToSend.groups;
+    
+    update: async (id: number, userData: UpdateUserRequest) => {
+        // Трансформация: groups → group_ids для бэкенда
+        const payload = { ...userData };
+        if (payload.groups) {
+            payload.group_ids = payload.groups;
+            delete payload.groups;
         }
-        const response = await AxiosInstance.put(`${API_ENDPOINTS.USER_MANAGEMENT.USERS}/${userId}`, dataToSend);
-        return response.data;
+        const { data } = await apiClient.put<User>(
+            `${API_ENDPOINTS.USER_MANAGEMENT.USERS}/${id}`,
+            payload
+        );
+        return data;
     },
-    remove: async (userId) => {
-        const response = await AxiosInstance.delete(`${API_ENDPOINTS.USER_MANAGEMENT.USERS}/${userId}`);
-        return response.data;
+    
+    delete: async (id: number) => {
+        await apiClient.delete(`${API_ENDPOINTS.USER_MANAGEMENT.USERS}/${id}`);
     },
 };
 ```
 
-#### 2. Сервисный слой (`features/userManagement/services/usersService.js`)
-Этот файл просто реэкспортирует функции из API-слоя, но может быть расширен для более сложной бизнес-логики.
+---
 
-```javascript
-import { usersApi } from "../api/usersApi";
+## TanStack Query Hooks
 
-export const usersService = usersApi;
-```
+API-вызовы обёрнуты в TanStack Query хуки:
 
-## Пример использования в хуках
+```typescript
+// src/modules/users/ui/hooks/useUsers.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usersApi } from '../../api/users.api';
 
-Кастомные хуки (`features/.../hooks/`) используют эти сервисные функции для получения и управления данными.
+export function useUsers(params?: PaginationParams) {
+    return useQuery({
+        queryKey: ['users', params],
+        queryFn: () => usersApi.list(params),
+    });
+}
 
-**Пример (`useUsers.jsx`):**
-```javascript
-import { useEffect, useState, useCallback } from "react";
-import { usersService } from "../services/usersService";
+export function useCreateUser() {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: usersApi.create,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
+}
 
-export default function useUsers() {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    const refetchUsers = useCallback(async () => {
-        setLoading(true);
-        // Вызов функции из сервиса, которая использует AxiosInstance
-        const data = await usersService.list({ skip: 0, limit: 10 });
-        setUsers(data.users);
-        setLoading(false);
-    }, []);
-
-    useEffect(() => {
-        refetchUsers();
-    }, [refetchUsers]);
-
-    return { users, loading, refetchUsers };
+export function useUpdateUser() {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: ({ id, data }: { id: number; data: UpdateUserRequest }) =>
+            usersApi.update(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
 }
 ```
 
-Такая архитектура (`Компонент -> Хук -> Сервис -> AxiosInstance`) позволяет четко разделить обязанности и делает компоненты чистыми, не обременяя их логикой HTTP-запросов и управления токенами.
+### Использование в компонентах
+
+```tsx
+function UserListContainer() {
+    const { data, isLoading, error } = useUsers();
+    const createMutation = useCreateUser();
+    
+    if (isLoading) return <CircularProgress />;
+    if (error) return <Alert severity="error">{error.message}</Alert>;
+    
+    return (
+        <UserTable 
+            users={data.items} 
+            onAdd={(user) => createMutation.mutate(user)}
+        />
+    );
+}
+```
+
+---
+
+## DTO (Data Transfer Objects)
+
+Типы зеркалят Pydantic-схемы бэкенда:
+
+```typescript
+// src/modules/users/api/users.dto.ts
+export interface User {
+    id: number;
+    login: string;
+    name: string;
+    is_active: boolean;
+    auth_type: 'local' | 'ldap';
+    groups: Group[];
+    created_at: string;
+}
+
+export interface CreateUserRequest {
+    login: string;
+    name: string;
+    password: string;
+    group_ids?: number[];
+}
+
+export interface UpdateUserRequest {
+    name?: string;
+    password?: string;
+    is_active?: boolean;
+    groups?: number[];  // Трансформируется в group_ids при отправке
+}
+```
+
+---
+
+## Константы API
+
+```typescript
+// src/shared/constants/apiEndpoints.ts
+export const API_ENDPOINTS = {
+    AUTH: {
+        LOGIN: '/auth/login',
+        LOGOUT: '/auth/logout',
+        REFRESH: '/auth/refresh',
+        PROFILE: '/auth/me',
+    },
+    USER_MANAGEMENT: {
+        USERS: '/users',
+        ROLES: '/roles',
+        GROUPS: '/groups',
+        PERMISSIONS: '/permissions',
+    },
+    SETTINGS: {
+        CORE: '/settings/core',
+        LDAP: '/settings/ldap',
+    },
+};
+```

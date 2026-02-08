@@ -1,12 +1,12 @@
 import importlib
-import pkgutil
 import logging
-from typing import List, Dict
+import pkgutil
 
 logger = logging.getLogger(__name__)
 
 # Глобальный список всех обнаруженных прав
-DISCOVERED_PERMISSIONS: List[Dict[str, str]] = []
+DISCOVERED_PERMISSIONS: list[dict[str, str]] = []
+
 
 def autodiscover_permissions(package_name: str = "app"):
     """
@@ -15,19 +15,19 @@ def autodiscover_permissions(package_name: str = "app"):
     """
     global DISCOVERED_PERMISSIONS
     DISCOVERED_PERMISSIONS.clear()
-    
+
     package = importlib.import_module(package_name)
-    
+
     # Рекурсивно проходим по всем пакетам
     for _, module_name, is_pkg in pkgutil.walk_packages(package.__path__, package.__name__ + "."):
         if is_pkg:
             continue
-            
+
         if module_name.endswith(".permissions"):
             try:
                 module = importlib.import_module(module_name)
                 if hasattr(module, "module_permissions"):
-                    perms = getattr(module, "module_permissions")
+                    perms = module.module_permissions
                     if isinstance(perms, list):
                         DISCOVERED_PERMISSIONS.extend(perms)
                         logger.info(f"Loaded permissions from {module_name}: {len(perms)} found")
