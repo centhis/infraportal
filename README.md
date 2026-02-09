@@ -1,114 +1,202 @@
 # Infraportal
 
-> Infraportal — это веб-приложение, предназначенное для управления инфраструктурой. Оно состоит из двух основных частей: бэкенда на Python/FastAPI и фронтенда на JavaScript/React.
+> Infraportal — веб-приложение для управления инфраструктурой. Бэкенд на Python/FastAPI, фронтенд на React/TypeScript.
 
-Этот файл содержит инструкции для быстрой настройки и запуска проекта в среде разработки.
+## 📚 Документация
 
-## 📚 Документация (Project Documentation)
-
-Более подробная и детальная документация по архитектуре, компонентам и API находится в директории [`docs/`](./docs/README.md).
+Подробная документация находится в [`docs/`](./docs/README.md):
+- [Бэкенд](docs/backend/overview.md) — архитектура, API, сервисы
+- [Фронтенд](docs/frontend/overview.md) — компоненты, состояние, маршрутизация
+- [Celery](docs/backend/celery.md) — фоновые задачи
 
 ---
 
-## 🚀 Быстрый старт (Quick Start)
+## 🚀 Быстрый старт (Docker Compose)
 
 ### Предварительные требования
 
-Перед началом убедитесь, что у вас установлены:
--   **Node.js и npm**: Для работы с фронтендом.
--   **uv**: Современный менеджер пакетов и виртуальных окружений для Python. [Инструкция по установке](https://astral.sh/uv).
--   **PostgreSQL**: База данных, используемая проектом.
+- **Docker** и **Docker Compose** v2+
 
-### 1. Настройка Бэкенда (Backend Setup)
+### 1. Настройка переменных окружения
 
-1.  **Перейдите в директорию бэкенда:**
-    ```bash
-    cd backend
-    ```
+```bash
+cp .env.example .env
+```
 
-2.  **Создайте и активируйте виртуальное окружение:**
-    ```bash
-    # Создаст .venv в текущей директории
-    uv venv
-    
-    # Активируйте окружение
-    source .venv/bin/activate
-    ```
+Отредактируйте `.env`, указав:
+- `SECRET_KEY` — уникальный ключ для шифрования (обязательно изменить!)
+- `REDIS_PASSWORD` — пароль Redis
+- Параметры LDAP (если используется)
 
-3.  **Установите зависимости:**
-    ```bash
-    uv pip sync
-    ```
+### 2. Запуск приложения
 
-4.  **Настройте переменные окружения:**
-    Скопируйте файл `.env.test` в новый файл `.env` и измените его содержимое, указав данные для подключения к вашей локальной базе данных.
-    ```bash
-    cp .env.test .env
-    ```
-    **Пример `.env` файла:**
-    ```env
-    DATABASE_URL="postgresql+psycopg2://<user>:<password>@<host>:<port>/<database>"
-    ```
+```bash
+docker compose up -d
+```
 
-### 2. Настройка Фронтенда (Frontend Setup)
+Будут запущены все сервисы:
+| Сервис | Описание | Порт |
+|--------|----------|------|
+| `gateway` | Nginx reverse proxy | **80** |
+| `frontend` | React SPA | 3000 (внутренний) |
+| `backend` | FastAPI API | 8000 (внутренний) |
+| `worker` | Celery воркеры (×2) | — |
+| `beat` | Celery планировщик | — |
+| `flower-service` | Мониторинг Celery | 5555 (внутренний) |
+| `db` | PostgreSQL | 5432 |
+| `redis` | Redis (брокер) | 6379 |
 
-1.  **Перейдите в директорию фронтенда:**
-    ```bash
-    cd frontend
-    ```
-    *(Если вы были в `backend/`, сначала выполните `cd ..`)*
+### 3. Доступ к приложению
 
-2.  **Установите зависимости:**
-    ```bash
-    npm install
-    ```
+- **Приложение**: http://localhost
+- **API**: http://localhost/api/v1
+- **Swagger UI**: http://localhost/api/v1/docs
 
-### 3. Запуск Проекта (Running the Project)
+Учётные данные по умолчанию:
+```
+Логин: admin
+Пароль: admin
+```
 
-Для работы приложения необходимо запустить два процесса в двух разных терминалах.
+### 4. Просмотр логов
 
-**Терминал 1 — Запуск Бэкенда:**
+```bash
+# Все сервисы
+docker compose logs -f
+
+# Конкретный сервис
+docker compose logs -f backend
+docker compose logs -f worker
+```
+
+### 5. Остановка
+
+```bash
+docker compose down
+```
+
+Для полной очистки (включая volumes):
+```bash
+docker compose down -v
+```
+
+---
+
+## 🛠 Разработка (без Docker)
+
+### Бэкенд
+
 ```bash
 cd backend
-sh start.sh
-```
-Бэкенд-сервер будет запущен по адресу `http://localhost:8000`.
 
-**Терминал 2 — Запуск Фронтенда:**
+# Создание окружения
+uv venv && source .venv/bin/activate
+
+# Установка зависимостей
+uv pip sync
+
+# Настройка
+cp .env.test .env  # Отредактируйте DATABASE_URL
+
+# Миграции
+.venv/bin/alembic upgrade head
+
+# Запуск
+.venv/bin/python main.py
+```
+
+Сервер: http://localhost:8000
+
+### Фронтенд
+
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
-### 4. Запуск Celery (Celery Worker)
-Для выполнения фоновых задач необходимо запустить воркер:
+
+Приложение: http://localhost:5173
+
+### Celery Worker
+
 ```bash
 cd celery_worker
-sh start_worker.sh
+# Требует запущенный Redis
+celery -A celery_app worker --loglevel=info -E
 ```
 
-### 5. Запуск Планировщика (Celery Beat)
-Для выполнения периодических задач (если необходимо):
+### Celery Beat
+
 ```bash
 cd celery_beat
-sh start_beat.sh
+# Требует запущенный Redis и PostgreSQL
+celery -A celery_app beat --loglevel=info
 ```
 
-### 6. Доступ к приложению
-Фронтенд будет доступен по адресу `http://localhost:5173`.
-Бэкенд по адресу `http://localhost:8000`.
+---
 
-### 4. Миграции Базы Данных (Database Migrations)
+## 🧪 Тестирование
 
-Бэкенд использует `Alembic` для управления версиями схемы базы данных.
+### Бэкенд
 
--   **Для создания новой миграции** после изменения моделей SQLAlchemy:
-    ```bash
-    # Убедитесь, что вы в директории backend/ с активным .venv
-    alembic revision --autogenerate -m "Краткое описание изменений"
-    ```
--   **Для применения миграций** к базе данных:
-    ```bash
-    # Убедитесь, что вы в директории backend/ с активным .venv
-    alembic upgrade head
-    ```
-    *Скрипт `start.sh` автоматически пытается применить миграции при запуске.*
+```bash
+cd backend
+.venv/bin/pytest                    # Все тесты
+.venv/bin/pytest --cov=app          # С покрытием
+```
+
+### Фронтенд
+
+```bash
+cd frontend
+npm run test
+```
+
+---
+
+## 📦 Технологии
+
+### Бэкенд
+- Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic
+- PostgreSQL, Redis, Celery
+- JWT, LDAP/AD интеграция
+
+### Фронтенд
+- React 18, TypeScript, Vite
+- TanStack Query, Zustand, MUI
+- i18next, React Hook Form
+
+---
+
+## 📁 Структура проекта
+
+```
+infraportal/
+├── backend/           # FastAPI приложение
+├── frontend/          # React SPA
+├── celery_worker/     # Celery воркеры
+├── celery_beat/       # Celery планировщик
+├── gateway/           # Nginx конфигурация
+├── docs/              # Документация
+├── docker-compose.yml
+└── .env.example       # Шаблон переменных окружения
+```
+
+---
+
+## 🗃️ Миграции БД
+
+```bash
+cd backend
+
+# Создать миграцию
+.venv/bin/alembic revision --autogenerate -m "Описание изменений"
+
+# Применить миграции
+.venv/bin/alembic upgrade head
+
+# Откатить последнюю
+.venv/bin/alembic downgrade -1
+```
+
+> При запуске через Docker миграции применяются автоматически.
