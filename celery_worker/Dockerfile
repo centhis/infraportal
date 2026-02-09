@@ -26,5 +26,5 @@ RUN uv pip install --system --no-cache .
 # Copy worker code
 COPY . .
 
-# Command
-CMD ["celery", "-A", "celery_app", "worker", "--loglevel=info"]
+# Command (-E включает отправку событий для мониторинга Flower)
+CMD ["celery", "-A", "celery_app", "worker", "--loglevel=info", "-E"]

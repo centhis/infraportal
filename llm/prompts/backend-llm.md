@@ -39,7 +39,11 @@ backend/
     │   ├── initial_data_loader.py  # Загрузчик начальных данных
     │   ├── permissions_registry.py # Autodiscovery разрешений
     │   ├── celery_client.py   # Клиент Celery (отправка задач)
-    │   └── ldap_service.py    # Core LDAP Service (Connection, TLS)
+    │   ├── ldap_service.py    # Core LDAP Service (Connection, TLS)
+    │   ├── settings_resolver.py  # Универсальный резолвер настроек
+    │   ├── task_contract.py   # TaskDefinition dataclass
+    │   ├── task_collector.py  # collect_all_tasks(), get_task_definition()
+    │   └── task_dispatcher.py # dispatch_result()
     │
     ├── db/                    # Слой данных
     │   ├── database.py        # Engine, SessionLocal, db_dependency
@@ -61,22 +65,29 @@ backend/
     │   │   ├── services.py    # UserService
     │   │   └── schemas.py     # CreateUserSchema, etc.
     │   ├── ldap/              # LDAP интеграция
-    │   │   └── services.py    # LDAP auth, sync
+    │   │   ├── services.py    # LDAP auth, sync
+    │   │   └── tasks/         # Задачи LDAP
+    │   │       ├── __init__.py
+    │   │       └── sync_ldap.py  # TaskDefinition + result_handler
     │   ├── groups/            # GroupService
     │   ├── roles/             # RoleService
     │   └── permissions/       # PermissionService
     │
     ├── settings/              # Модуль настроек
     │   ├── models.py          # CoreSetting, LdapSetting
+    │   ├── resolver.py        # Регистрация геттеров настроек
     │   ├── api/               # Роутеры /settings/*
     │   ├── core/              # Core settings
     │   └── ldap/              # LDAP settings
     │
     └── tasks/                 # Фоновые задачи
-        ├── models.py          # TaskExecution
-        ├── registry.py        # TASK_REGISTRY, TASK_DEFINITIONS
-        ├── services.py        # TaskService
-        └── api/               # Роутеры /tasks
+        ├── models.py          # TaskExecution, TaskDefinitionModel
+        ├── services.py        # TaskService, TaskExecutionService
+        ├── initial_data.py    # sync_task_definitions()
+        ├── tasks/             # Системные задачи
+        │   ├── __init__.py
+        │   └── cleanup_zombie.py
+        └── api/               # Роутеры /tasks, /internal/*
 ```
 
 ---
@@ -448,6 +459,99 @@ def test_create_user(client: TestClient, admin_token: str):
 - Секреты: Fernet (`encrypt_value`, `decrypt_value`)
 
 ---
+
+## Settings Resolver
+
+Для получения настроек из разных источников (LDAP, Core) используется универсальный резолвер.
+
+### Проблема
+
+```python
+# ❌ ЗАПРЕЩЕНО — кросс-доменный импорт
+from app.settings.ldap.services import get_ldap_setting_value  # В tasks/
+```
+
+### Решение
+
+```python
+# ✅ ПРАВИЛЬНО — через резолвер из core/
+from app.core.settings_resolver import resolve_setting
+
+ldap_uri = resolve_setting(db, "LDAP_URI")        # Ищет в LDAP → Core
+welcome_msg = resolve_setting(db, "WELCOME_MESSAGE")
+```
+
+### Архитектура
+
+```
+resolve_setting(db, key)
+       ↓
+settings_resolver(db, key)
+       ↓
+[LDAP getter] → [Core getter]  # Приоритет: LDAP первый
+```
+
+**Ключевые файлы:**
+- `app/core/settings_resolver.py` — глобальный резолвер
+- `app/settings/resolver.py` — реестр геттеров подмодулей
+
+---
+
+## Фоновые задачи (Background Tasks)
+
+Подробная документация: `docs/backend/tasks.md`
+
+### Архитектура
+
+```
+Backend (Producer) → Redis → Celery Worker (Consumer)
+                         ↓
+                   Celery Beat (Scheduler)
+```
+
+**Ключевые файлы:**
+- `app/core/task_contract.py` — контракт `TaskDefinition`
+- `app/core/task_collector.py` — автообнаружение задач
+- `app/core/task_dispatcher.py` — передача результата в handler
+
+### TaskDefinition
+
+```python
+from app.core.task_contract import TaskDefinition
+from pydantic import BaseModel
+
+class MyParams(BaseModel):
+    timeout: int = 300
+
+def result_handler(result: dict, db: Session) -> dict:
+    """Обрабатывает результат от Worker'а."""
+    return {"summary": f"Processed {result.get('count')} items"}
+
+TASK = TaskDefinition(
+    name="module:my_task",           # Уникальное имя
+    display_name="Моя задача",       # Для UI
+    category="module",               # Категория
+    permission="module:execute",     # Требуемое разрешение
+    secrets=["API_KEY"],             # Ключи настроек для Worker
+    params_schema=MyParams,          # Pydantic модель (опционально)
+    result_handler=result_handler,   # Обработчик результата
+)
+```
+
+### Структура файлов для новой задачи
+
+```
+app/{module}/tasks/
+├── __init__.py       # TASK_DEFINITIONS = [my_task]
+└── my_task.py        # TASK = TaskDefinition(...)
+```
+
+### Важно
+
+- **Задачи регистрируются автоматически** при наличии `TASK` или `TASK_DEFINITIONS`
+- **Секреты получаются через Internal API** — Worker запрашивает `POST /internal/secrets`
+- **Результат обрабатывается на Backend** — через `result_handler`
+- **JSON Schema генерируется из Pydantic** при синхронизации в БД
 
 ## Пример: правильный docstring и комментарии
 

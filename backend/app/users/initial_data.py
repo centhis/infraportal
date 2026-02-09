@@ -72,7 +72,9 @@ def init_data(db: Session):
     db.commit()  # Зафиксировать сущности перед созданием ассоциаций
 
     # 0. Автообнаружение разрешений
-    autodiscover_permissions("app")
+    import os
+    app_path = os.path.dirname(os.path.dirname(__file__))
+    autodiscover_permissions(app_path)
 
     # Создать разрешения
     permissions_to_create = DISCOVERED_PERMISSIONS

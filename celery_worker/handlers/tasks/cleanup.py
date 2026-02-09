@@ -10,21 +10,17 @@ logger = logging.getLogger(__name__)
 def cleanup_zombie_tasks(execution_id: str, secret: str = None, **kwargs):
     """
     Системная задача для очистки зависших задач.
-    1. Получает от бэкенда список stale tasks (зависание heartbeat).
-    2. Проверяет, активны ли они на данном воркере (или вообще в кластере, если inspect позволяет).
-    3. Если активны - убивает.
-    4. Обновляет статус на FAILURE.
+    1. Получает от бэкенда список stale tasks.
+    2. Если активны в Celery - убивает (revoke).
+    3. Возвращает список ID для финальной обработки на бэкенде.
     """
-    
-    # timeout передается через параметры задачи (kwargs)
     timeout = kwargs.get("timeout_seconds", 300) 
-    
     logger.info(f"Запуск очистки Zombie-задач (timeout={timeout}s)...")
     
     headers = {"X-API-Key": settings.CELERY_WORKER_API_KEY}
     
     try:
-        # 1. Запрашиваем список stale tasks
+        # 1. Запрашиваем список stale tasks у бэкенда
         resp = httpx.get(
             f"{settings.BACKEND_INTERNAL_API_URL}/tasks/stale",
             params={"timeout_seconds": timeout},
@@ -32,76 +28,43 @@ def cleanup_zombie_tasks(execution_id: str, secret: str = None, **kwargs):
             timeout=10.0
         )
         resp.raise_for_status()
-        stale_task_ids = resp.json() # List[UUID string]
+        stale_task_ids = resp.json()
         
         if not stale_task_ids:
             logger.info("Zombie-задачи не найдены.")
-            return {"status": "ok", "count": 0}
+            return {"terminated_ids": []}
             
-        logger.info(f"Найдено {len(stale_task_ids)} потенциальных зомби: {stale_task_ids}")
+        logger.info(f"Найдено {len(stale_task_ids)} потенциальных зомби.")
 
-        # 2. Проверяем активность через inspect().active()
+        # 2. Проверяем активность в Celery, чтобы сделать revoke
         inspector = celery_app.control.inspect()
         active_map = inspector.active() or {}
         
-        # Собираем Execution IDs всех активных задач
-        active_execution_ids = set()
+        active_tasks_lookup = {} # execution_id -> celery_id
         for worker_name, tasks in active_map.items():
             for t in tasks:
                 kw = t.get('kwargs', {})
-                if isinstance(kw, dict):
-                     eid = kw.get('execution_id')
-                     if eid:
-                         active_execution_ids.add(str(eid))
+                if isinstance(kw, dict) and kw.get('execution_id'):
+                    active_tasks_lookup[str(kw.get('execution_id'))] = t['id']
 
-        # 3. Обрабатываем каждый stale ID
-        processed_count = 0
-        
+        # 3. Терминируем те, что еще активны, и собираем список для бэкенда
+        terminated_ids = []
         for stale_id in stale_task_ids:
             stale_id_str = str(stale_id)
-            error_reason = "Worker crashed or task lost"
             
-            # Случай 1: Зависание (есть в активных)
-            if stale_id_str in active_execution_ids:
-                logger.warning(f"Задача {stale_id_str} зависла (есть в active). Пытаемся убить.")
-                
-                found_celery_id = None
-                for worker_name, tasks in active_map.items():
-                    for t in tasks:
-                        kw = t.get('kwargs', {})
-                        if kw.get('execution_id') == stale_id_str:
-                            found_celery_id = t['id']
-                            break
-                    if found_celery_id:
-                        break
-                
-                if found_celery_id:
-                    celery_app.control.revoke(found_celery_id, terminate=True)
-                    error_reason = "Task hung (timeout) and was terminated"
-                else:
-                    logger.error(f"Не удалось найти Celery ID для execution_id {stale_id_str}")
+            # Если задача еще числится активной в Celery - убиваем её
+            if stale_id_str in active_tasks_lookup:
+                celery_id = active_tasks_lookup[stale_id_str]
+                logger.warning(f"Терминируем зависшую задачу {stale_id_str} (Celery ID: {celery_id})")
+                celery_app.control.revoke(celery_id, terminate=True)
 
-            # Случай 2: Потеряна (нет в активных) -> просто обновляем статус
-            try:
-                patch_url = f"{settings.BACKEND_INTERNAL_API_URL}/tasks/{stale_id_str}"
-                httpx.patch(
-                    patch_url,
-                    json={
-                        "status": "FAILURE",
-                        "result": {"error": error_reason}
-                    },
-                    headers=headers,
-                    timeout=5.0
-                )
-                logger.info(f"Задача {stale_id_str} помечена как FAILURE ({error_reason})")
-                processed_count += 1
-            except Exception as e:
-                logger.error(f"Ошибка при обновлении статуса зомби-задачи {stale_id_str}: {e}")
+            terminated_ids.append(stale_id_str)
 
-        return {"status": "ok", "processed": processed_count}
+        logger.info(f"Обработано {len(terminated_ids)} задач. Список передан бэкенду.")
+        return {"terminated_ids": terminated_ids}
 
     except Exception as e:
-        logger.error(f"Critial error in zombie cleanup: {e}", exc_info=True)
+        logger.error(f"Error in zombie cleanup: {e}", exc_info=True)
         raise e
 
 # Регистрация обработчика

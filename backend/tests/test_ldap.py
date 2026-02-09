@@ -220,7 +220,10 @@ def test_authenticate_ldap_user_fail_bind(db_session, ldap_settings):
     mock_user_conn, _ = create_mock_connection(bind_success=False)
     with (
         patch("app.core.ldap_service.create_ldap_server", return_value=mock_server),
-        patch("app.core.ldap_service.create_ldap_connection", side_effect=[mock_admin_conn, mock_user_conn]),
+        patch(
+            "app.core.ldap_service.create_ldap_connection",
+            side_effect=[mock_admin_conn, mock_user_conn],
+        ),
         patch("app.core.ldap_service.detect_server_type", return_value="ad"),
     ):
         result = authenticate_ldap_user(db_session, "ldapuser", "wrong_password")

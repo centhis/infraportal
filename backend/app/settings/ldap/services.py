@@ -59,9 +59,7 @@ def get_all_ldap_settings(db: Session) -> list[LdapSetting]:
     Получает список всех LDAP Settings из БД, включая виртуальные из планировщика.
     """
     # Исключаем виртуальные настройки из выборки БД, чтобы избежать конфликтов
-    settings_list = (
-        db.query(LdapSetting).filter(LdapSetting.key != "LDAP_SYNC_SCHEDULE").all()
-    )
+    settings_list = db.query(LdapSetting).filter(LdapSetting.key != "LDAP_SYNC_SCHEDULE").all()
 
     # Добавить виртуальную настройку расписания
     task_info = scheduler.get_periodic_task_info(db, "Users: LDAP Sync")
@@ -103,7 +101,11 @@ def update_ldap_setting(db: Session, key: str, value: Any) -> LdapSetting:
         )
         db.commit()
         return LdapSetting(
-            id=task.id, key="LDAP_SYNC_SCHEDULE", value=str(value), type="string", is_sensitive=False
+            id=task.id,
+            key="LDAP_SYNC_SCHEDULE",
+            value=str(value),
+            type="string",
+            is_sensitive=False,
         )
 
     db_setting = db.query(LdapSetting).filter(LdapSetting.key == key).first()
@@ -178,7 +180,11 @@ def update_ldap_settings_bulk(db: Session, settings_dict: dict) -> list[LdapSett
     if schedule_value is not None or enabled_value is not None:
         task_info = scheduler.get_periodic_task_info(db, "Users: LDAP Sync")
         new_enabled = (
-            (enabled_value if isinstance(enabled_value, bool) else str(enabled_value).lower() == "true")
+            (
+                enabled_value
+                if isinstance(enabled_value, bool)
+                else str(enabled_value).lower() == "true"
+            )
             if enabled_value is not None
             else is_ldap_enabled(db)
         )
@@ -215,7 +221,7 @@ def update_ldap_settings_bulk(db: Session, settings_dict: dict) -> list[LdapSett
         # поэтому её нельзя рефрешить из таблицы ldap_settings.
         if s.id and s.id > 0 and s.key != "LDAP_SYNC_SCHEDULE":
             db.refresh(s)
-            
+
     return updated_settings
 
 
@@ -252,7 +258,7 @@ def test_ldap_connection(db: Session, settings_data: dict) -> LdapTestResultSche
     tls_verify_raw = settings_data.get("LDAP_TLS_VERIFY")
     tls_verify = True
     if tls_verify_raw is not None:
-         # Фронт может прислать boolean или строку
+        # Фронт может прислать boolean или строку
         if isinstance(tls_verify_raw, bool):
             tls_verify = tls_verify_raw
         else:

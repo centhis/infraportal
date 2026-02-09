@@ -20,6 +20,11 @@ def login(
     service: AuthService = Depends(),
     permission_service: PermissionService = Depends(),
 ):
+    """
+    Аутентификация пользователя по логину и паролю.
+    Возвращает access и refresh токены, а также список прав пользователя.
+    Refresh токен устанавливается в httpOnly cookie.
+    """
     user = service.authenticate_user(payload.login, payload.password)
     access_token, refresh_token = service.create_tokens(user, request)
     permissions = permission_service.get_user_permissions(user.id)
@@ -39,6 +44,9 @@ def login(
 
 @router.get("/refresh")
 def refresh_token(request: Request, service: AuthService = Depends()):
+    """
+    Обновление access токена с помощью refresh токена из cookie.
+    """
     token = request.cookies.get("refresh_token")
     if not token:
         raise HTTPException(
@@ -50,6 +58,9 @@ def refresh_token(request: Request, service: AuthService = Depends()):
 
 @router.get("/verify")
 def verify_token(token: str = Depends(oauth2_scheme)):
+    """
+    Проверка валидности access токена.
+    """
     payload = decode_token(token)
     if payload.get("type") != "access":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
@@ -58,6 +69,10 @@ def verify_token(token: str = Depends(oauth2_scheme)):
 
 @router.post("/logout")
 def logout(request: Request, response: Response, service: AuthService = Depends()):
+    """
+    Выход пользователя из системы.
+    Инвалидирует refresh токен и удаляет cookie.
+    """
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token:
         service.logout(refresh_token)
@@ -70,6 +85,10 @@ def get_me(
     current_user: User = Depends(get_current_user),
     permission_service: PermissionService = Depends(),
 ):
+    """
+    Получение информации о текущем аутентифицированном пользователе.
+    Включает список его прав.
+    """
     user_permissions = permission_service.get_user_permissions(current_user.id)
     user_dict = current_user.__dict__
     user_dict["permissions"] = user_permissions
@@ -78,6 +97,9 @@ def get_me(
 
 @router.get("/sessions", response_model=list[SessionResponseSchema])
 def list_sessions(current_user: User = Depends(get_current_user), service: AuthService = Depends()):
+    """
+    Получение списка активных сессий (refresh токенов) текущего пользователя.
+    """
     return service.list_sessions(current_user.id)
 
 
@@ -87,5 +109,8 @@ def revoke_session(
     current_user: User = Depends(get_current_user),
     service: AuthService = Depends(),
 ):
+    """
+    Отзыв конкретной сессии (refresh токена) пользователя.
+    """
     service.revoke_session(current_user.id, session_id)
     return {"message": "Session revoked successfully"}

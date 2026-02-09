@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 def sync_ldap_users_handler(execution_id: str, secrets: dict, **kwargs):
     """
     Обработчик для задачи 'users:sync_ldap'.
-    Все LDAP-настройки берутся из secrets (бэкенд выдаёт их из БД).
+    Собирает пользователей из LDAP и возвращает их для постобработки бэкендом.
     """
-    logger.info(f"Starting LDAP Sync (Execution ID: {execution_id})")
+    logger.info(f"Starting LDAP Fetch (Execution ID: {execution_id})")
 
     # --- Извлечение настроек из secrets ---
     ldap_uri = secrets.get("LDAP_URI")
@@ -49,29 +49,12 @@ def sync_ldap_users_handler(execution_id: str, secrets: dict, **kwargs):
         users = fetch_users(conn, base_dn, user_filter)
         logger.info(f"Fetched {len(users)} users from LDAP.")
 
-        if not users:
-            logger.warning("No users found in LDAP. Proceeding to send empty list.")
-        
-        # --- Отправка в Бэкенд ---
-        url = f"{settings.BACKEND_INTERNAL_API_URL}/users/sync_ldap"
-        logger.info(f"Sending batch to Backend: {url}")
-        
-        headers = {"X-API-Key": settings.CELERY_WORKER_API_KEY}
-        
-        response = httpx.post(
-            url,
-            json=users,
-            headers=headers,
-            timeout=60.0
-        )
-        response.raise_for_status()
-        
-        stats = response.json()
-        logger.info(f"Sync completed successfully. Backend Stats: {stats}")
-        return stats
+        # Возвращаем результат для бэкенда. 
+        # Общая инфраструктура воркера (dispatch_task) сама отправит это в baceknd.
+        return {"users": users}
 
     except Exception as e:
-        logger.error(f"Error during User Sync logic: {e}", exc_info=True)
+        logger.error(f"Error during LDAP fetch: {e}", exc_info=True)
         raise
     finally:
         if conn:

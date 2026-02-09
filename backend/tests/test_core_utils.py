@@ -29,34 +29,21 @@ def test_jwt_provider_invalid_token():
         provider.decode_token("invalid.token.here")
 
 
-def test_autodiscover_permissions():
-    mock_module = MagicMock()
-    mock_module.module_permissions = [{"name": "test:perm", "description": "test"}]
+def test_autodiscover_permissions(tmp_path):
+    """Тест автообнаружения разрешений из permissions.py."""
+    # Создаём тестовую структуру директорий
+    test_domain = tmp_path / "test_domain"
+    test_domain.mkdir()
 
-    with (
-        patch("pkgutil.walk_packages") as mock_walk,
-        patch("importlib.import_module") as mock_import,
-    ):
-        # Setup walk_packages to return one module
-        mock_walk.return_value = [(None, "app.test_mod.permissions", False)]
+    permissions_file = test_domain / "permissions.py"
+    permissions_file.write_text(
+        'module_permissions = [{"name": "test:perm", "description": "test permission"}]'
+    )
 
-        # Setup import_module to return the package for walk_packages and then our mock module
-        def side_effect(name):
-            if name == "app":
-                pkg = MagicMock()
-                pkg.__path__ = ["/fake/path"]
-                pkg.__name__ = "app"
-                return pkg
-            if name == "app.test_mod.permissions":
-                return mock_module
-            return MagicMock()
+    autodiscover_permissions(str(tmp_path))
 
-        mock_import.side_effect = side_effect
-
-        autodiscover_permissions("app")
-
-        assert len(DISCOVERED_PERMISSIONS) == 1
-        assert DISCOVERED_PERMISSIONS[0]["name"] == "test:perm"
+    assert len(DISCOVERED_PERMISSIONS) == 1
+    assert DISCOVERED_PERMISSIONS[0]["name"] == "test:perm"
 
 
 def test_load_initial_data():

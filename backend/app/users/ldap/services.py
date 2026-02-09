@@ -40,11 +40,11 @@ def connect_to_ldap(db: Session, use_admin: bool = True) -> tuple[Connection | N
     tls_verify_setting = ldap_config.get_ldap_setting_value(db, "LDAP_TLS_VERIFY")
     tls_verify = True
     if tls_verify_setting is not None:
-         # ldap_config возвращает типизированное значение, если оно bool
-         if isinstance(tls_verify_setting, bool):
-             tls_verify = tls_verify_setting
-         else:
-             tls_verify = str(tls_verify_setting).lower() == "true"
+        # ldap_config возвращает типизированное значение, если оно bool
+        if isinstance(tls_verify_setting, bool):
+            tls_verify = tls_verify_setting
+        else:
+            tls_verify = str(tls_verify_setting).lower() == "true"
 
     try:
         # 2. Создаем сервер (используя новую логику из core)
@@ -340,24 +340,34 @@ def create_or_update_ldap_user(db: Session, user_info: dict) -> User | None:
 def sync_ldap_users_batch(db: Session, users_data: list[dict]) -> dict:
     """
     Синхронизирует пакет пользователей LDAP.
-    Возвращает статистику: {'created': int, 'updated': int, 'unchanged': int, 'errors': int}
-    """
-    stats = {"created": 0, "updated": 0, "unchanged": 0, "errors": 0}
+    Выполняет полный цикл: создание, обновление и деактивацию отсутствующих.
 
+    Returns:
+        dict: Статистика: {'created': int, 'updated': int, 'unchanged': int, 'deactivated': int, 'errors': int}
+    """
+    stats = {"created": 0, "updated": 0, "unchanged": 0, "deactivated": 0, "errors": 0}
+    current_ldap_ids = set()
+
+    # 1. Создание и обновление
     for user_info in users_data:
         try:
             ldap_id = user_info.get("ldap_id")
             login = user_info.get("login")
 
-            # Ищем существующего пользователя
+            if not ldap_id and not login:
+                logger.warning(f"Skipping LDAP user with no ID or Login: {user_info}")
+                stats["errors"] += 1
+                continue
+
+            # Ищем существующего пользователя для статистики
             existing_user = None
             if ldap_id:
                 existing_user = db.query(User).filter(User.ldap_id == ldap_id).first()
             if not existing_user and login:
                 existing_user = db.query(User).filter(User.login == login.lower()).first()
 
+            old_values = {}
             if existing_user:
-                # Сохраняем предыдущие значения для сравнения
                 old_values = {
                     "login": existing_user.login,
                     "name": existing_user.name,
@@ -366,11 +376,13 @@ def sync_ldap_users_batch(db: Session, users_data: list[dict]) -> dict:
                     "is_active": existing_user.is_active,
                 }
 
+            # Выполняем создание/обновление
             user = create_or_update_ldap_user(db, user_info)
 
             if user:
+                current_ldap_ids.add(user.ldap_id)
                 if existing_user:
-                    # Проверяем, изменилось ли что-нибудь
+                    # Проверяем на изменения
                     new_values = {
                         "login": user.login,
                         "name": user.name,
@@ -391,6 +403,28 @@ def sync_ldap_users_batch(db: Session, users_data: list[dict]) -> dict:
             logger.error(f"Error syncing user {user_info.get('login')}: {e}")
             stats["errors"] += 1
 
+    # 2. Деактивация отсутствующих пользователей (только типа ldap)
+    try:
+        if current_ldap_ids:
+            # Находим всех LDAP пользователей, которые активны, но их нет в текущем списке из LDAP
+            users_to_deactivate = (
+                db.query(User)
+                .filter(
+                    User.type == "ldap",
+                    User.is_active.is_(True),
+                    User.ldap_id.notin_(current_ldap_ids),
+                )
+                .all()
+            )
+
+            for u in users_to_deactivate:
+                u.is_active = False
+                stats["deactivated"] += 1
+                logger.info(f"Deactivated user '{u.login}' (not found in LDAP sync batch)")
+
+    except Exception as e:
+        logger.error(f"Error during users deactivation: {e}")
+        stats["errors"] += 1
+
     db.commit()
     return stats
-

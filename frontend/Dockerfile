@@ -8,6 +8,11 @@ COPY package.json package-lock.json* ./
 RUN npm install
 
 COPY . .
+
+# Standard way to pass build arguments
+ARG VITE_API_URL
+ARG VITE_ALERT_TIMEOUT
+
 RUN npm run build
 
 # Stage 2: Serve

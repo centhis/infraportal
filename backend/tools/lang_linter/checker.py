@@ -27,14 +27,14 @@ LATIN_WORD_REGEX = re.compile(r"[a-zA-Z]{2,}")
 
 # Паттерны исключений для комментариев
 COMMENT_EXCLUSIONS = [
-    re.compile(r"^#\s*type:", re.IGNORECASE),  # Type hints
-    re.compile(r"^#\s*noqa", re.IGNORECASE),  # Linter ignores
+    re.compile(r"^#\s*type:", re.IGNORECASE),  # Подсказки типов
+    re.compile(r"^#\s*noqa", re.IGNORECASE),  # Игнорирование линтера
     re.compile(r"^#\s*pragma", re.IGNORECASE),  # Pragma
     re.compile(r"^#\s*TODO", re.IGNORECASE),  # TODO (допускается)
     re.compile(r"^#\s*FIXME", re.IGNORECASE),  # FIXME (допускается)
     re.compile(r"^#\s*XXX", re.IGNORECASE),  # XXX (допускается)
-    re.compile(r"^#\s*-\*-"),  # Encoding declarations
-    re.compile(r"^#!/"),  # Shebang
+    re.compile(r"^#\s*-\*-"),  # Объявление кодировки
+    re.compile(r"^#!/"),  # Shebang (путь к интерпретатору)
 ]
 
 

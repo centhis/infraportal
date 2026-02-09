@@ -29,6 +29,10 @@ def list_groups(
     created_at_to: str | None = None,
     current_user=Depends(get_current_user),
 ):
+    """
+    Получение списка групп с пагинацией и фильтрацией.
+    Требует права `users:view`.
+    """
     return service.list_groups(
         skip=skip,
         limit=limit,
@@ -49,6 +53,10 @@ def list_groups(
 def get_group_by_id(
     group_id: int, service: GroupService = Depends(), current_user=Depends(get_current_user)
 ):
+    """
+    Получение детальной информации о группе по ID.
+    Требует права `users:view`.
+    """
     return service.get_group_by_id(group_id)
 
 
@@ -62,6 +70,10 @@ def create_group(
     service: GroupService = Depends(),
     current_user=Depends(get_current_user),
 ):
+    """
+    Создание новой группы.
+    Требует права `users:create`.
+    """
     return service.create_group(data)
 
 
@@ -76,6 +88,10 @@ def update_group(
     service: GroupService = Depends(),
     current_user=Depends(get_current_user),
 ):
+    """
+    Обновление существующей группы.
+    Требует права `users:update`.
+    """
     return service.update_group(group_id, data)
 
 
@@ -83,4 +99,8 @@ def update_group(
 def delete_group(
     group_id: int, service: GroupService = Depends(), current_user=Depends(get_current_user)
 ):
+    """
+    Удаление группы.
+    Требует права `users:delete`.
+    """
     return service.delete_group(group_id)

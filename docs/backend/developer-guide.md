@@ -12,8 +12,10 @@
 6. [Python и типизация](#6-python-и-типизация)
 7. [FastAPI паттерны](#7-fastapi-паттерны)
 8. [SQLAlchemy и БД](#8-sqlalchemy-и-бд)
-9. [Тестирование](#9-тестирование)
-10. [Чеклист перед коммитом](#10-чеклист-перед-коммитом)
+9. [Settings Resolver](#9-settings-resolver)
+10. [Фоновые задачи](#10-фоновые-задачи)
+11. [Тестирование](#11-тестирование)
+12. [Чеклист перед коммитом](#12-чеклист-перед-коммитом)
 
 ---
 
@@ -424,7 +426,136 @@ users = self.db.execute(stmt).scalars().all()
 
 ---
 
-## 9. Тестирование
+## 9. Settings Resolver
+
+Для получения настроек из разных источников (LDAP, Core, future modules) используется **Settings Resolver** — универсальный механизм без кросс-доменных импортов.
+
+### Проблема
+
+```python
+# ❌ ЗАПРЕЩЕНО — кросс-доменный импорт
+from app.settings.ldap.services import get_ldap_setting_value  # В tasks/
+from app.settings.core.services import get_core_setting_value  # В users/
+```
+
+### Решение
+
+```python
+# ✅ ПРАВИЛЬНО — через резолвер
+from app.core.settings_resolver import resolve_setting
+
+ldap_uri = resolve_setting(db, "LDAP_URI")        # Ищет в LDAP → Core
+welcome_msg = resolve_setting(db, "WELCOME_MESSAGE")
+```
+
+### Как это работает
+
+```
+resolve_setting(db, key)
+       ↓
+settings_resolver(db, key)
+       ↓
+┌──────────────┬──────────────┐
+│ LDAP getter  │ Core getter  │ → Приоритет: LDAP первый
+└──────────────┴──────────────┘
+```
+
+### Добавление нового подмодуля настроек
+
+1. Создать `app/settings/{module}/services.py`
+2. Реализовать `get_{module}_setting_value(db, key)`
+3. Зарегистрировать в `__init__.py`:
+
+```python
+from app.settings.resolver import register_setting_getter
+register_setting_getter(get_mail_setting_value)
+```
+
+Подробнее: [Settings Overview](settings_overview.md)
+
+---
+
+## 10. Фоновые задачи
+
+### Создание новой задачи
+
+#### Шаг 1: Backend — определить TaskDefinition
+
+```python
+# app/{module}/tasks/{task_name}.py
+from app.core.task_contract import TaskDefinition
+from pydantic import BaseModel, Field
+
+class MyTaskParams(BaseModel):
+    """Параметры задачи."""
+    timeout: int = Field(default=300, ge=60)
+
+def result_handler(result: dict, db: Session) -> dict:
+    """Обрабатывает результат от Worker."""
+    processed = result.get("count", 0)
+    # Бизнес-логика: сохранение в БД, статистика
+    return {"summary": f"Обработано {processed} записей"}
+
+TASK = TaskDefinition(
+    name="module:my_task",
+    display_name="Моя задача",
+    category="module",
+    permission="module:execute",
+    secrets=["API_KEY", "API_SECRET"],
+    params_schema=MyTaskParams,
+    result_handler=result_handler,
+)
+```
+
+#### Шаг 2: Backend — экспортировать
+
+```python
+# app/{module}/tasks/__init__.py
+from .my_task import TASK as my_task
+TASK_DEFINITIONS = [my_task]
+```
+
+#### Шаг 3: Worker — реализовать handler
+
+```python
+# celery_worker/handlers/{module}/{task_name}.py
+from task_registry import register_task_handler
+
+def my_handler(execution_id: str, secrets: dict, **kwargs):
+    """Выполняет задачу."""
+    api_key = secrets.get("API_KEY")
+    timeout = kwargs.get("timeout", 300)
+    
+    # Бизнес-логика...
+    
+    return {"count": 42}
+
+register_task_handler("module:my_task", my_handler)
+```
+
+#### Шаг 4: Добавить разрешение
+
+```python
+# app/{module}/permissions.py
+module_permissions = [
+    {'name': 'module:execute', 'description': 'Execute module tasks'},
+]
+```
+
+### Ключевые принципы
+
+| Принцип | Описание |
+|---------|----------|
+| **Секреты в контракте** | Указываются в `secrets=[]`, читаются из БД |
+| **Pydantic для параметров** | JSON Schema генерируется автоматически |
+| **result_handler на Backend** | Бизнес-логика обработки результата |
+| **Heartbeat** | Worker отправляет каждые 30 сек |
+
+Подробнее: [Архитектура задач](celery.md), [Каталог handlers](worker_handlers.md)
+
+---
+
+## 11. Тестирование
 
 ### Структура тестов
 
@@ -476,7 +607,7 @@ def test_create_user(client: TestClient, admin_token: str):
 
 ---
 
-## 10. Чеклист перед коммитом
+## 12. Чеклист перед коммитом
 
 - [ ] `.venv/bin/ruff check .` — без ошибок линтера
 - [ ] `.venv/bin/ruff format .` — код отформатирован

@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser, get_current_user, permission_checker
-from app.core.scheduling import scheduler
 from app.db.database import get_db
 from app.settings.ldap import services
 from app.settings.ldap.schemas import (
@@ -13,7 +12,6 @@ from app.settings.ldap.schemas import (
     LdapTestResultSchema,
     LdapTestSettingsSchema,
 )
-from app.settings.ldap.services import _convert_value_to_type
 
 router = APIRouter(
     prefix="/settings/ldap",

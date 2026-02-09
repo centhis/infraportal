@@ -29,6 +29,10 @@ def list_roles(
     created_at_to: str | None = None,
     current_user=Depends(get_current_user),
 ):
+    """
+    Получение списка ролей с пагинацией и фильтрацией.
+    Требует права `users:view`.
+    """
     return service.list_roles(
         skip=skip,
         limit=limit,
@@ -49,6 +53,10 @@ def list_roles(
 def get_role_by_id(
     role_id: int, service: RoleService = Depends(), current_user=Depends(get_current_user)
 ):
+    """
+    Получение детальной информации о роли по ID.
+    Требует права `users:view`.
+    """
     return service.get_role_by_id(role_id)
 
 
@@ -60,6 +68,10 @@ def get_role_by_id(
 def create_role(
     data: CreateRoleSchema, service: RoleService = Depends(), current_user=Depends(get_current_user)
 ):
+    """
+    Создание новой роли.
+    Требует права `users:create`.
+    """
     return service.create_role(data)
 
 
@@ -74,6 +86,10 @@ def update_role(
     service: RoleService = Depends(),
     current_user=Depends(get_current_user),
 ):
+    """
+    Обновление существующей роли.
+    Требует права `users:update`.
+    """
     return service.update_role(role_id, data)
 
 
@@ -81,4 +97,8 @@ def update_role(
 def delete_role(
     role_id: int, service: RoleService = Depends(), current_user=Depends(get_current_user)
 ):
+    """
+    Удаление роли.
+    Требует права `users:delete`.
+    """
     return service.delete_role(role_id)

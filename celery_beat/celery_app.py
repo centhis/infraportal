@@ -12,6 +12,21 @@ celery_app.config_from_object('config')
 # We need to patch the PeriodicTaskChanged model to use 2.0 syntax
 from celery_sqlalchemy_scheduler import models
 from sqlalchemy import select, insert, update, event
+from celery_sqlalchemy_scheduler import session
+import logging
+
+logger = logging.getLogger(__name__)
+
+# --- Monkeypatch for SessionManager.prepare_models ---
+# Prevent celery-sqlalchemy-scheduler from creating tables automatically.
+# We use Alembic migrations for schema management.
+def prepare_models_fixed(self, engine):
+    logger.info("Skipping table creation by celery-sqlalchemy-scheduler (handled by Alembic)")
+    pass
+
+session.SessionManager.prepare_models = prepare_models_fixed
+# -----------------------------------------------------
+
 import datetime as dt
 
 def update_changed_fixed(mapper, connection, target):

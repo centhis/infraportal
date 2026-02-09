@@ -24,8 +24,7 @@ class SchedulerInterface(Protocol):
         enabled: bool = True,
     ) -> Any: ...
 
-    def get_periodic_task_info(self, task_name: str) -> PeriodicTaskInfo | None:
-        ...
+    def get_periodic_task_info(self, task_name: str) -> PeriodicTaskInfo | None: ...
 
 
 class SchedulerProxy:

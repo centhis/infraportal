@@ -1,4 +1,5 @@
 import importlib
+import importlib.util
 import logging
 import pkgutil
 from contextlib import asynccontextmanager
@@ -6,12 +7,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core import task_collector
 from app.core.config import settings
 from app.core.initial_data_loader import load_initial_data
 from app.core.scheduling import scheduler
 from app.db.database import SessionLocal
 from app.settings.ldap.services import get_ldap_setting_value, is_ldap_enabled
-from app.tasks.registry import TASK_REGISTRY, autodiscover_tasks
 from app.tasks.schedule_service import ScheduleService
 
 logging.basicConfig(level=logging.INFO)
@@ -27,14 +28,12 @@ async def lifespan(app: FastAPI):
 
     apply_patches()
 
-    # 1. Autodiscover background tasks
-    logger.info("Discovering background tasks...")
-    autodiscover_tasks("app")
-
     # Register Core Scheduler Implementation (Dependency Injection)
     scheduler.set_implementation(ScheduleService)
 
-    logger.info(f"Discovered tasks: {', '.join(TASK_REGISTRY.keys()) if TASK_REGISTRY else 'none'}")
+    # Log discovered tasks using new collector
+    tasks = task_collector.collect_all_tasks()
+    logger.info(f"Discovered tasks: {', '.join([t.name for t in tasks]) if tasks else 'none'}")
 
     # 2. Load initial data
     db = SessionLocal()
@@ -98,6 +97,9 @@ if hasattr(app_package, "__path__"):
     for _, module_name, is_pkg in pkgutil.iter_modules(app_package.__path__):
         if is_pkg:
             try:
+                if importlib.util.find_spec(f"app.{module_name}.api") is None:
+                    continue
+
                 # Try to import app.<module>.api
                 api_module = importlib.import_module(f"app.{module_name}.api")
 

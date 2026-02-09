@@ -52,7 +52,12 @@ class Settings(BaseSettings):
             )
         return self
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "case_sensitive": True}
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": True,
+        "extra": "ignore",
+    }
 
 
 settings = Settings()

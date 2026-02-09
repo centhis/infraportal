@@ -4,8 +4,9 @@ import pytest
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core import task_collector
+from app.core.task_contract import TaskDefinition
 from app.tasks.models import ExecutionStatus, TaskExecution
-from app.tasks.registry import TASK_REGISTRY, TaskDefinition
 
 
 class MockParams(BaseModel):
@@ -13,18 +14,37 @@ class MockParams(BaseModel):
 
 
 @pytest.fixture(autouse=True)
-def mock_task_registry():
-    # Setup: Add a test task to the global registry
+def mock_task_registry(monkeypatch):
+    # Setup: Add a test task to the collector cache
     test_task = TaskDefinition(
         name="test_task",
+        display_name="Test Task",
+        category="system",
         params_schema=MockParams,
         permission="tasks:read",  # Using an existing permission that admin has
+        secrets=["TEST_SECRET"],
     )
-    TASK_REGISTRY["test_task"] = test_task
+
+    # Mock collect_all_tasks and get_task_definition to return our test task
+    def mock_collect():
+        return [test_task]
+
+    def mock_get(name):
+        if name == "test_task":
+            return test_task
+        return None
+
+    monkeypatch.setattr(task_collector, "collect_all_tasks", mock_collect)
+    monkeypatch.setattr(task_collector, "get_task_definition", mock_get)
     yield
-    # Cleanup: Remove the test task
-    if "test_task" in TASK_REGISTRY:
-        del TASK_REGISTRY["test_task"]
+
+
+@pytest.fixture
+def mock_worker_key(monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "CELERY_WORKER_API_KEY", "test_key")
+    return {"X-API-Key": "test_key"}
 
 
 def test_get_available_tasks(authenticated_client):

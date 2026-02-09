@@ -233,7 +233,8 @@ def test_test_ldap_connection_invalid_dn_error(
     # Патч конструктора Connection для генерации LDAPInvalidDnError
     with (
         patch(
-            "app.core.ldap_service.create_ldap_connection", side_effect=LDAPInvalidDnError("Invalid DN format")
+            "app.core.ldap_service.create_ldap_connection",
+            side_effect=LDAPInvalidDnError("Invalid DN format"),
         ) as MockConnection,
         patch("app.core.ldap_service.create_ldap_server"),
     ):
@@ -284,7 +285,8 @@ def test_test_ldap_connection_generic_ldap_error(
     # Патч конструктора Connection для генерации LDAPException
     with (
         patch(
-            "app.core.ldap_service.create_ldap_connection", side_effect=LDAPException("Connection refused")
+            "app.core.ldap_service.create_ldap_connection",
+            side_effect=LDAPException("Connection refused"),
         ) as MockConnection,
         patch("app.core.ldap_service.create_ldap_server"),
     ):

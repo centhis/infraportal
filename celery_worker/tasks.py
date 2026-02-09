@@ -116,23 +116,37 @@ def dispatch_task(
     
     update_execution_status("IN_PROGRESS")
 
-    handler = get_task_handler(current_task_type)
-    if handler:
+    try:
+        handler = get_task_handler(current_task_type)
+        
+        # Transfer secrets to handler.
+        # We pass `secrets` as a named argument.
+        result = handler(execution_id=current_execution_id, secrets=secrets, **current_kwargs)
+        logger.info(f"Task task_type='{current_task_type}' (execution_id='{current_execution_id}') completed successfully.")
+        
+        # Отправляем результат в Backend для обработки (вызов result_handler и обновление статуса)
         try:
-            # Transfer secrets to handler.
-            # We pass `secrets` as a named argument.
-            result = handler(execution_id=current_execution_id, secrets=secrets, **current_kwargs)
-            logger.info(f"Task task_type='{current_task_type}' (execution_id='{current_execution_id}') completed successfully.")
-            
-            update_execution_status("SUCCESS", result)
-            return result
-        except Exception as e:
-            logger.error(f"Error executing task task_type='{current_task_type}' (execution_id='{current_execution_id}'): {e}", exc_info=True)
-            # Send error details
-            error_data = {"error": str(e)}
-            update_execution_status("FAILURE", error_data)
-            raise e
-    else:
-        logger.error(f"Handler for task_type '{current_task_type}' not found (execution_id='{current_execution_id}').")
-        update_execution_status("FAILURE", {"error": f"Handler for task_type '{current_task_type}' not found."})
-        raise ValueError(f"Handler for task_type '{current_task_type}' not found.")
+            headers = {"X-API-Key": settings.CELERY_WORKER_API_KEY}
+            httpx.post(
+                f"{settings.BACKEND_INTERNAL_API_URL}/tasks/{current_execution_id}/result",
+                json={
+                    "result": result if isinstance(result, dict) else {"output": str(result)},
+                    "status": "SUCCESS"
+                },
+                headers=headers,
+                timeout=30.0,
+            )
+            logger.info(f"Result for task '{current_execution_id}' sent to backend successfully.")
+        except Exception as post_err:
+            logger.error(f"Failed to send result to backend for task '{current_execution_id}': {post_err}")
+            raise post_err
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Error executing task task_type='{current_task_type}' (execution_id='{current_execution_id}'): {e}", exc_info=True)
+        
+        # При любой ошибке (не найден обработчик или ошибка в логике) - ставим FAILURE
+        error_data = {"error": str(e)}
+        update_execution_status("FAILURE", error_data)
+        raise e

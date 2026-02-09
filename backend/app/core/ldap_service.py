@@ -2,6 +2,7 @@
 Модуль для низкоуровневой работы с LDAP (подключение, TLS).
 Централизует логику, используемую в users, settings и tasks.
 """
+
 import logging
 import ssl
 from typing import Any
@@ -66,7 +67,7 @@ def create_ldap_connection(
     bind_dn: str | None = None,
     bind_password: str | None = None,
     auto_bind: bool = True,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> Connection:
     """
     Создает объект ldap3.Connection.
@@ -88,7 +89,7 @@ def create_ldap_connection(
             password=bind_password,
             authentication=SIMPLE,
             auto_bind=auto_bind,
-            **kwargs
+            **kwargs,
         )
     else:
         # Анонимное или без авторизации
@@ -113,29 +114,36 @@ def detect_server_type(server: Server, connection: Connection | None = None) -> 
             # Запрашиваем только то, что влияет на определение типа
             # supportedCapabilities (OID), forestFunctionality (AD), vendorName (AD/Other) - Проверка возможностей
             if connection.search(
-                search_base='',
-                search_filter='(objectClass=*)',
-                search_scope='BASE',
-                attributes=['supportedCapabilities', 'forestFunctionality', 'vendorName']
+                search_base="",
+                search_filter="(objectClass=*)",
+                search_scope="BASE",
+                attributes=["supportedCapabilities", "forestFunctionality", "vendorName"],
             ):
                 if connection.entries:
                     dse = connection.entries[0]
 
                     # 1. Проверка по OID
-                    if 'supportedCapabilities' in dse and AD_OID in dse['supportedCapabilities'].values:
+                    if (
+                        "supportedCapabilities" in dse
+                        and AD_OID in dse["supportedCapabilities"].values
+                    ):
                         logger.info(f"LDAP Server detected as: Active Directory (via OID {AD_OID})")
                         return "ad"
 
                     # 2. Проверка по forestFunctionality
-                    if 'forestFunctionality' in dse:
-                        logger.info("LDAP Server detected as: Active Directory (via forestFunctionality)")
+                    if "forestFunctionality" in dse:
+                        logger.info(
+                            "LDAP Server detected as: Active Directory (via forestFunctionality)"
+                        )
                         return "ad"
 
                     # 3. Проверка по vendorName
-                    if 'vendorName' in dse:
-                        vendor = str(dse['vendorName'].value).lower()
+                    if "vendorName" in dse:
+                        vendor = str(dse["vendorName"].value).lower()
                         if "microsoft" in vendor:
-                            logger.info(f"LDAP Server detected as: Active Directory (via vendorName '{vendor}')")
+                            logger.info(
+                                f"LDAP Server detected as: Active Directory (via vendorName '{vendor}')"
+                            )
                             return "ad"
         except Exception as e:
             logger.warning(f"Error during manual server detection: {e}")

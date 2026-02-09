@@ -1,11 +1,34 @@
+import datetime as dt
 import enum
 import uuid
 
-from sqlalchemy import JSON, Column, DateTime, Enum, String
+from celery_sqlalchemy_scheduler.models import (
+    CrontabSchedule,
+    IntervalSchedule,
+    PeriodicTask,
+    PeriodicTaskChanged,
+    SolarSchedule,
+)
+from sqlalchemy import ARRAY, JSON, Column, DateTime, Enum, String, event, insert, select, update
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from app.db.orm_base import Base
+
+
+class TaskDefinitionModel(Base):
+    """Метаданные задач в БД."""
+
+    __tablename__ = "task_definitions"
+
+    name = Column(String, primary_key=True)  # Пример: "users:sync_ldap"
+    display_name = Column(String, nullable=False)
+    category = Column(String, nullable=False)
+    permission = Column(String, nullable=True)
+    params_schema = Column(JSON, nullable=True)
+    secrets = Column(ARRAY(String), default=[])
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 
 class ExecutionStatus(str, enum.Enum):
@@ -45,48 +68,42 @@ class TaskExecution(Base):
 # Импортировать модели планировщика, чтобы Alembic мог их видеть
 # Эти модели являются частью библиотеки celery-sqlalchemy-scheduler и
 # используются сервисом celery-beat для хранения расписания.
-from celery_sqlalchemy_scheduler.models import (  # noqa: F401, E402
-    CrontabSchedule,
-    IntervalSchedule,
-    PeriodicTask,
-    SolarSchedule,
-    PeriodicTaskChanged,
-)
-from sqlalchemy import event, insert, select, update
-import datetime as dt
 
-# Monkeypatching celery-sqlalchemy-scheduler for SQLAlchemy 2.0 compatibility
+
+# Патч celery-sqlalchemy-scheduler для совместимости с SQLAlchemy 2.0
 def update_changed_fixed(mapper, connection, target):
     """
-    Fixed version of update_changed that uses select(Entity) instead of select([Entity])
+    Исправленная версия update_changed, которая использует select(Entity) вместо select([Entity])
     """
-    s = connection.execute(select(PeriodicTaskChanged).
-                           where(PeriodicTaskChanged.id == 1).limit(1))
+    s = connection.execute(select(PeriodicTaskChanged).where(PeriodicTaskChanged.id == 1).limit(1))
     if not s.first():
-        connection.execute(insert(PeriodicTaskChanged).
-                               values(last_update=dt.datetime.now()))
+        connection.execute(insert(PeriodicTaskChanged).values(last_update=dt.datetime.now()))
     else:
-        connection.execute(update(PeriodicTaskChanged).
-                               where(PeriodicTaskChanged.id == 1).
-                               values(last_update=dt.datetime.now()))
+        connection.execute(
+            update(PeriodicTaskChanged)
+            .where(PeriodicTaskChanged.id == 1)
+            .values(last_update=dt.datetime.now())
+        )
+
 
 def changed_fixed(mapper, connection, target):
-    if not getattr(target, 'no_changes', False):
+    if not getattr(target, "no_changes", False):
         update_changed_fixed(mapper, connection, target)
 
-# Re-register listeners with fixed function
+
+# Перерегистрация слушателей с исправленной функцией
 for model in [PeriodicTask, IntervalSchedule, CrontabSchedule, SolarSchedule]:
-    for evt in ['after_insert', 'after_delete', 'after_update']:
+    for evt in ["after_insert", "after_delete", "after_update"]:
         try:
-            if model is PeriodicTask and evt == 'after_update':
-                 target_fn = PeriodicTaskChanged.changed
-                 new_fn = changed_fixed
+            if model is PeriodicTask and evt == "after_update":
+                target_fn = PeriodicTaskChanged.changed
+                new_fn = changed_fixed
             else:
-                 target_fn = PeriodicTaskChanged.update_changed
-                 new_fn = update_changed_fixed
-            
+                target_fn = PeriodicTaskChanged.update_changed
+                new_fn = update_changed_fixed
+
             if event.contains(model, evt, target_fn):
-                 event.remove(model, evt, target_fn)
-                 event.listen(model, evt, new_fn)
+                event.remove(model, evt, target_fn)
+                event.listen(model, evt, new_fn)
         except Exception:
             pass

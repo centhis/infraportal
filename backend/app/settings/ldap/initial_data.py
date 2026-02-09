@@ -82,11 +82,11 @@ def init_data(db: Session):
 
     # --- Настройка расписания синхронизации LDAP ---
     # Использование Core Proxy для отвязки от модуля Tasks
-    
+
     # Пытаемся получить существующую задачу, чтобы сохранить пользовательские настройки (время, вкл/выкл)
     # Это решает проблему сброса настроек, измененных через UI, при перезапуске бэкенда.
     existing_task_info = scheduler.get_periodic_task_info(db, task_name="Users: LDAP Sync")
-    
+
     if existing_task_info:
         logger.info("LDAP Sync task exists. Preserving schedule and enabled status from DB.")
         ldap_schedule = existing_task_info["cron_schedule"]
@@ -110,4 +110,4 @@ def init_data(db: Session):
         },
         enabled=ldap_enabled,
     )
-    db.commit() # Явно фиксируем изменения (особенно kwargs)
+    db.commit()  # Явно фиксируем изменения (особенно kwargs)

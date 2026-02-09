@@ -107,3 +107,35 @@ class TaskExecutionService:
         self.db.commit()
         self.db.refresh(execution)
         return execution
+
+    def fail_multiple_executions(
+        self, execution_ids: list[str], error_reason: str = "Task failed or worker lost"
+    ) -> int:
+        """
+        Пакетно помечает список задач как FAILURE.
+
+        Returns:
+            int: Количество успешно обновленных задач.
+        """
+        if not execution_ids:
+            return 0
+
+        updated_at = datetime.now(pytz.utc)
+
+        # Мы используем update() для эффективности
+        result = (
+            self.db.query(TaskExecution)
+            .filter(TaskExecution.id.in_(execution_ids))
+            .filter(TaskExecution.status != ExecutionStatus.SUCCESS)  # Не трогаем уже завершенные
+            .update(
+                {
+                    "status": ExecutionStatus.FAILURE,
+                    "result": {"error": error_reason},
+                    "finished_at": updated_at,
+                },
+                synchronize_session=False,
+            )
+        )
+
+        self.db.commit()
+        return result

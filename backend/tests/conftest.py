@@ -1,3 +1,4 @@
+import os
 import subprocess
 from datetime import timedelta
 
@@ -18,6 +19,8 @@ from main import app
 # Apply patches for celery-sqlalchemy-scheduler compatibility with SA 2.0
 apply_patches()
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 @pytest.fixture(scope="session", autouse=True)
 def run_migrations(db_engine):  # Add db_engine as a dependency
@@ -25,9 +28,18 @@ def run_migrations(db_engine):  # Add db_engine as a dependency
     Apply alembic migrations to the test database and initialize data before the test session starts.
     """
     try:
-        # Note: We are in the 'backend' directory when running pytest
+        # Determine the path to alembic executable
+        alembic_exe = os.path.join(BASE_DIR, ".venv", "bin", "alembic")
+        if not os.path.exists(alembic_exe):
+            # Fallback for systems where alembic might be in the system path or another location
+            alembic_exe = "alembic"
+
         subprocess.run(
-            ["./.venv/bin/alembic", "upgrade", "head"], check=True, capture_output=True, text=True
+            [alembic_exe, "upgrade", "head"],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=BASE_DIR,  # Ensure alembic runs in the backend directory
         )
 
         # Initialize default data (admin user, roles, permissions)

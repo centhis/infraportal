@@ -33,6 +33,10 @@ def list_users(
     created_at_to: str | None = None,
     current_user=Depends(get_current_user),
 ):
+    """
+    Получение списка пользователей с пагинацией и фильтрацией.
+    Требует права `users:view`.
+    """
     return service.list_users(
         skip=skip,
         limit=limit,
@@ -57,9 +61,16 @@ def get_user_by_id(
     permission_service: PermissionService = Depends(),
     current_user=Depends(get_current_user),
 ):
+    """
+    Получение детальной информации о пользователе по ID.
+    Пользователь может смотреть свой профиль без особых прав.
+    Для просмотра чужих профилей требуется право `users:view`.
+    """
     # Разрешить пользователю просматривать свой собственный профиль без разрешения users:view
     if user_id == current_user.id:
         return service.get_user_by_id(user_id)
+
+
 
     # Для любого другого пользователя требовать разрешение users:view
     user_permissions_report = permission_service.get_user_permissions_report(current_user.id)
@@ -81,9 +92,16 @@ def get_user_by_login(
     permission_service: PermissionService = Depends(),
     current_user=Depends(get_current_user),
 ):
+    """
+    Получение детальной информации о пользователе по логину.
+    Пользователь может смотреть свой профиль без особых прав.
+    Для просмотра чужих профилей требуется право `users:view`.
+    """
     # Разрешить пользователю просматривать свой собственный профиль по логину без разрешения users:view
     if login == current_user.login:
         return service.get_user_by_login(login)
+
+
 
     # Для любого другого пользователя требовать разрешение users:view
     user_permissions_report = permission_service.get_user_permissions_report(current_user.id)
@@ -103,6 +121,10 @@ def get_user_by_login(
 def create_user(
     data: CreateUserSchema, service: UserService = Depends(), current_user=Depends(get_current_user)
 ):
+    """
+    Создание нового пользователя.
+    Требует права `users:create`.
+    """
     return service.create_user(data)
 
 
@@ -117,6 +139,10 @@ def update_user(
     service: UserService = Depends(),
     current_user=Depends(get_current_user),
 ):
+    """
+    Обновление данных пользователя.
+    Требует права `users:update`.
+    """
     return service.update_user(user_id, data)
 
 
@@ -124,6 +150,10 @@ def update_user(
 def delete_user(
     user_id: int, service: UserService = Depends(), current_user=Depends(get_current_user)
 ):
+    """
+    Удаление пользователя.
+    Требует права `users:delete`.
+    """
     return service.delete_user(user_id)
 
 
@@ -137,4 +167,8 @@ def get_user_permissions_report(
     permission_service: PermissionService = Depends(),
     current_user=Depends(get_current_user),
 ):
+    """
+    Получение отчета о всех правах конкретного пользователя (включая права от ролей и групп).
+    Требует права `users:view`.
+    """
     return permission_service.get_user_permissions_report(user_id)

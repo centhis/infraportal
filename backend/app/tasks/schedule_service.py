@@ -25,14 +25,15 @@ class ScheduleService:
             return None
 
         cron = task.crontab
-        cron_str = f"{cron.minute} {cron.hour} {cron.day_of_month} {cron.month_of_year} {cron.day_of_week}"
+        cron_str = (
+            f"{cron.minute} {cron.hour} {cron.day_of_month} {cron.month_of_year} {cron.day_of_week}"
+        )
 
         return {
             "id": task.id,
             "enabled": task.enabled,
             "cron_schedule": cron_str,
         }
-
 
     def create_or_update_periodic_task(
         self,
@@ -86,13 +87,13 @@ class ScheduleService:
             if not task.crontab:
                 task.crontab = CrontabSchedule()
                 self.db.add(task.crontab)
-            
+
             task.crontab.minute = minute
             task.crontab.hour = hour
             task.crontab.day_of_month = day_of_month
             task.crontab.month_of_year = month_of_year
             task.crontab.day_of_week = day_of_week
-            
+
             task.task = task_func
             task.kwargs = json.dumps(kwargs)
             task.enabled = enabled
