@@ -3,7 +3,8 @@
         "default": "ИнфраПортал",
         "home": "Домашняя",
         "about": "О программе",
-        "user_management": "Пользователи"
+        "user_management": "Пользователи",
+        "settings": "Настройки"
     },
     "user_menu": {
         "profile": "Профиль",

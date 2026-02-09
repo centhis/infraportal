@@ -123,6 +123,15 @@
                 "edit_title": "Edit Group",
                 "create_title": "Create New Group"
             }
+        },
+        "ldap_sync": {
+            "button": "Sync LDAP",
+            "syncing": "Syncing...",
+            "success_started": "LDAP synchronization started",
+            "success_finished": "LDAP synchronization completed successfully",
+            "error_failed": "Failed to start LDAP synchronization",
+            "error_failed_execution": "LDAP synchronization failed",
+            "no_permission": "You do not have permission to sync LDAP"
         }
     }
 }

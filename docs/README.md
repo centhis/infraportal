@@ -11,6 +11,9 @@ Infraportal — это веб-приложение, предназначенно
 ## Разделы Документации
 
 *   [Документация Бэкенда](backend/overview.md)
+*   [Руководство Разработчика (Dev Guide)](backend/development.md)
+*   [Фоновые Задачи (Celery)](backend/celery.md)
+    *   [Каталог Обработчиков](backend/worker_handlers.md)
 *   [Документация Фронтенда](frontend/overview.md)
 
 ## Быстрый старт

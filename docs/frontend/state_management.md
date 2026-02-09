@@ -1,73 +1,210 @@
-# Документация по Управлению состоянием
+# Управление состоянием
 
-В React-приложении состояние можно разделить на несколько категорий. Этот документ описывает, как каждая из них управляется в проекте Infraportal.
+## Типы состояния
 
-## 1. Состояние Сервера (Server State)
+| Тип | Инструмент | Примеры |
+|-----|------------|---------|
+| **Серверное** | TanStack Query | Пользователи, настройки, данные API |
+| **Клиентское глобальное** | Zustand | Права доступа, UI-состояние навбара |
+| **Локальное** | useState/useReducer | Форма, модалка, пагинация |
+| **Аутентификация** | React Context | Текущий пользователь, токены |
 
-Это данные, которые поступают с бэкенда и хранятся в его базе данных. Примеры: список пользователей, информация о конкретной роли.
+---
 
-**Подход в проекте:**
-Состояние сервера управляется с помощью **кастомных хуков** для каждой "фичи". Эти хуки инкапсулируют логику получения данных, а также состояния загрузки и ошибок.
+## TanStack Query (Серверное состояние)
 
-**Пример (`useUsers.jsx`):**
--   **Хранение данных**: `useState` используется для хранения самих данных (например, `users`), состояния загрузки (`loading`) и информации о пагинации (`rowCount`).
--   **Получение данных**: `useEffect` вызывает функцию для загрузки данных при монтировании компонента или изменении зависимостей (например, страницы пагинации).
--   **Абстракция**: Вся эта логика (`useState`, `useEffect`, вызов API) скрыта внутри одного хука (`useUsers`). Компоненты просто вызывают этот хук и получают готовые данные и функции.
+Все данные с сервера кешируются и синхронизируются через TanStack Query.
 
-```javascript
-// Внутри кастомного хука useUsers
-const [users, setUsers] = useState([]);
-const [loading, setLoading] = useState(true);
+### Конфигурация
 
-useEffect(() => {
-    // Вызов сервиса, который делает API-запрос
-    usersService.list().then(data => {
-        setUsers(data.users);
-        setLoading(false);
-    });
-}, []);
-
-// Хук возвращает { users, loading, ... }
+```typescript
+// src/app/App.tsx
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 5 * 60 * 1000,  // 5 минут
+            retry: 1,
+        },
+    },
+});
 ```
 
--   **`usePermissions`**: Этот хук используется для доступа к **разрешениям текущего аутентифицированного пользователя**, которые были получены в процессе аутентификации. Он предоставляет эти разрешения и функции проверки прав доступа (`can`), а также инкапсулирует состояние загрузки.
+### Query — получение данных
 
-## 2. Глобальное Состояние (Global State)
+```typescript
+// src/modules/users/ui/hooks/useUsers.ts
+export function useUsers() {
+    return useQuery({
+        queryKey: ['users'],
+        queryFn: () => usersApi.list(),
+    });
+}
 
-Это состояние, которое необходимо для многих компонентов в дереве приложения. В нашем проекте это в первую очередь **информация об аутентификации**.
+// Использование
+const { data, isLoading, error, refetch } = useUsers();
+```
 
-**Подход в проекте:**
-Глобальное состояние управляется с помощью **React Context** и кастомных хуков.
+### Mutation — изменение данных
 
--   **`useAuth` (`features/auth/hooks/useAuth.jsx`)**: Основной хук, который управляет состоянием аутентификации. Он содержит:
-    -   Информацию о текущем пользователе (`user`).
-    -   Функции `login` и `logout`.
-    -   Состояние загрузки и ошибок.
--   **`AuthProvider` (`app/providers/AuthProvider.jsx`)**: Компонент-провайдер, который использует `useAuth` и передает его результат в `AuthContext`. Все приложение обернуто в этот провайдер, что делает состояние аутентификации доступным везде.
--   **`useAuthContext`**: Хук-потребитель, который компоненты используют для доступа к данным и функциям аутентификации.
+```typescript
+export function useCreateUser() {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: usersApi.create,
+        onSuccess: () => {
+            // Инвалидация кеша после успешного создания
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+    });
+}
 
-## 3. Состояние UI (UI State)
+// Использование
+const { mutate, isPending } = useCreateUser();
+mutate(userData);
+```
 
-Это локальное состояние, определяющее, как выглядит и ведет себя один компонент. Примеры: открыто ли модальное окно, значение в поле ввода, выбранная вкладка.
+### Query Keys
 
-**Подход в проекте:**
-Управляется стандартными хуками React: `useState` и, реже, `useReducer`, внутри самого компонента.
+Структура ключей:
 
-## 4. Состояние Форм (Form State)
+```typescript
+['users']                    // Список пользователей
+['users', { page: 1 }]       // С пагинацией
+['user', 123]                // Конкретный пользователь
+['settings', 'ldap']         // LDAP настройки
+```
 
-Это состояние, связанное с формами: значения полей, ошибки валидации, статус отправки.
+---
 
-**Подход в проекте:**
-Для управления формами используется библиотека **React Hook Form**.
+## Zustand (Глобальное клиентское состояние)
 
--   **`useForm`**: Основной хук библиотеки. Он используется в компонентах форм (например, `UserForm.jsx`).
--   **Преимущества**: Берет на себя управление состоянием полей, обработку валидации (с помощью интеграции с `zod`) и отслеживание изменений, что значительно упрощает код форм.
+Используется, когда данные нужны во многих компонентах и не связаны с API.
 
-## 5. Персистентное Состояние (Persistent State)
+### Пример: Права доступа
 
-Это состояние, которое должно сохраняться между перезагрузками страницы. Пример: выбранный пользователем размер страницы в таблице.
+```typescript
+// src/core/auth/permissions.store.ts
+import { create } from 'zustand';
 
-**Подход в проекте:**
-Для этого был создан кастомный хук `usePersistentState`.
+interface PermissionsState {
+    permissions: string[];
+    setPermissions: (permissions: string[]) => void;
+    hasPermission: (permission: string) => boolean;
+}
 
--   **`usePersistentState` (`features/userManagement/hooks/usePersistentState.js`)**: Этот хук работает как `useState`, но с одним дополнением: он автоматически синхронизирует свое значение с `localStorage`. При инициализации он пытается прочитать значение из `localStorage`, а при каждом изменении — записывает его обратно.
+export const usePermissionsStore = create<PermissionsState>((set, get) => ({
+    permissions: [],
+    setPermissions: (permissions) => set({ permissions }),
+    hasPermission: (permission) => get().permissions.includes(permission),
+}));
+```
+
+### Использование
+
+```tsx
+function Navbar() {
+    const hasPermission = usePermissionsStore((s) => s.hasPermission);
+    
+    if (!hasPermission('users:view')) return null;
+    
+    return <UsersLink />;
+}
+```
+
+---
+
+## React Context (Аутентификация)
+
+### AuthProvider
+
+```typescript
+// src/core/providers/AuthProvider.tsx
+interface AuthContextValue {
+    user: User | null;
+    isAuthenticated: boolean;
+    login: (credentials: Credentials) => Promise<void>;
+    logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
+    
+    const login = async (credentials: Credentials) => {
+        const { user, token } = await authApi.login(credentials);
+        localStorage.setItem('access_token', token);
+        setUser(user);
+    };
+    
+    const logout = async () => {
+        await authApi.logout();
+        localStorage.removeItem('access_token');
+        setUser(null);
+    };
+    
+    return (
+        <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (!context) throw new Error('useAuth must be used within AuthProvider');
+    return context;
+}
+```
+
+---
+
+## Локальное состояние
+
+### useState
+
+```tsx
+function UserForm() {
+    const [open, setOpen] = useState(false);
+    const [formData, setFormData] = useState<UserFormData>({});
+    
+    return (
+        <Dialog open={open} onClose={() => setOpen(false)}>
+            <UserFormContent data={formData} onChange={setFormData} />
+        </Dialog>
+    );
+}
+```
+
+### React Hook Form
+
+```tsx
+function LoginForm() {
+    const { register, handleSubmit, formState: { errors } } = useForm<LoginData>();
+    
+    return (
+        <form onSubmit={handleSubmit(onSubmit)}>
+            <TextField {...register('login', { required: true })} />
+            {errors.login && <span>Login required</span>}
+        </form>
+    );
+}
+```
+
+---
+
+## Когда что использовать
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Данные с сервера?                │
+│                         ↓                           │
+│          ДА → TanStack Query (useQuery)             │
+│          НЕТ → Локальное или глобальное?            │
+│                         ↓                           │
+│       Нужно в разных частях приложения?             │
+│          ДА → Zustand store                         │
+│          НЕТ → useState / useReducer                │
+└─────────────────────────────────────────────────────┘
+```

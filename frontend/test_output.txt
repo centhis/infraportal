@@ -1,0 +1,976 @@
+
+> infraportal-frontend@0.0.0 test
+> vitest --run --reporter=verbose
+
+
+[1m[46m RUN [49m[22m [36mv4.0.8 [39m[90m/home/centhis/infraportal/frontend[39m
+
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+ [31m×[39m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mRendering and Interactions[2m > [22mshould render users correctly[32m 249[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+Could not parse CSS stylesheet
+ [31m×[39m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould render group names and descriptions[33m 301[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould call onEdit when a row is clicked[32m 45[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould call onDelete when delete icon is clicked[32m 31[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mRendering and Interactions[2m > [22mshould call onEdit when clicking on a row[32m 109[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould have a disabled delete button for a built-in group[32m 59[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould display "Built-in" key for a built-in group[32m 51[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould display "Custom" key for a custom group[32m 71[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mRendering and Interactions[2m > [22mshould call onDelete when clicking the delete icon[32m 101[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mshould call onPermissionsReport when clicking the policy icon[32m 79[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mdelete button should be disabled for a built_in user[32m 70[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mdelete button should be disabled if canDelete is false[32m 48[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mChips Display[2m > [22mshould display correct Auth Type chips via Keys[32m 30[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mChips Display[2m > [22mshould display correct status chips via Keys[32m 40[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould render role names and descriptions[33m 559[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould call onEdit when a row is clicked[32m 75[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould call onDelete and stop propagation when delete icon is clicked[32m 44[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould have a disabled delete button for a built-in role[32m 67[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould display "Built-in" key for a built-in role[32m 51[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+ [31m×[39m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould display "Custom" key for a custom role[32m 65[2mms[22m[39m
+[31m   → Cannot read properties of undefined (reading 'id')[39m
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould render loading state[32m 152[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould render loading state[32m 118[2mms[22m[39m
+Could not parse CSS stylesheet
+ [32m✓[39m src/__tests__/integration/users-crud.test.tsx[2m > [22mUsers CRUD Integration[2m > [22mshould display list of users[33m 1062[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould render the role table with data[33m 559[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould render the user table with data[33m 595[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould open create dialog when "Add Role" is clicked[33m 1195[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould open create dialog when "Add User" is clicked[33m 1644[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/users-crud.test.tsx[2m > [22mUsers CRUD Integration[2m > [22mshould create a new user[33m 2405[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould create a new role[33m 1843[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould create a new user[33m 1879[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould open edit dialog when row is clicked[33m 1427[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould open edit dialog when row is clicked[33m 1386[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/users-crud.test.tsx[2m > [22mUsers CRUD Integration[2m > [22mshould edit an existing user[33m 2371[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould update an existing role[33m 1818[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould update an existing user[33m 1969[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/users-crud.test.tsx[2m > [22mUsers CRUD Integration[2m > [22mshould delete a user[33m 2622[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould open delete confirmation when delete action is clicked[33m 1476[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould delete a role when confirmed[33m 1640[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/RoleTabPage.test.tsx[2m > [22mRoleTabPage[2m > [22mshould disable add button if no create permission[33m 524[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould open delete confirmation when delete action is clicked[33m 1679[2mms[22m[39m
+[90mstderr[2m | src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22m[2mUserTabPage[2m > [22m[2mshould open permissions report when permissions button is clicked
+[22m[39m[MSW] Warning: intercepted a request without a matching request handler:
+
+  • GET http://localhost:8000/api/v1/users/1/permissions_report
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould delete a user when confirmed[33m 1827[2mms[22m[39m
+Could not parse CSS stylesheet
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould open permissions report when permissions button is clicked[33m 1607[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserTabPage.test.tsx[2m > [22mUserTabPage[2m > [22mshould disable add button if no create permission[33m 676[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/Navbar.test.tsx[2m > [22mNavbar[2m > [22mshould render correct title when user has permission[33m 305[2mms[22m[39m
+Could not parse CSS stylesheet
+ [32m✓[39m src/core/layout/Navbar/Navbar.test.tsx[2m > [22mNavbar[2m > [22mshould render navigation items if user has permission[33m 450[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/Navbar.test.tsx[2m > [22mNavbar[2m > [22mshould render user management link if user has users:view permission[32m 229[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/Navbar.test.tsx[2m > [22mNavbar[2m > [22mshould not render user management link if user lacks permission[32m 56[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/Navbar.test.tsx[2m > [22mNavbar[2m > [22mshould pass user and logout to UserMenu when authenticated[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/Navbar.test.tsx[2m > [22mNavbar[2m > [22mshould not render UserMenu content when not authenticated[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/Navbar.test.tsx[2m > [22mNavbar[2m > [22mshould render nothing when loading[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/GroupTabPage.test.tsx[2m > [22mGroupTabPage[2m > [22mshould show loading spinner when groups are loading[32m 185[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/GroupTabPage.test.tsx[2m > [22mGroupTabPage[2m > [22mshould render the group table with data[33m 660[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/UserForm.test.tsx[2m > [22mUserForm[2m > [22mCreate Mode[2m > [22mshould submit the form with valid data[33m 833[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/UserForm.test.tsx[2m > [22mUserForm[2m > [22mCreate Mode[2m > [22mshould display validation errors for required fields[32m 232[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/UserForm.test.tsx[2m > [22mUserForm[2m > [22mCreate Mode[2m > [22mshould have a disabled submit button if user lacks create permission[32m 282[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/GroupTabPage.test.tsx[2m > [22mGroupTabPage[2m > [22mshould open create dialog on "Add Group" click[33m 1045[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/UserForm.test.tsx[2m > [22mUserForm[2m > [22mEdit Mode[2m > [22mshould render with default values[32m 121[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/UserForm.test.tsx[2m > [22mUserForm[2m > [22mEdit Mode[2m > [22mshould have submit button disabled if form is not dirty[32m 21[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/GroupForm.test.tsx[2m > [22mGroupForm[2m > [22mshould render all roles in the "Available" list by default[33m 667[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/UserForm.test.tsx[2m > [22mUserForm[2m > [22mEdit Mode[2m > [22mshould have a disabled submit button if user lacks update permission[32m 283[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/UserForm.test.tsx[2m > [22mUserForm[2m > [22mView Only Mode[2m > [22mshould disable all fields and button when isViewOnly is true[32m 226[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/UserForm.test.tsx[2m > [22mUserForm[2m > [22mBuilt-in User Mode[2m > [22mshould disable restricted fields for built-in user[32m 44[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/GroupTabPage.test.tsx[2m > [22mGroupTabPage[2m > [22mshould call createMutation on form submit[33m 1782[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/GroupForm.test.tsx[2m > [22mGroupForm[2m > [22mshould move a role to the assigned list on click and submit[33m 721[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/GroupForm.test.tsx[2m > [22mGroupForm[2m > [22mshould start with pre-assigned roles and allow moving one back[33m 562[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/GroupForm.test.tsx[2m > [22mGroupForm[2m > [22mshould disable fields for built-in group but allow editing members if logic permits[32m 156[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/GroupTabPage.test.tsx[2m > [22mGroupTabPage[2m > [22mshould open edit dialog on row click[33m 561[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/GroupTabPage.test.tsx[2m > [22mGroupTabPage[2m > [22mshould call updateMutation on edit submit[33m 1535[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/GroupTabPage.test.tsx[2m > [22mGroupTabPage[2m > [22mshould open delete confirmation on delete click[33m 570[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/GroupTabPage.test.tsx[2m > [22mGroupTabPage[2m > [22mshould call deleteMutation on confirm delete[33m 619[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/LdapSettingsPage.test.tsx[2m > [22mLdapSettingsPage[2m > [22mshould show loading spinner[32m 125[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/LdapSettingsPage.test.tsx[2m > [22mLdapSettingsPage[2m > [22mshould show error message[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/RoleForm.test.tsx[2m > [22mRoleForm[2m > [22mshould render correctly in create mode[33m 583[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/LdapSettingsPage.test.tsx[2m > [22mLdapSettingsPage[2m > [22mshould render page title and settings list[32m 272[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/LdapSettingsPage.test.tsx[2m > [22mLdapSettingsPage[2m > [22mshould display LDAP status correctly[32m 66[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/LdapSettingsPage.test.tsx[2m > [22mLdapSettingsPage[2m > [22mshould handle test connection click[32m 59[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/LdapSettingsPage.test.tsx[2m > [22mLdapSettingsPage[2m > [22mshould show success alert on successful test[32m 129[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/LdapSettingsPage.test.tsx[2m > [22mLdapSettingsPage[2m > [22mshould show error alert on failed test (API returned failure)[32m 104[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/RoleForm.test.tsx[2m > [22mRoleForm[2m > [22mshould submit the form with valid data in create mode[33m 619[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/LdapSettingsPage.test.tsx[2m > [22mLdapSettingsPage[2m > [22mshould show generic error alert on mutation error[32m 120[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/RoleForm.test.tsx[2m > [22mRoleForm[2m > [22mshould render with default values in edit mode[32m 217[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/RoleForm.test.tsx[2m > [22mRoleForm[2m > [22mshould disable the form when editing a built-in role[32m 273[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/ldap-settings.test.tsx[2m > [22mLDAP Settings Integration[2m > [22mshould render LDAP settings page with settings[33m 404[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/ldap-settings.test.tsx[2m > [22mLDAP Settings Integration[2m > [22mshould display test connection button[32m 151[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/ldap-settings.test.tsx[2m > [22mLDAP Settings Integration[2m > [22mshould test LDAP connection successfully[32m 215[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/ldap-settings.test.tsx[2m > [22mLDAP Settings Integration[2m > [22mshould handle LDAP connection test failure[32m 185[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/TransferList.test.tsx[2m > [22mTransferList[2m > [22mshould render available and assigned lists[32m 246[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/TransferList.test.tsx[2m > [22mTransferList[2m > [22mshould move an item from available to assigned on click[32m 53[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/TransferList.test.tsx[2m > [22mTransferList[2m > [22mshould move an item from assigned to available on click[32m 61[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/TransferList.test.tsx[2m > [22mTransferList[2m > [22mshould filter items in both lists[33m 321[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/TransferList.test.tsx[2m > [22mTransferList[2m > [22mBusiness Logic: Automatic Permission Assignment[2m > [22mshould automatically assign "users:view" when another "users:*" permission is assigned[32m 53[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/TransferList.test.tsx[2m > [22mTransferList[2m > [22mBusiness Logic: Automatic Permission Assignment[2m > [22mshould not remove "users:view" if other "users:*" permissions are still assigned[32m 33[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/TransferList.test.tsx[2m > [22mTransferList[2m > [22mBusiness Logic: Automatic Permission Assignment[2m > [22mshould allow removing "users:view" if no other "users:*" permissions are assigned[32m 90[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/TransferList.test.tsx[2m > [22mTransferList[2m > [22mDisabled State[2m > [22mshould not allow moving a disabled item[32m 80[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingInputField.test.tsx[2m > [22mSettingInputField[2m > [22mrenders in view mode correctly[32m 36[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingInputField.test.tsx[2m > [22mSettingInputField[2m > [22mswitches to edit mode on click when allowed[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingInputField.test.tsx[2m > [22mSettingInputField[2m > [22mdoes not switch to edit mode if no permission[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingInputField.test.tsx[2m > [22mSettingInputField[2m > [22mrenders input in edit mode[32m 206[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingInputField.test.tsx[2m > [22mSettingInputField[2m > [22mshows save and cancel buttons when dirty in edit mode[32m 77[2mms[22m[39m
+[90mstderr[2m | src/modules/auth/ui/pages/LoginPage.test.tsx[2m > [22m[2mLoginPage Integration[2m > [22m[2mshould successfully log in and redirect to home
+[22m[39mAn update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m src/modules/settings/ui/components/SettingInputField.test.tsx[2m > [22mSettingInputField[2m > [22mcalls onChange when typing[32m 118[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingInputField.test.tsx[2m > [22mSettingInputField[2m > [22mtoggles password visibility[32m 177[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/pages/LoginPage.test.tsx[2m > [22mLoginPage Integration[2m > [22mshould successfully log in and redirect to home[33m 491[2mms[22m[39m
+[90mstderr[2m | src/modules/auth/ui/pages/LoginPage.test.tsx[2m > [22m[2mLoginPage Integration[2m > [22m[2mshould show an error message on failed login
+[22m[39mAn update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m src/modules/auth/ui/pages/LoginPage.test.tsx[2m > [22mLoginPage Integration[2m > [22mshould show an error message on failed login[32m 235[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/PermissionsReportDialog.test.tsx[2m > [22mPermissionsReportDialog[2m > [22mshould result to null if not open[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/PermissionsReportDialog.test.tsx[2m > [22mPermissionsReportDialog[2m > [22mshould render loading state[32m 252[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/PermissionsReportDialog.test.tsx[2m > [22mPermissionsReportDialog[2m > [22mshould render no data state[32m 66[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/PermissionsReportDialog.test.tsx[2m > [22mPermissionsReportDialog[2m > [22mshould render report data correctly[33m 451[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/components/PermissionsReportDialog.test.tsx[2m > [22mPermissionsReportDialog[2m > [22mshould call onClose when close button is clicked[32m 56[2mms[22m[39m
+ [32m✓[39m src/shared/ui/Dialog/ConfirmDialog.test.tsx[2m > [22mConfirmDialog[2m > [22mshould render correctly when open[33m 386[2mms[22m[39m
+ [32m✓[39m src/shared/ui/Dialog/ConfirmDialog.test.tsx[2m > [22mConfirmDialog[2m > [22mshould not render when closed[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/ui/Dialog/ConfirmDialog.test.tsx[2m > [22mConfirmDialog[2m > [22mshould call onClose when Cancel button is clicked[32m 90[2mms[22m[39m
+ [32m✓[39m src/shared/ui/Dialog/ConfirmDialog.test.tsx[2m > [22mConfirmDialog[2m > [22mshould call onConfirm when Confirm button is clicked[32m 94[2mms[22m[39m
+ [32m✓[39m src/shared/ui/Dialog/ConfirmDialog.test.tsx[2m > [22mConfirmDialog[2m > [22mshould call onClose when close icon is clicked[32m 39[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/UserMenu.test.tsx[2m > [22mUserMenu[2m > [22mshould render nothing if user is null[32m 8[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/UserMenu.test.tsx[2m > [22mUserMenu[2m > [22mshould render UserAvatar and open menu on click[33m 328[2mms[22m[39m
+[90mstdout[2m | src/__tests__/integration/auth-flow.test.tsx
+[22m[39mi18next: languageChanged en-US
+i18next: initialized {
+  debug: [33mtrue[39m,
+  initAsync: [33mtrue[39m,
+  ns: [ [32m'common'[39m, [32m'auth'[39m, [32m'layout'[39m, [32m'user_management'[39m, [32m'settings'[39m ],
+  defaultNS: [32m'common'[39m,
+  fallbackLng: [ [32m'en'[39m ],
+  fallbackNS: [33mfalse[39m,
+  supportedLngs: [33mfalse[39m,
+  nonExplicitSupportedLngs: [33mfalse[39m,
+  load: [32m'all'[39m,
+  preload: [33mfalse[39m,
+  simplifyPluralSuffix: [33mtrue[39m,
+  keySeparator: [32m'.'[39m,
+  nsSeparator: [32m':'[39m,
+  pluralSeparator: [32m'_'[39m,
+  contextSeparator: [32m'_'[39m,
+  partialBundledLanguages: [33mfalse[39m,
+  saveMissing: [33mfalse[39m,
+  updateMissing: [33mfalse[39m,
+  saveMissingTo: [32m'fallback'[39m,
+  saveMissingPlurals: [33mtrue[39m,
+  missingKeyHandler: [33mfalse[39m,
+  missingInterpolationHandler: [33mfalse[39m,
+  postProcess: [33mfalse[39m,
+  postProcessPassResolved: [33mfalse[39m,
+  returnNull: [33mfalse[39m,
+  returnEmptyString: [33mtrue[39m,
+  returnObjects: [33mfalse[39m,
+  joinArrays: [33mfalse[39m,
+  returnedObjectHandler: [33mfalse[39m,
+  parseMissingKeyHandler: [33mfalse[39m,
+  appendNamespaceToMissingKey: [33mfalse[39m,
+  appendNamespaceToCIMode: [33mfalse[39m,
+  overloadTranslationOptionHandler: [36m[Function: overloadTranslationOptionHandler][39m,
+  interpolation: {
+    escapeValue: [33mfalse[39m,
+    format: [36m[Function: bound format][39m,
+    prefix: [32m'{{'[39m,
+    suffix: [32m'}}'[39m,
+    formatSeparator: [32m','[39m,
+    unescapePrefix: [32m'-'[39m,
+    nestingPrefix: [32m'$t('[39m,
+    nestingSuffix: [32m')'[39m,
+    nestingOptionsSeparator: [32m','[39m,
+    maxReplaces: [33m1000[39m,
+    skipOnVariables: [33mtrue[39m
+  },
+  cacheInBuiltFormats: [33mtrue[39m,
+  resources: {
+    en: {
+      common: [36m[Object][39m,
+      auth: [36m[Object][39m,
+      layout: [36m[Object][39m,
+      user_management: [36m[Object][39m,
+      settings: [36m[Object][39m
+    },
+    ru: {
+      common: [36m[Object][39m,
+      auth: [36m[Object][39m,
+      layout: [36m[Object][39m,
+      user_management: [36m[Object][39m,
+      settings: [36m[Object][39m
+    }
+  },
+  ignoreJSONStructure: [33mtrue[39m
+}
+
+ [32m✓[39m src/core/layout/Navbar/UserMenu.test.tsx[2m > [22mUserMenu[2m > [22mshould call onLogout when Logout option is clicked[32m 140[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/UserMenu.test.tsx[2m > [22mUserMenu[2m > [22mshould close menu when Profile option is clicked[32m 94[2mms[22m[39m
+ [32m✓[39m src/core/providers/ToastProvider.test.tsx[2m > [22mToastProvider[2m > [22mshould display a success toast[32m 187[2mms[22m[39m
+ [32m✓[39m src/core/providers/ToastProvider.test.tsx[2m > [22mToastProvider[2m > [22mshould display an error toast[32m 62[2mms[22m[39m
+ [32m✓[39m src/core/providers/ToastProvider.test.tsx[2m > [22mToastProvider[2m > [22mshould display an info toast with default severity[32m 55[2mms[22m[39m
+ [32m✓[39m src/core/providers/ToastProvider.test.tsx[2m > [22mToastProvider[2m > [22mshould close the toast when dismissed via close button[32m 240[2mms[22m[39m
+[90mstderr[2m | src/__tests__/integration/auth-flow.test.tsx[2m > [22m[2mAuthentication Flow Integration[2m > [22m[2mLogin Flow[2m > [22m[2mshould show error on invalid credentials
+[22m[39mAn update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/integration/auth-flow.test.tsx[2m > [22m[2mAuthentication Flow Integration[2m > [22m[2mLogin Flow[2m > [22m[2mshould show error on invalid credentials
+[22m[39mAn update to MemoryRouter inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/integration/auth-flow.test.tsx[2m > [22m[2mAuthentication Flow Integration[2m > [22m[2mLogin Flow[2m > [22m[2mshould show error on invalid credentials
+[22m[39mAn update to LoginPage inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m src/__tests__/integration/auth-flow.test.tsx[2m > [22mAuthentication Flow Integration[2m > [22mLogin Flow[2m > [22mshould successfully login and store token[33m 408[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/auth-flow.test.tsx[2m > [22mAuthentication Flow Integration[2m > [22mLogin Flow[2m > [22mshould show error on invalid credentials[32m 125[2mms[22m[39m
+ [32m✓[39m src/__tests__/integration/auth-flow.test.tsx[2m > [22mAuthentication Flow Integration[2m > [22mProtected Route Redirect[2m > [22mshould render login page when not authenticated[32m 106[2mms[22m[39m
+[90mstdout[2m | src/app/App.test.tsx
+[22m[39mi18next: languageChanged en-US
+i18next: initialized {
+  debug: [33mtrue[39m,
+  initAsync: [33mtrue[39m,
+  ns: [ [32m'common'[39m, [32m'auth'[39m, [32m'layout'[39m, [32m'user_management'[39m, [32m'settings'[39m ],
+  defaultNS: [32m'common'[39m,
+  fallbackLng: [ [32m'en'[39m ],
+  fallbackNS: [33mfalse[39m,
+  supportedLngs: [33mfalse[39m,
+  nonExplicitSupportedLngs: [33mfalse[39m,
+  load: [32m'all'[39m,
+  preload: [33mfalse[39m,
+  simplifyPluralSuffix: [33mtrue[39m,
+  keySeparator: [32m'.'[39m,
+  nsSeparator: [32m':'[39m,
+  pluralSeparator: [32m'_'[39m,
+  contextSeparator: [32m'_'[39m,
+  partialBundledLanguages: [33mfalse[39m,
+  saveMissing: [33mfalse[39m,
+  updateMissing: [33mfalse[39m,
+  saveMissingTo: [32m'fallback'[39m,
+  saveMissingPlurals: [33mtrue[39m,
+  missingKeyHandler: [33mfalse[39m,
+  missingInterpolationHandler: [33mfalse[39m,
+  postProcess: [33mfalse[39m,
+  postProcessPassResolved: [33mfalse[39m,
+  returnNull: [33mfalse[39m,
+  returnEmptyString: [33mtrue[39m,
+  returnObjects: [33mfalse[39m,
+  joinArrays: [33mfalse[39m,
+  returnedObjectHandler: [33mfalse[39m,
+  parseMissingKeyHandler: [33mfalse[39m,
+  appendNamespaceToMissingKey: [33mfalse[39m,
+  appendNamespaceToCIMode: [33mfalse[39m,
+  overloadTranslationOptionHandler: [36m[Function: overloadTranslationOptionHandler][39m,
+  interpolation: {
+    escapeValue: [33mfalse[39m,
+    format: [36m[Function: bound format][39m,
+    prefix: [32m'{{'[39m,
+    suffix: [32m'}}'[39m,
+    formatSeparator: [32m','[39m,
+    unescapePrefix: [32m'-'[39m,
+    nestingPrefix: [32m'$t('[39m,
+    nestingSuffix: [32m')'[39m,
+    nestingOptionsSeparator: [32m','[39m,
+    maxReplaces: [33m1000[39m,
+    skipOnVariables: [33mtrue[39m
+  },
+  cacheInBuiltFormats: [33mtrue[39m,
+  resources: {
+    en: {
+      common: [36m[Object][39m,
+      auth: [36m[Object][39m,
+      layout: [36m[Object][39m,
+      user_management: [36m[Object][39m,
+      settings: [36m[Object][39m
+    },
+    ru: {
+      common: [36m[Object][39m,
+      auth: [36m[Object][39m,
+      layout: [36m[Object][39m,
+      user_management: [36m[Object][39m,
+      settings: [36m[Object][39m
+    }
+  },
+  ignoreJSONStructure: [33mtrue[39m
+}
+
+ [32m✓[39m src/modules/settings/ui/components/SettingItem.test.tsx[2m > [22mSettingItem - RBAC Tests[2m > [22mBoolean Settings[2m > [22mshould render Switch for boolean type setting[32m 286[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingItem.test.tsx[2m > [22mSettingItem - RBAC Tests[2m > [22mBoolean Settings[2m > [22mshould disable Switch when user lacks settings:update permission[32m 49[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingItem.test.tsx[2m > [22mSettingItem - RBAC Tests[2m > [22mBoolean Settings[2m > [22mshould enable Switch when user has settings:update permission[32m 59[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingItem.test.tsx[2m > [22mSettingItem - RBAC Tests[2m > [22mString Settings[2m > [22mshould display value for non-sensitive string setting[32m 15[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/components/SettingItem.test.tsx[2m > [22mSettingItem - RBAC Tests[2m > [22mString Settings[2m > [22mshould mask value for sensitive string setting[32m 16[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/SettingsPage.test.tsx[2m > [22mSettingsPage[2m > [22mshould render tabs[32m 292[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/SettingsPage.test.tsx[2m > [22mSettingsPage[2m > [22mshould default to Core tab[32m 23[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/SettingsPage.test.tsx[2m > [22mSettingsPage[2m > [22mshould switch to LDAP tab on click[32m 72[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserManagementPage.test.tsx[2m > [22mUserManagementPage[2m > [22mshould render all tabs with correct translation keys[32m 96[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/pages/UserManagementPage.test.tsx[2m > [22mUserManagementPage[2m > [22mshould render UserTabPage by default (index 0)[32m 114[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginPassField.test.tsx[2m > [22mLoginPassField[2m > [22mrenders the password field with the correct label[32m 95[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginPassField.test.tsx[2m > [22mLoginPassField[2m > [22mtoggles password visibility when the icon is clicked[32m 61[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginPassField.test.tsx[2m > [22mLoginPassField[2m > [22mdisplays an error message when there is a field error[32m 36[2mms[22m[39m
+Could not parse CSS stylesheet
+ [32m✓[39m src/modules/auth/ui/components/LoginPassField.test.tsx[2m > [22mLoginPassField[2m > [22mupdates its value on change[32m 39[2mms[22m[39m
+[90mstdout[2m | src/app/App.test.tsx[2m > [22m[2mApp Integration[2m > [22m[2mrenders home page and navbar when authenticated
+[22m[39mi18next::translator: missingKey en-US common pages.home.title Welcome
+i18next::translator: missingKey en-US common pages.home.description InfraPortal - Infrastructure Management System
+
+ [32m✓[39m src/app/App.test.tsx[2m > [22mApp Integration[2m > [22mrenders login page by default (public route)[32m 176[2mms[22m[39m
+ [32m✓[39m src/app/App.test.tsx[2m > [22mApp Integration[2m > [22mredirects to login if accessing protected route while unauthenticated[32m 35[2mms[22m[39m
+ [32m✓[39m src/app/App.test.tsx[2m > [22mApp Integration[2m > [22mrenders home page and navbar when authenticated[32m 184[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useUsers.test.tsx[2m > [22museUsers Hooks[2m > [22museUsers[2m > [22mshould fetch users with params[32m 78[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useUsers.test.tsx[2m > [22museUsers Hooks[2m > [22museUser[2m > [22mshould fetch a single user by id[32m 56[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useUsers.test.tsx[2m > [22museUsers Hooks[2m > [22museUser[2m > [22mshould not fetch if id is not provided[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useUsers.test.tsx[2m > [22museUsers Hooks[2m > [22museCreateUser[2m > [22mshould create a user and invalidate queries[32m 11[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useUsers.test.tsx[2m > [22museUsers Hooks[2m > [22museUpdateUser[2m > [22mshould update a user and invalidate/set queries[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useUsers.test.tsx[2m > [22museUsers Hooks[2m > [22museDeleteUser[2m > [22mshould delete a user and invalidate queries[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useUsers.test.tsx[2m > [22museUsers Hooks[2m > [22musePermissionsReport[2m > [22mshould fetch permissions report[32m 70[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useUsers.test.tsx[2m > [22museUsers Hooks[2m > [22musePermissionsReport[2m > [22mshould not fetch report if id is null or enabled is false[32m 3[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useGroups.test.tsx[2m > [22museGroups Hooks[2m > [22museGroups[2m > [22mshould fetch groups with params[32m 79[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useGroups.test.tsx[2m > [22museGroups Hooks[2m > [22museGroup[2m > [22mshould fetch a single group by id[32m 61[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useGroups.test.tsx[2m > [22museGroups Hooks[2m > [22museGroup[2m > [22mshould not fetch if id is not provided[32m 7[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useGroups.test.tsx[2m > [22museGroups Hooks[2m > [22museCreateGroup[2m > [22mshould create a group and invalidate queries[32m 2[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useGroups.test.tsx[2m > [22museGroups Hooks[2m > [22museUpdateGroup[2m > [22mshould update a group and invalidate/set queries[32m 4[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useGroups.test.tsx[2m > [22museGroups Hooks[2m > [22museDeleteGroup[2m > [22mshould delete a group and invalidate queries[32m 4[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useLdapSettings.test.tsx[2m > [22museLdapSettings Hooks[2m > [22museLdapSettings[2m > [22mshould fetch and return ldap settings[32m 79[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useLdapSettings.test.tsx[2m > [22museLdapSettings Hooks[2m > [22museLdapSettings[2m > [22mshould handle fetch error[32m 62[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useLdapSettings.test.tsx[2m > [22museLdapSettings Hooks[2m > [22museLdapEnabled[2m > [22mshould fetch ldap enabled status[32m 108[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useLdapSettings.test.tsx[2m > [22museLdapSettings Hooks[2m > [22museUpdateLdapSetting[2m > [22mshould call update API[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useLdapSettings.test.tsx[2m > [22museLdapSettings Hooks[2m > [22museUpdateLdapSettingsBulk[2m > [22mshould call bulk update API[32m 6[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useLdapSettings.test.tsx[2m > [22museLdapSettings Hooks[2m > [22museTestLdapConnection[2m > [22mshould call test connection API[32m 14[2mms[22m[39m
+[90mstderr[2m | src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22m[2museAuth[2m > [22m[2mshould have correct initial state when no token exists
+[22m[39mAn update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22m[2museAuth[2m > [22m[2mshould fetch user on initial load if token exists
+[22m[39mAn update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22m[2museAuth[2m > [22m[2mshould handle error when fetching user on initial load
+[22m[39mAn update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22m[2museAuth[2m > [22m[2mshould successfully login, set token, and fetch user
+[22m[39mAn update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22museAuth[2m > [22mshould be intercepted by msw[32m 28[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22museAuth[2m > [22mshould have correct initial state when no token exists[32m 12[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22museAuth[2m > [22mshould fetch user on initial load if token exists[32m 27[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22museAuth[2m > [22mshould handle error when fetching user on initial load[32m 15[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22museAuth[2m > [22mshould successfully login, set token, and fetch user[32m 16[2mms[22m[39m
+[90mstderr[2m | src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22m[2museAuth[2m > [22m[2mshould handle failed login and set error message
+[22m[39mAn update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22m[2museAuth[2m > [22m[2mshould logout, remove token, and reset user state
+[22m[39mAn update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to AuthProvider inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22museAuth[2m > [22mshould handle failed login and set error message[32m 9[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/hooks/useAuth.test.tsx[2m > [22museAuth[2m > [22mshould logout, remove token, and reset user state[32m 9[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/CoreSettingsPage.test.tsx[2m > [22mCoreSettingsPage[2m > [22mLoading State[2m > [22mshould show loading spinner when loading[32m 142[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/CoreSettingsPage.test.tsx[2m > [22mCoreSettingsPage[2m > [22mContent Rendering[2m > [22mshould render page title[32m 35[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/CoreSettingsPage.test.tsx[2m > [22mCoreSettingsPage[2m > [22mContent Rendering[2m > [22mshould render settings list[32m 61[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/CoreSettingsPage.test.tsx[2m > [22mCoreSettingsPage[2m > [22mContent Rendering[2m > [22mshould show empty state when no settings[32m 38[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/pages/CoreSettingsPage.test.tsx[2m > [22mCoreSettingsPage[2m > [22mError Handling[2m > [22mshould show error message on error[32m 5[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useRoles.test.tsx[2m > [22museRoles Hooks[2m > [22museRoles[2m > [22mshould fetch roles with params[32m 87[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useRoles.test.tsx[2m > [22museRoles Hooks[2m > [22museRole[2m > [22mshould fetch a single role by id[32m 59[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useRoles.test.tsx[2m > [22museRoles Hooks[2m > [22museRole[2m > [22mshould not fetch if id is not provided[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useRoles.test.tsx[2m > [22museRoles Hooks[2m > [22museCreateRole[2m > [22mshould create a role and invalidate queries[32m 7[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useRoles.test.tsx[2m > [22museRoles Hooks[2m > [22museUpdateRole[2m > [22mshould update a role and invalidate/set queries[32m 3[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/useRoles.test.tsx[2m > [22museRoles Hooks[2m > [22museDeleteRole[2m > [22mshould delete a role and invalidate queries[32m 2[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useCoreSettings.test.tsx[2m > [22museCoreSettings Hooks[2m > [22museCoreSettings[2m > [22mshould fetch and return core settings[32m 60[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useCoreSettings.test.tsx[2m > [22museCoreSettings Hooks[2m > [22museCoreSettings[2m > [22mshould handle error[32m 63[2mms[22m[39m
+ [32m✓[39m src/modules/settings/ui/hooks/useCoreSettings.test.tsx[2m > [22museCoreSettings Hooks[2m > [22museUpdateCoreSetting[2m > [22mshould call update API[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginTextField.test.tsx[2m > [22mLoginTextField[2m > [22mrenders the text field with the correct label[32m 135[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginTextField.test.tsx[2m > [22mLoginTextField[2m > [22mdisplays an error message when there is a field error[32m 11[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginTextField.test.tsx[2m > [22mLoginTextField[2m > [22mupdates its value on change[32m 22[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginTextField.test.tsx[2m > [22mLoginTextField[2m > [22mdisplays the default value[32m 23[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginAlert.test.tsx[2m > [22mLoginAlert[2m > [22mrenders nothing if no message is provided[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/auth/ui/components/LoginAlert.test.tsx[2m > [22mLoginAlert[2m > [22mrenders the Alert with correct message when provided[32m 145[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/UserAvatar.test.tsx[2m > [22mUserAvatar[2m > [22mrenders nothing if no user is provided[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/UserAvatar.test.tsx[2m > [22mUserAvatar[2m > [22mrenders an avatar with the first initial for a single name[32m 76[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/UserAvatar.test.tsx[2m > [22mUserAvatar[2m > [22mrenders an avatar with two initials for a two-part name[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/UserAvatar.test.tsx[2m > [22mUserAvatar[2m > [22mrenders an avatar with two initials for a multi-part name[32m 14[2mms[22m[39m
+ [32m✓[39m src/core/layout/Navbar/UserAvatar.test.tsx[2m > [22mUserAvatar[2m > [22mcalculates a background color[32m 97[2mms[22m[39m
+[90mstdout[2m | src/core/providers/I18nProvider.test.tsx
+[22m[39mi18next: languageChanged en-US
+i18next: initialized {
+  debug: [33mtrue[39m,
+  initAsync: [33mtrue[39m,
+  ns: [ [32m'common'[39m, [32m'auth'[39m, [32m'layout'[39m, [32m'user_management'[39m, [32m'settings'[39m ],
+  defaultNS: [32m'common'[39m,
+  fallbackLng: [ [32m'en'[39m ],
+  fallbackNS: [33mfalse[39m,
+  supportedLngs: [33mfalse[39m,
+  nonExplicitSupportedLngs: [33mfalse[39m,
+  load: [32m'all'[39m,
+  preload: [33mfalse[39m,
+  simplifyPluralSuffix: [33mtrue[39m,
+  keySeparator: [32m'.'[39m,
+  nsSeparator: [32m':'[39m,
+  pluralSeparator: [32m'_'[39m,
+  contextSeparator: [32m'_'[39m,
+  partialBundledLanguages: [33mfalse[39m,
+  saveMissing: [33mfalse[39m,
+  updateMissing: [33mfalse[39m,
+  saveMissingTo: [32m'fallback'[39m,
+  saveMissingPlurals: [33mtrue[39m,
+  missingKeyHandler: [33mfalse[39m,
+  missingInterpolationHandler: [33mfalse[39m,
+  postProcess: [33mfalse[39m,
+  postProcessPassResolved: [33mfalse[39m,
+  returnNull: [33mfalse[39m,
+  returnEmptyString: [33mtrue[39m,
+  returnObjects: [33mfalse[39m,
+  joinArrays: [33mfalse[39m,
+  returnedObjectHandler: [33mfalse[39m,
+  parseMissingKeyHandler: [33mfalse[39m,
+  appendNamespaceToMissingKey: [33mfalse[39m,
+  appendNamespaceToCIMode: [33mfalse[39m,
+  overloadTranslationOptionHandler: [36m[Function: overloadTranslationOptionHandler][39m,
+  interpolation: {
+    escapeValue: [33mfalse[39m,
+    format: [36m[Function: bound format][39m,
+    prefix: [32m'{{'[39m,
+    suffix: [32m'}}'[39m,
+    formatSeparator: [32m','[39m,
+    unescapePrefix: [32m'-'[39m,
+    nestingPrefix: [32m'$t('[39m,
+    nestingSuffix: [32m')'[39m,
+    nestingOptionsSeparator: [32m','[39m,
+    maxReplaces: [33m1000[39m,
+    skipOnVariables: [33mtrue[39m
+  },
+  cacheInBuiltFormats: [33mtrue[39m,
+  resources: {
+    en: {
+      common: [36m[Object][39m,
+      auth: [36m[Object][39m,
+      layout: [36m[Object][39m,
+      user_management: [36m[Object][39m,
+      settings: [36m[Object][39m
+    },
+    ru: {
+      common: [36m[Object][39m,
+      auth: [36m[Object][39m,
+      layout: [36m[Object][39m,
+      user_management: [36m[Object][39m,
+      settings: [36m[Object][39m
+    }
+  },
+  ignoreJSONStructure: [33mtrue[39m
+}
+
+[90mstdout[2m | src/core/providers/I18nProvider.test.tsx[2m > [22m[2mI18nProvider[2m > [22m[2mshould render children and provide default language
+[22m[39mi18next: languageChanged en
+
+[90mstdout[2m | src/core/providers/I18nProvider.test.tsx[2m > [22m[2mI18nProvider[2m > [22m[2mshould initialize with language from localStorage if present
+[22m[39mi18next: languageChanged en
+
+[90mstdout[2m | src/core/providers/I18nProvider.test.tsx[2m > [22m[2mI18nProvider[2m > [22m[2mshould initialize with language from localStorage if present
+[22m[39mi18next: languageChanged ru
+
+[90mstdout[2m | src/core/providers/I18nProvider.test.tsx[2m > [22m[2mI18nProvider[2m > [22m[2mshould call i18n.changeLanguage when context function is used
+[22m[39mi18next: languageChanged en
+
+[90mstdout[2m | src/core/providers/I18nProvider.test.tsx[2m > [22m[2mI18nProvider[2m > [22m[2mshould call i18n.changeLanguage when context function is used
+[22m[39mi18next: languageChanged de
+
+[90mstdout[2m | src/core/providers/I18nProvider.test.tsx[2m > [22m[2mI18nProvider[2m > [22m[2mshould update context and localStorage when language changes
+[22m[39mi18next: languageChanged en
+
+[90mstdout[2m | src/core/providers/I18nProvider.test.tsx[2m > [22m[2mI18nProvider[2m > [22m[2mshould update context and localStorage when language changes
+[22m[39mi18next: languageChanged fr
+
+ [32m✓[39m src/core/providers/I18nProvider.test.tsx[2m > [22mI18nProvider[2m > [22mshould render children and provide default language[32m 19[2mms[22m[39m
+ [32m✓[39m src/core/providers/I18nProvider.test.tsx[2m > [22mI18nProvider[2m > [22mshould initialize with language from localStorage if present[32m 16[2mms[22m[39m
+ [32m✓[39m src/core/providers/I18nProvider.test.tsx[2m > [22mI18nProvider[2m > [22mshould call i18n.changeLanguage when context function is used[32m 11[2mms[22m[39m
+ [32m✓[39m src/core/providers/I18nProvider.test.tsx[2m > [22mI18nProvider[2m > [22mshould update context and localStorage when language changes[32m 7[2mms[22m[39m
+ [32m✓[39m src/modules/users/ui/hooks/usePermissionsList.test.tsx[2m > [22musePermissionsList Hook[2m > [22mshould fetch permissions list[32m 75[2mms[22m[39m
+ [32m✓[39m src/app/main.test.tsx[2m > [22mmain.tsx[2m > [22mrenders App into root element[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/router/ProtectedRoute.test.tsx[2m > [22mProtectedRoute[2m > [22mshould render children when authenticated and not loading[32m 30[2mms[22m[39m
+ [32m✓[39m src/core/router/ProtectedRoute.test.tsx[2m > [22mProtectedRoute[2m > [22mshould redirect to login when not authenticated and not loading[32m 21[2mms[22m[39m
+ [32m✓[39m src/core/router/ProtectedRoute.test.tsx[2m > [22mProtectedRoute[2m > [22mshould render nothing when loading[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/content/ui/pages/AboutPage.test.tsx[2m > [22mAboutPage[2m > [22mrenders the "About page" text[32m 67[2mms[22m[39m
+ [32m✓[39m src/core/router/RouterProvider.test.tsx[2m > [22mRouterProvider[2m > [22mshould render public route when unauthenticated[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/router/RouterProvider.test.tsx[2m > [22mRouterProvider[2m > [22mshould redirect to defaultPublicRoute when accessing protected route unauthenticated[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/router/RouterProvider.test.tsx[2m > [22mRouterProvider[2m > [22mshould render protected route and navbar when authenticated[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/router/RouterProvider.test.tsx[2m > [22mRouterProvider[2m > [22mshould redirect unknown routes to defaultProtectedRoute when authenticated[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/providers/AuthProvider.test.tsx[2m > [22mAuthProvider[2m > [22mshould render children[32m 26[2mms[22m[39m
+ [32m✓[39m src/core/providers/AuthProvider.test.tsx[2m > [22mAuthProvider[2m > [22mshould provide a loading state[32m 10[2mms[22m[39m
+ [32m✓[39m src/core/providers/AuthProvider.test.tsx[2m > [22mAuthProvider[2m > [22mshould provide user context and permissions to children when authenticated[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/providers/AuthProvider.test.tsx[2m > [22mAuthProvider[2m > [22mshould provide null user when not authenticated[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/providers/AuthProvider.test.tsx[2m > [22mAuthProvider[2m > [22mshould delegate login and logout to the hook[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/providers/AuthProvider.test.tsx[2m > [22mAuthProvider[2m > [22mshould throw an error if useAuthContext is used outside of AuthProvider[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/api/settings.api.test.ts[2m > [22msettingsApi[2m > [22mCore Settings[2m > [22mgetCoreSettings should fetch and return core settings[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/api/settings.api.test.ts[2m > [22msettingsApi[2m > [22mCore Settings[2m > [22mupdateCoreSetting should update a single core setting[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/api/settings.api.test.ts[2m > [22msettingsApi[2m > [22mLDAP Settings[2m > [22mgetLdapSettings should fetch and return LDAP settings[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/api/settings.api.test.ts[2m > [22msettingsApi[2m > [22mLDAP Settings[2m > [22mupdateLdapSetting should update a single LDAP setting[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/api/settings.api.test.ts[2m > [22msettingsApi[2m > [22mLDAP Settings[2m > [22mupdateLdapSettingsBulk should update multiple LDAP settings[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/api/settings.api.test.ts[2m > [22msettingsApi[2m > [22mLDAP Settings[2m > [22mtestLdapConnection should send test request with settings[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/settings/api/settings.api.test.ts[2m > [22msettingsApi[2m > [22mLDAP Settings[2m > [22misLdapEnabled should return LDAP enabled status[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mshould return false if loading is true[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mhas()[2m > [22mshould return true if permission exists[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mhas()[2m > [22mshould return false if permission does not exist[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcan()[2m > [22mshould return true for single permission present[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcan()[2m > [22mshould return false for single permission missing[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcan()[2m > [22mshould return true if ANY permission in array is present (OR logic)[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcan()[2m > [22mshould return false if NO permission in array is present[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcan()[2m > [22mshould return true if empty array passed (no requirements)[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcanAny()[2m > [22mshould behave validly as OR logic[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcanAll()[2m > [22mshould return true only if ALL permissions are present[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcanAll()[2m > [22mshould return false if ANY permission is missing[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/PermissionService.test.ts[2m > [22mPermissionService[2m > [22mcanAll()[2m > [22mshould return true if empty array passed[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/hooks/usePersistentState.test.ts[2m > [22musePersistentState[2m > [22mshould initialize with the initial value if localStorage is empty[32m 12[2mms[22m[39m
+ [32m✓[39m src/shared/hooks/usePersistentState.test.ts[2m > [22musePersistentState[2m > [22mshould initialize from localStorage if a value exists[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/hooks/usePersistentState.test.ts[2m > [22musePersistentState[2m > [22mshould update the state and localStorage when the setter is called[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/hooks/usePersistentState.test.ts[2m > [22musePersistentState[2m > [22mshould handle objects as values[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/hooks/usePersistentState.test.ts[2m > [22musePersistentState[2m > [22mshould return initial value if localStorage parsing fails[32m 10[2mms[22m[39m
+ [32m✓[39m src/modules/users/api/users.api.test.ts[2m > [22musersApi[2m > [22mupdate[2m > [22mshould transform groups to group_ids in payload[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/users/api/users.api.test.ts[2m > [22musersApi[2m > [22mupdate[2m > [22mshould send other fields as is[32m 0[2mms[22m[39m
+ [32m✓[39m src/__tests__/architecture.test.ts[2m > [22mArchitecture Rules[2m > [22mshared/ layer isolation[2m > [22mshared/ should not import from modules/[32m 0[2mms[22m[39m
+ [32m✓[39m src/__tests__/architecture.test.ts[2m > [22mArchitecture Rules[2m > [22mshared/ layer isolation[2m > [22mshared/ should not import from core/[32m 0[2mms[22m[39m
+ [32m✓[39m src/__tests__/architecture.test.ts[2m > [22mArchitecture Rules[2m > [22mModule structure[2m > [22mall modules should have an index.ts or index.tsx file[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould be configured with the correct baseURL[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould have a timeout of 5000ms[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould have correct default headers[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould be configured with withCredentials: true[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould add Authorization header if token exists in localStorage[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould NOT add Authorization header if no token in localStorage[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould not modify successful responses[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould reject non-401 errors without redirect[32m 0[2mms[22m[39m
+ [32m✓[39m src/shared/api/api-client.test.tsx[2m > [22mapiClient Basic Functionality[2m > [22mshould reject 401 for login requests without attempting to refresh token[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/usePermissions.test.tsx[2m > [22musePermissions Hook & Can Component[2m > [22musePermissions Hook (Reactivity)[2m > [22mshould return true from can() if user has the required permission[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/usePermissions.test.tsx[2m > [22musePermissions Hook & Can Component[2m > [22musePermissions Hook (Reactivity)[2m > [22mshould return false from can() if user does not have the required permission[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/usePermissions.test.tsx[2m > [22musePermissions Hook & Can Component[2m > [22musePermissions Hook (Reactivity)[2m > [22mshould return false from can() when auth is loading[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/usePermissions.test.tsx[2m > [22musePermissions Hook & Can Component[2m > [22mCan Component[2m > [22mshould render children if user has the required permission[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/usePermissions.test.tsx[2m > [22musePermissions Hook & Can Component[2m > [22mCan Component[2m > [22mshould not render children if user does not have the required permission[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/usePermissions.test.tsx[2m > [22musePermissions Hook & Can Component[2m > [22mCan Component[2m > [22mshould render fallback component if provided and user lacks permission[32m 0[2mms[22m[39m
+ [32m✓[39m src/core/auth/usePermissions.test.tsx[2m > [22musePermissions Hook & Can Component[2m > [22mCan Component[2m > [22mshould not render children or fallback when auth is loading[32m 0[2mms[22m[39m
+ [32m✓[39m src/modules/content/ui/pages/HomePage.test.tsx[2m > [22mHomePage[2m > [22mrenders the "Home page" content[32m 0[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 20 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould render group names and descriptions
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould call onEdit when a row is clicked
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould call onDelete when delete icon is clicked
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould have a disabled delete button for a built-in group
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould display "Built-in" key for a built-in group
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/GroupTable.test.tsx[2m > [22mGroupTable[2m > [22mshould display "Custom" key for a custom group
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'id')[39m
+[36m [2m❯[22m Object.renderHeader src/modules/users/ui/components/GroupTable.tsx:[2m74:40[22m[39m
+    [90m 72| [39m                    [33m<[39m[33mColumnFilterHeader[39m
+    [90m 73| [39m                        [33mlabel[39m[33m=[39m[33m{[39mparams[33m.[39mcolDef[33m.[39mheaderName [33m??[39m [32m''[39m[33m}[39m
+    [90m 74| [39m                        [33mvalue[39m[33m=[39m[33m{[39mfilters[33m.[39mid [33m??[39m [32m''[39m[33m}[39m
+    [90m   | [39m                                       [31m^[39m
+    [90m 75| [39m                        onFilterChange={(val) => handleFilterChange('i…
+    [90m 76| [39m                    [33m/[39m[33m>[39m
+[90m [2m❯[22m GridColumnHeaderItem node_modules/@mui/x-data-grid/esm/components/columnHeaders/GridColumnHeaderItem.js:[2m84:30[22m[39m
+[90m [2m❯[22m Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:[2m25904:20[22m[39m
+[90m [2m❯[22m renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:[2m7662:22[22m[39m
+[90m [2m❯[22m updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:[2m10166:19[22m[39m
+[90m [2m❯[22m beginWork node_modules/react-dom/cjs/react-dom-client.development.js:[2m11778:18[22m[39m
+[90m [2m❯[22m runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:[2m874:13[22m[39m
+[90m [2m❯[22m performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:[2m17641:22[22m[39m
+[90m [2m❯[22m workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:[2m17469:41[22m[39m
+[90m [2m❯[22m renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:[2m17450:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/20]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould render role names and descriptions
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould call onEdit when a row is clicked
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould call onDelete and stop propagation when delete icon is clicked
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould have a disabled delete button for a built-in role
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould display "Built-in" key for a built-in role
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/RoleTable.test.tsx[2m > [22mRoleTable[2m > [22mshould display "Custom" key for a custom role
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'id')[39m
+[36m [2m❯[22m Object.renderHeader src/modules/users/ui/components/RoleTable.tsx:[2m74:40[22m[39m
+    [90m 72| [39m                    [33m<[39m[33mColumnFilterHeader[39m
+    [90m 73| [39m                        [33mlabel[39m[33m=[39m[33m{[39mparams[33m.[39mcolDef[33m.[39mheaderName [33m??[39m [32m''[39m[33m}[39m
+    [90m 74| [39m                        [33mvalue[39m[33m=[39m[33m{[39mfilters[33m.[39mid [33m??[39m [32m''[39m[33m}[39m
+    [90m   | [39m                                       [31m^[39m
+    [90m 75| [39m                        onFilterChange={(val) => handleFilterChange('i…
+    [90m 76| [39m                    [33m/[39m[33m>[39m
+[90m [2m❯[22m GridColumnHeaderItem node_modules/@mui/x-data-grid/esm/components/columnHeaders/GridColumnHeaderItem.js:[2m84:30[22m[39m
+[90m [2m❯[22m Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:[2m25904:20[22m[39m
+[90m [2m❯[22m renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:[2m7662:22[22m[39m
+[90m [2m❯[22m updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:[2m10166:19[22m[39m
+[90m [2m❯[22m beginWork node_modules/react-dom/cjs/react-dom-client.development.js:[2m11778:18[22m[39m
+[90m [2m❯[22m runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:[2m874:13[22m[39m
+[90m [2m❯[22m performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:[2m17641:22[22m[39m
+[90m [2m❯[22m workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:[2m17469:41[22m[39m
+[90m [2m❯[22m renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:[2m17450:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/20]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mRendering and Interactions[2m > [22mshould render users correctly
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mRendering and Interactions[2m > [22mshould call onEdit when clicking on a row
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mRendering and Interactions[2m > [22mshould call onDelete when clicking the delete icon
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mshould call onPermissionsReport when clicking the policy icon
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mdelete button should be disabled for a built_in user
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mdelete button should be disabled if canDelete is false
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mChips Display[2m > [22mshould display correct Auth Type chips via Keys
+[41m[1m FAIL [22m[49m src/modules/users/ui/components/UserTable.test.tsx[2m > [22mUserTable[2m > [22mChips Display[2m > [22mshould display correct status chips via Keys
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'id')[39m
+[36m [2m❯[22m Object.renderHeader src/modules/users/ui/components/UserTable.tsx:[2m97:40[22m[39m
+    [90m 95| [39m                    [33m<[39m[33mColumnFilterHeader[39m
+    [90m 96| [39m                        [33mlabel[39m[33m=[39m[33m{[39mparams[33m.[39mcolDef[33m.[39mheaderName [33m??[39m [32m''[39m[33m}[39m
+    [90m 97| [39m                        [33mvalue[39m[33m=[39m[33m{[39mfilters[33m.[39mid [33m??[39m [32m''[39m[33m}[39m
+    [90m   | [39m                                       [31m^[39m
+    [90m 98| [39m                        onFilterChange={(val) => handleFilterChange('i…
+    [90m 99| [39m                    [33m/[39m[33m>[39m
+[90m [2m❯[22m GridColumnHeaderItem node_modules/@mui/x-data-grid/esm/components/columnHeaders/GridColumnHeaderItem.js:[2m84:30[22m[39m
+[90m [2m❯[22m Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:[2m25904:20[22m[39m
+[90m [2m❯[22m renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:[2m7662:22[22m[39m
+[90m [2m❯[22m updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:[2m10166:19[22m[39m
+[90m [2m❯[22m beginWork node_modules/react-dom/cjs/react-dom-client.development.js:[2m11778:18[22m[39m
+[90m [2m❯[22m runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:[2m874:13[22m[39m
+[90m [2m❯[22m performUnitOfWork node_modules/react-dom/cjs/react-dom-client.development.js:[2m17641:22[22m[39m
+[90m [2m❯[22m workLoopSync node_modules/react-dom/cjs/react-dom-client.development.js:[2m17469:41[22m[39m
+[90m [2m❯[22m renderRootSync node_modules/react-dom/cjs/react-dom-client.development.js:[2m17450:11[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/20]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m48 passed[39m[22m[90m (51)[39m
+[2m      Tests [22m [1m[31m20 failed[39m[22m[2m | [22m[1m[32m239 passed[39m[22m[90m (259)[39m
+[2m   Start at [22m 20:08:57
+[2m   Duration [22m 57.92s[2m (transform 13.31s, setup 14.43s, collect 63.54s, tests 59.66s, environment 22.62s, prepare 1.03s)[22m
+

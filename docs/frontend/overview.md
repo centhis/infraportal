@@ -1,102 +1,87 @@
-# Обзор Фронтенда
+# Обзор Frontend
 
-Фронтенд проекта Infraportal — это одностраничное приложение (SPA), разработанное на React. Оно предоставляет пользовательский интерфейс для взаимодействия с бэкендом, включая аутентификацию, управление пользователями, группами и ролями.
+Фронтенд проекта Infraportal — одностраничное приложение (SPA) на React с TypeScript. Использует модульную архитектуру, где каждый бизнес-домен изолирован в отдельный модуль.
 
-## Ключевые Технологии
+## Ключевые технологии
 
-*   **React**: Библиотека для создания пользовательских интерфейсов.
-*   **Vite**: Современный и быстрый сборщик проектов, используемый для разработки и сборки приложения.
-*   **Material-UI (MUI)**: Библиотека готовых React-компонентов, реализующая гайдлайны Google Material Design.
-*   **React Router**: Библиотека для реализации маршрутизации в приложении.
-*   **Axios**: HTTP-клиент для выполнения запросов к бэкенд API.
-*   **React Hook Form**: Библиотека для управления состоянием форм, их валидации и отправки.
-*   **i18next**: Фреймворк для интернационализации (i18n) приложения.
-*   **Vitest**: Фреймворк для тестирования, совместимый с Vite.
-*   **MSW (Mock Service Worker)**: Библиотека для мокирования API-запросов во время тестирования и разработки.
+| Технология | Назначение |
+|------------|------------|
+| **React 18** | UI-библиотека |
+| **TypeScript** | Строгая типизация |
+| **Vite** | Сборщик проекта |
+| **TanStack Query** | Серверное состояние, кеширование |
+| **Zustand** | Клиентское состояние |
+| **React Router 6** | Маршрутизация |
+| **Material-UI** | UI-компоненты |
+| **Axios** | HTTP-клиент |
+| **React Hook Form** | Управление формами |
+| **i18next** | Интернационализация |
+| **Vitest + RTL** | Тестирование |
+| **MSW** | Мокирование API |
 
-## Структура Проекта
+## Структура проекта
 
-Основная структура проекта находится в директории `frontend/src/`.
+```
+src/
+├── app/                      # Точка входа приложения
+│   ├── App.tsx               # Корневой компонент
+│   └── main.tsx              # Точка входа React
+│
+├── core/                     # Ядро приложения
+│   ├── providers/            # AuthProvider, I18nProvider, ToastProvider
+│   ├── router/               # RouterProvider, ProtectedRoute
+│   ├── layout/               # Navbar, глобальный layout
+│   └── auth/                 # PermissionService, usePermissions
+│
+├── shared/                   # Общий переиспользуемый код
+│   ├── api/                  # api-client.ts с interceptors
+│   ├── ui/                   # UI-компоненты (Button, TextField, Dialog)
+│   ├── hooks/                # Общие хуки
+│   └── constants/            # apiEndpoints.ts, routes.ts
+│
+├── modules/                  # Бизнес-модули
+│   ├── auth/                 # Аутентификация
+│   ├── users/                # Пользователи, роли, группы
+│   ├── settings/             # Настройки (Core, LDAP)
+│   └── content/              # Контентные страницы
+│
+├── i18n/                     # Переводы (en/, ru/)
+├── mocks/                    # MSW handlers
+└── types/                    # Глобальные типы
+```
 
-*   `app/`: Ядро приложения: главный компонент `App.jsx`, провайдеры (аутентификация, i18n) и основная маршрутизация.
-*   `components/`: Глобальные, переиспользуемые UI-компоненты, не привязанные к конкретной бизнес-логике (например, `IpAlert`, `Navbar`).
-*   `features/`: Ключевая директория, содержащая модули бизнес-логики ("фичи"), такие как `auth` и `userManagement`. Каждая фича имеет собственную структуру (api, components, hooks, pages).
-*   `shared/`: Общий код, используемый в нескольких фичах. Сюда входят инстанс Axios, константы (маршруты, ключи), и общие хуки.
-*   `i18n/`: Конфигурация и файлы переводов для интернационализации.
-*   `mocks/`: Настройка MSW для мокирования API в тестах.
+> Подробнее см. [Архитектура](architecture.md)
 
-## Настройка окружения для разработки
+## Настройка окружения
 
-### 1. Установка зависимостей
+### Установка
 
-Перейдите в директорию `frontend/` и выполните команду:
 ```bash
+cd frontend
 npm install
 ```
 
-### 2. Запуск dev-сервера
+### Запуск dev-сервера
 
-Для запуска локального сервера для разработки выполните:
 ```bash
 npm run dev
 ```
-Приложение будет доступно по адресу `http://localhost:5173` (порт может отличаться).
 
-## Архитектурная схема
+Приложение: `http://localhost:5173`
 
-```mermaid
-graph TD
-    %% Определения узлов
-    Main["main.jsx (Точка входа)<br>Рендеринг App"]
-    App["App.jsx<br>Подключение провайдеров"]
-    Providers["app/providers/<br>AuthProvider, I18nProvider"]
-    AppRoutes["app/routes/AppRoutes.jsx<br>Определение маршрутов"]
-    Pages["features/.../pages/<br>Страницы фич (Login, UserManagement)"]
-    FeatureComponents["features/.../components/<br>Компоненты фич"]
-    FeatureHooks["features/.../hooks/<br>Кастомные хуки с бизнес-логикой"]
-    SharedComponents["components/<br>Глобальные UI-компоненты"]
-    ApiModules["features/.../api/<br>Функции для запросов к API"]
-    AxiosInstance["shared/api/AxiosInstance.jsx<br>Настроенный клиент Axios"]
+### Запуск тестов
 
-    %% Зависимости
-    Main --> App
-    App --> Providers
-    App --> AppRoutes
-    AppRoutes --> Pages
-    Pages --> FeatureComponents
-    Pages --> FeatureHooks
-    FeatureHooks --> ApiModules
-    ApiModules --> AxiosInstance
-    FeatureComponents --> SharedComponents
-
-    %% Группировка
-    subgraph "Ядро приложения"
-        Main
-        App
-        Providers
-        AppRoutes
-    end
-
-    subgraph "Фичи (Features)"
-        Pages
-        FeatureComponents
-        FeatureHooks
-        ApiModules
-    end
-
-    subgraph "Общий код (Shared & Components)"
-        SharedComponents
-        AxiosInstance
-    end
+```bash
+npm run test
 ```
 
-## Разделы Документации Фронтенда
+## Документация
 
-Ниже представлены ссылки на детальную документацию по различным аспектам фронтенда:
-
-*   [Взаимодействие с API](api_interaction.md)
-*   [Компоненты и Макет](components_and_layout.md)
-*   [Управление состоянием](state_management.md)
-*   [Маршрутизация](routing.md)
-*   [Интернационализация (i18n)](internationalization.md)
-*   [Тестирование](testing.md)
+- [Архитектура](architecture.md) — структура, паттерны, правила
+- [Взаимодействие с API](api_interaction.md) — api-client, TanStack Query
+- [Управление состоянием](state_management.md) — Zustand, Query
+- [Маршрутизация](routing.md) — роутер, защищённые маршруты
+- [Компоненты](components_and_layout.md) — UI-компоненты, layout
+- [Тестирование](testing.md) — Vitest, RTL, MSW
+- [Настройки](settings.md) — модуль settings
+- [i18n](internationalization.md) — интернационализация

@@ -3,7 +3,8 @@
         "default": "InfraPortal",
         "home": "Home",
         "about": "About",
-        "user_management": "Users"
+        "user_management": "Users",
+        "settings": "Settings"
     },
     "user_menu": {
         "profile": "Profile",

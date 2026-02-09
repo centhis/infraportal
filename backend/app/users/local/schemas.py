@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List, Literal
 from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
+
 from app.users.permissions.schemas import PermissionResponseSchema
-from app.users.roles.schemas import RoleResponseSchema # Добавлен импорт RoleResponseSchema
+
 
 class CreateUserSchema(BaseModel):
     login: str = Field(..., min_length=3, max_length=50)
@@ -10,26 +11,29 @@ class CreateUserSchema(BaseModel):
     name: str = Field(..., min_length=1)
     is_active: bool = True
     type: str = "local"
-    group_ids: Optional[list[int]] = None
+    group_ids: list[int] | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class UpdateUserSchema(BaseModel):
-    login: Optional[str] = Field(None, min_length=3, max_length=50)
-    password: Optional[str] = Field(None, min_length=3)
-    name: Optional[str] = Field(None, min_length=1)
-    is_active: Optional[bool] = None
-    type: Optional[str] = None
-    group_ids: Optional[list[int]] = None
+    login: str | None = Field(None, min_length=3, max_length=50)
+    password: str | None = Field(None, min_length=3)
+    name: str | None = Field(None, min_length=1)
+    is_active: bool | None = None
+    type: str | None = None
+    group_ids: list[int] | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class GroupBasicResponseSchema(BaseModel):
     id: int
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class UserResponseSchema(BaseModel):
     id: int
@@ -38,35 +42,39 @@ class UserResponseSchema(BaseModel):
     is_active: bool = True
     type: str
     created_at: datetime
-    groups: List[GroupBasicResponseSchema] = []
-    built_in_group_ids: List[int] = Field(default_factory=list) # New field
+    groups: list[GroupBasicResponseSchema] = []
+    built_in_group_ids: list[int] = Field(default_factory=list)  # Новое поле
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class PaginatedUserResponse(BaseModel):
     total: int
-    users: List[UserResponseSchema]
+    items: list[UserResponseSchema]
+
 
 class RoleWithPermissionsSchema(BaseModel):
     id: int
     name: str
     built_in: bool
-    permissions: List[PermissionResponseSchema] # Используем PermissionResponseSchema как Detail
+    permissions: list[PermissionResponseSchema]  # Используем PermissionResponseSchema как Detail
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class GroupWithRolesAndPermissionsSchema(BaseModel):
     id: int
     name: str
     built_in: bool
-    roles: List[RoleWithPermissionsSchema]
+    roles: list[RoleWithPermissionsSchema]
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class UserPermissionsReportSchema(BaseModel):
     user_id: int
     username: str
-    all_unique_permissions: List[PermissionResponseSchema]
-    groups_with_roles_and_permissions: List[GroupWithRolesAndPermissionsSchema]
+    all_unique_permissions: list[PermissionResponseSchema]
+    groups_with_roles_and_permissions: list[GroupWithRolesAndPermissionsSchema]
 
     model_config = ConfigDict(from_attributes=True)

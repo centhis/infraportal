@@ -1,15 +1,27 @@
 import logging
-from sqlalchemy.orm import Session
+
 from sqlalchemy import insert, select
-from app.users.models import User, Group, Role, Permission, user_group_association, group_role_association, role_permission_association
+from sqlalchemy.orm import Session
+
 from app.core.config import settings
+from app.core.permissions_registry import DISCOVERED_PERMISSIONS, autodiscover_permissions
 from app.core.security import hash_password
+from app.users.models import (
+    Group,
+    Permission,
+    Role,
+    User,
+    group_role_association,
+    role_permission_association,
+    user_group_association,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def init_data(db: Session):
-    # Create or update default admin user
+    # Создать или обновить администратора по умолчанию
     admin_user = db.query(User).filter(User.login == settings.DEFAULT_ADMIN_USER).first()
     if not admin_user:
         logger.info("Creating default admin user")
@@ -17,55 +29,57 @@ def init_data(db: Session):
             login=settings.DEFAULT_ADMIN_USER,
             password=hash_password(settings.DEFAULT_ADMIN_PASSWORD),
             name=settings.DEFAULT_ADMIN_USER,
-            type='built_in',
-            is_active=True
+            type="built_in",
+            is_active=True,
         )
         db.add(new_admin)
-        db.flush() # Flush to get the ID for relationships
+        db.flush()  # Сбросить, чтобы получить ID для отношений
         admin_user = new_admin
     else:
         logger.info("Default admin user found")
-        if admin_user.type != 'built_in':
+        if admin_user.type != "built_in":
             logger.info("Updating default admin user type to 'built_in'")
-            admin_user.type = 'built_in'
-    
-    # Create or get 'admins' group
+            admin_user.type = "built_in"
+
+    # Создать или получить группу 'admins'
     admins_group = db.query(Group).filter(Group.name == "admins").first()
     if not admins_group:
         logger.info("Creating 'admins' group")
         admins_group = Group(name="admins", description="Administrators group", built_in=True)
         db.add(admins_group)
-        db.flush() # Flush to get the ID for relationships
+        db.flush()  # Сбросить, чтобы получить ID для отношений
     else:
         logger.info("'admins' group found")
         if not admins_group.built_in:
             logger.info("Updating 'admins' group built_in flag to True")
             admins_group.built_in = True
 
-    # Create or get 'admin' role
+    # Создать или получить роль 'admin'
     admin_role = db.query(Role).filter(Role.name == "admin").first()
     if not admin_role:
         logger.info("Creating 'admin' role")
-        admin_role = Role(name="admin", description="Administrator role with full permissions", built_in=True)
+        admin_role = Role(
+            name="admin", description="Administrator role with full permissions", built_in=True
+        )
         db.add(admin_role)
-        db.flush() # Flush to get the ID for relationships
+        db.flush()  # Сбросить, чтобы получить ID для отношений
     else:
         logger.info("'admin' role found")
         if not admin_role.built_in:
             logger.info("Updating 'admin' role built_in flag to True")
             admin_role.built_in = True
 
-    db.commit() # Commit entities before creating associations
-    
-    # Create permissions
-    permissions_to_create = [
-        {'name': 'users:view', 'description': 'View all users, groups, and roles'},
-        {'name': 'users:create', 'description': 'Create users, groups, and roles'},
-        {'name': 'users:update', 'description': 'Update users, groups, and roles'},
-        {'name': 'users:delete', 'description': 'Delete users, groups, and roles'},
-    ]
+    db.commit()  # Зафиксировать сущности перед созданием ассоциаций
+
+    # 0. Автообнаружение разрешений
+    import os
+    app_path = os.path.dirname(os.path.dirname(__file__))
+    autodiscover_permissions(app_path)
+
+    # Создать разрешения
+    permissions_to_create = DISCOVERED_PERMISSIONS
     for perm_data in permissions_to_create:
-        permission = db.query(Permission).filter(Permission.name == perm_data['name']).first()
+        permission = db.query(Permission).filter(Permission.name == perm_data["name"]).first()
         if not permission:
             logger.info(f"Creating permission: {perm_data['name']}")
             permission = Permission(**perm_data, built_in=True)
@@ -76,23 +90,21 @@ def init_data(db: Session):
             if not permission.built_in:
                 logger.info(f"Updating permission '{perm_data['name']}' built_in flag to True")
                 permission.built_in = True
-    
-    db.commit() # Commit permissions before assigning them
 
-    # Assign all permissions to admin role
+    db.commit()  # Зафиксировать разрешения перед их назначением
+
+    # Назначить все разрешения роли администратора
     all_permissions = db.query(Permission).all()
     for permission in all_permissions:
         stmt = select(role_permission_association).where(
             role_permission_association.c.role_id == admin_role.id,
-            role_permission_association.c.permission_id == permission.id
+            role_permission_association.c.permission_id == permission.id,
         )
         existing_association = db.execute(stmt).first()
         if not existing_association:
             db.execute(
                 insert(role_permission_association).values(
-                    role_id=admin_role.id,
-                    permission_id=permission.id,
-                    built_in=True
+                    role_id=admin_role.id, permission_id=permission.id, built_in=True
                 )
             )
         else:
@@ -104,18 +116,16 @@ def init_data(db: Session):
                     .values(built_in=True)
                 )
 
-    # Assign 'admin' role to 'admins' group (association)
+    # Назначить роль 'admin' группе 'admins' (ассоциация)
     stmt = select(group_role_association).where(
         group_role_association.c.group_id == admins_group.id,
-        group_role_association.c.role_id == admin_role.id
+        group_role_association.c.role_id == admin_role.id,
     )
     existing_association = db.execute(stmt).first()
     if not existing_association:
         db.execute(
             insert(group_role_association).values(
-                group_id=admins_group.id,
-                role_id=admin_role.id,
-                built_in=True
+                group_id=admins_group.id, role_id=admin_role.id, built_in=True
             )
         )
     else:
@@ -127,18 +137,16 @@ def init_data(db: Session):
                 .values(built_in=True)
             )
 
-    # Assign 'admins' group to default admin user (association)
+    # Назначить группу 'admins' администратору по умолчанию (ассоциация)
     stmt = select(user_group_association).where(
         user_group_association.c.user_id == admin_user.id,
-        user_group_association.c.group_id == admins_group.id
+        user_group_association.c.group_id == admins_group.id,
     )
     existing_association = db.execute(stmt).first()
     if not existing_association:
         db.execute(
             insert(user_group_association).values(
-                user_id=admin_user.id,
-                group_id=admins_group.id,
-                built_in=True
+                user_id=admin_user.id, group_id=admins_group.id, built_in=True
             )
         )
     else:

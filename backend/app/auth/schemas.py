@@ -1,27 +1,32 @@
-from pydantic import BaseModel, ConfigDict
-from typing import List
 from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
-    permissions: List[str]
+    permissions: list[str]
+
 
 class UserBaseSchema(BaseModel):
     name: str
     login: str
 
+
 class LoginUserSchema(BaseModel):
     login: str
     password: str
+
 
 class CurrenUserSchema(BaseModel):
     id: int
     login: str
     name: str
-    permissions: List[str]
+    permissions: list[str]
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class SessionResponseSchema(BaseModel):
     id: int
